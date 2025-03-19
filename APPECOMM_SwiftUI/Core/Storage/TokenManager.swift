@@ -6,7 +6,6 @@
 //
 
 import Foundation
-import JWTDecode
 
 protocol TokenManagerProtocol {
     func saveTokens(accessToken: String, refreshToken: String?, userId: Int) throws
@@ -179,25 +178,3 @@ extension String {
     }
 }
 
-// Añadir este import al principio del archivo
-// En un proyecto real, JWT sería una dependencia externa vía SPM o CocoaPods
-// Para simplificar, aquí creamos una implementación básica
-enum JWT {
-    static func decode(_ token: String) -> [String: Any]? {
-        let parts = token.components(separatedBy: ".")
-        
-        guard parts.count == 3 else {
-            return nil
-        }
-        
-        guard let payloadData = parts[1].base64UrlDecoded() else {
-            return nil
-        }
-        
-        do {
-            return try JSONSerialization.jsonObject(with: payloadData, options: []) as? [String: Any]
-        } catch {
-            return nil
-        }
-    }
-}

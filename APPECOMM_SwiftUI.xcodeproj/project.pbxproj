@@ -9,7 +9,6 @@
 /* Begin PBXBuildFile section */
 		1D7000E02D8AA8B600A348EC /* Kingfisher in Frameworks */ = {isa = PBXBuildFile; productRef = 1D7000DF2D8AA8B600A348EC /* Kingfisher */; };
 		1D7001552D8AC87100A348EC /* Swinject in Frameworks */ = {isa = PBXBuildFile; productRef = 1D7001542D8AC87100A348EC /* Swinject */; };
-		1D70020C2D8B1EB300A348EC /* JWTDecode in Frameworks */ = {isa = PBXBuildFile; productRef = 1D70020B2D8B1EB300A348EC /* JWTDecode */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -31,7 +30,6 @@
 			files = (
 				1D7000E02D8AA8B600A348EC /* Kingfisher in Frameworks */,
 				1D7001552D8AC87100A348EC /* Swinject in Frameworks */,
-				1D70020C2D8B1EB300A348EC /* JWTDecode in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -76,7 +74,6 @@
 			packageProductDependencies = (
 				1D7000DF2D8AA8B600A348EC /* Kingfisher */,
 				1D7001542D8AC87100A348EC /* Swinject */,
-				1D70020B2D8B1EB300A348EC /* JWTDecode */,
 			);
 			productName = APPECOMM_SwiftUI;
 			productReference = 1D70007F2D89AABF00A348EC /* APPECOMM_SwiftUI.app */;
@@ -109,7 +106,6 @@
 			packageReferences = (
 				1D7000DE2D8AA8B600A348EC /* XCRemoteSwiftPackageReference "Kingfisher" */,
 				1D7001532D8AC87100A348EC /* XCRemoteSwiftPackageReference "Swinject" */,
-				1D70020A2D8B1EB300A348EC /* XCRemoteSwiftPackageReference "JWTDecode" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 1D7000802D89AABF00A348EC /* Products */;
@@ -359,14 +355,6 @@
 				minimumVersion = 2.8.0;
 			};
 		};
-		1D70020A2D8B1EB300A348EC /* XCRemoteSwiftPackageReference "JWTDecode" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/auth0/JWTDecode.swift";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 3.2.0;
-			};
-		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -379,11 +367,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 1D7001532D8AC87100A348EC /* XCRemoteSwiftPackageReference "Swinject" */;
 			productName = Swinject;
-		};
-		1D70020B2D8B1EB300A348EC /* JWTDecode */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 1D70020A2D8B1EB300A348EC /* XCRemoteSwiftPackageReference "JWTDecode" */;
-			productName = JWTDecode;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
