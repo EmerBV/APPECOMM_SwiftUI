@@ -21,14 +21,13 @@ struct LoginView: View {
                     VStack(spacing: 30) {
                         // Logo
                         VStack(spacing: 16) {
-                            Image(systemName: "bag.circle.fill")
+                            Image("logo")
                                 .resizable()
                                 .aspectRatio(contentMode: .fit)
                                 .frame(width: 100, height: 100)
-                                .foregroundColor(.blue)
                                 .padding(.top, 50)
                             
-                            Text("Welcome to eCommDB")
+                            Text("Welcome to Kaioland")
                                 .font(.title)
                                 .fontWeight(.bold)
                                 .multilineTextAlignment(.center)

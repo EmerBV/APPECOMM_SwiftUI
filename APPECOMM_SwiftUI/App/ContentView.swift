@@ -53,17 +53,10 @@ struct SplashView: View {
             Color.blue.edgesIgnoringSafeArea(.all)
             
             VStack {
-                Image(systemName: "bag.circle.fill")
+                Image("logo")
                     .resizable()
                     .aspectRatio(contentMode: .fit)
-                    .frame(width: 100, height: 100)
-                    .foregroundColor(.white)
-                
-                Text("eCommDB")
-                    .font(.largeTitle)
-                    .fontWeight(.bold)
-                    .foregroundColor(.white)
-                    .padding(.top, 16)
+                    .frame(width: 220, height: 100)
                 
                 ProgressView()
                     .progressViewStyle(CircularProgressViewStyle(tint: .white))
