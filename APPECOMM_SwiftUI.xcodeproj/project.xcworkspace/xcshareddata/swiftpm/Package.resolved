@@ -1,6 +1,15 @@
 {
-  "originHash" : "67d4aa98a668963205ad1f07f79c62c776a2d9289506c8364d67676942b02c2a",
+  "originHash" : "d3bcb21910dc50c105dfe11c9beafa7726aa72fb3b167eaa90b8ce9d1b96bc43",
   "pins" : [
+    {
+      "identity" : "jwtdecode.swift",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/auth0/JWTDecode.swift",
+      "state" : {
+        "revision" : "1e153ef009969543191970c66b7c60163c0b4a65",
+        "version" : "3.2.0"
+      }
+    },
     {
       "identity" : "kingfisher",
       "kind" : "remoteSourceControl",

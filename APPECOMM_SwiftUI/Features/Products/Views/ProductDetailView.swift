@@ -2,12 +2,13 @@ import SwiftUI
 
 struct ProductDetailView: View {
     let product: Product
-    let viewModel: ProductListViewModel
+    @ObservedObject var viewModel: ProductListViewModel
     
     @State private var selectedVariant: Variant?
     @State private var quantity: Int = 1
     @State private var showingImageViewer = false
     @State private var selectedImageIndex = 0
+    @State private var showAddedToCartMessage = false
     
     // Computed properties
     private var effectivePrice: Decimal {
@@ -46,50 +47,74 @@ struct ProductDetailView: View {
     }
     
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 0) {
-                // Product Images
-                ProductImageCarousel(
-                    product: product,
-                    showingImageViewer: $showingImageViewer,
-                    selectedImageIndex: $selectedImageIndex
-                )
-                
-                // Product Info Sections
-                VStack(alignment: .leading, spacing: 16) {
-                    // Header
-                    ProductHeaderView(product: product)
-                    
-                    Divider()
-                    
-                    // Price & Variants
-                    ProductPriceVariantView(
+        ZStack {
+            // Contenido principal
+            ScrollView {
+                VStack(alignment: .leading, spacing: 0) {
+                    // Product Images
+                    ProductImageCarousel(
                         product: product,
-                        viewModel: viewModel,
-                        selectedVariant: $selectedVariant,
-                        formattedEffectivePrice: formattedEffectivePrice,
-                        quantity: $quantity,
-                        availableInventory: availableInventory,
-                        isOutOfStock: isOutOfStock
+                        showingImageViewer: $showingImageViewer,
+                        selectedImageIndex: $selectedImageIndex
                     )
                     
-                    Divider()
-                        .padding(.vertical, 8)
-                    
-                    // Description
-                    ProductDescriptionView(product: product)
-                    
-                    Divider()
-                        .padding(.vertical, 8)
-                    
-                    // Details and Specifications
-                    ProductDetailsView(product: product)
-                    
-                    Spacer(minLength: 30)
+                    // Product Info Sections
+                    VStack(alignment: .leading, spacing: 16) {
+                        // Header
+                        ProductHeaderView(product: product)
+                        
+                        Divider()
+                        
+                        // Price & Variants
+                        ProductPriceVariantView(
+                            product: product,
+                            viewModel: viewModel,
+                            selectedVariant: $selectedVariant,
+                            formattedEffectivePrice: formattedEffectivePrice,
+                            quantity: $quantity,
+                            availableInventory: availableInventory,
+                            isOutOfStock: isOutOfStock,
+                            onAddToCart: addToCart
+                        )
+                        
+                        Divider()
+                            .padding(.vertical, 8)
+                        
+                        // Description
+                        ProductDescriptionView(product: product)
+                        
+                        Divider()
+                            .padding(.vertical, 8)
+                        
+                        // Details and Specifications
+                        ProductDetailsView(product: product)
+                        
+                        Spacer(minLength: 30)
+                    }
+                }
+            }
+            
+            // Loading overlay
+            if viewModel.isAddingToCart {
+                LoadingView()
+            }
+            
+            // Error message
+            if let errorMessage = viewModel.errorMessage {
+                ErrorToast(message: errorMessage) {
+                    viewModel.errorMessage = nil
+                }
+            }
+            
+            // Success message
+            if showAddedToCartMessage {
+                SuccessToast(message: "Producto añadido al carrito") {
+                    showAddedToCartMessage = false
                 }
             }
         }
         .navigationBarTitleDisplayMode(.inline)
+        .navigationTitle(product.name)
         .sheet(isPresented: $showingImageViewer) {
             if let images = product.images, !images.isEmpty {
                 ImageViewer(
@@ -98,6 +123,57 @@ struct ProductDetailView: View {
                 )
             }
         }
+        .onReceive(viewModel.$cartSuccessMessage) { message in
+            if message != nil {
+                showAddedToCartMessage = true
+                
+                // Ocultar mensaje después de 3 segundos
+                DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+                    showAddedToCartMessage = false
+                }
+            }
+        }
+    }
+    
+    private func addToCart() {
+        let variantId = selectedVariant?.id
+        viewModel.addToCart(productId: product.id, quantity: quantity, variantId: variantId)
+    }
+}
+
+// MARK: - Success Toast
+struct SuccessToast: View {
+    let message: String
+    let onDismiss: () -> Void
+    
+    var body: some View {
+        VStack {
+            Spacer()
+            
+            HStack(spacing: 12) {
+                Image(systemName: "checkmark.circle.fill")
+                    .foregroundColor(.white)
+                
+                Text(message)
+                    .foregroundColor(.white)
+                    .font(.subheadline)
+                
+                Spacer()
+                
+                Button(action: onDismiss) {
+                    Image(systemName: "xmark")
+                        .foregroundColor(.white)
+                }
+            }
+            .padding()
+            .background(Color.green)
+            .cornerRadius(10)
+            .padding(.horizontal)
+            .padding(.bottom)
+        }
+        .transition(.move(edge: .bottom))
+        .animation(.spring())
+        .zIndex(100)
     }
 }
 
@@ -208,6 +284,7 @@ struct ProductPriceVariantView: View {
     @Binding var quantity: Int
     let availableInventory: Int
     let isOutOfStock: Bool
+    let onAddToCart: () -> Void
     
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -271,10 +348,7 @@ struct ProductPriceVariantView: View {
             )
             
             // Add to cart button
-            Button(action: {
-                // Action to add to cart
-                // Would call repository method in a real app
-            }) {
+            Button(action: onAddToCart) {
                 HStack {
                     Image(systemName: "cart.badge.plus")
                     Text("Add to Cart")
@@ -285,7 +359,7 @@ struct ProductPriceVariantView: View {
                 .foregroundColor(.white)
                 .cornerRadius(10)
             }
-            .disabled(isOutOfStock)
+            .disabled(isOutOfStock || viewModel.isAddingToCart)
         }
         .padding(.horizontal)
     }
@@ -496,6 +570,7 @@ struct ImageViewer: View {
     let selectedIndex: Int
     @Environment(\.presentationMode) var presentationMode
     @State private var currentIndex: Int
+    @State private var scale: CGFloat = 1.0
     
     init(images: [String], selectedIndex: Int) {
         self.images = images
@@ -528,35 +603,102 @@ struct ImageViewer: View {
                     
                     TabView(selection: $currentIndex) {
                         ForEach(Array(images.enumerated()), id: \.offset) { index, imageUrl in
-                            AsyncImage(url: URL(string: imageUrl)) { phase in
-                                switch phase {
-                                case .empty:
-                                    ProgressView()
-                                case .success(let image):
-                                    image
-                                        .resizable()
-                                        .aspectRatio(contentMode: .fit)
-                                        .frame(width: geometry.size.width, height: geometry.size.height - 100)
-                                        .gesture(
-                                            MagnificationGesture()
-                                                .onChanged { value in
-                                                    // Zoom logic would go here in a real app
-                                                }
-                                        )
-                                case .failure:
-                                    Image(systemName: "photo")
-                                        .font(.largeTitle)
-                                        .foregroundColor(.gray)
-                                @unknown default:
-                                    EmptyView()
-                                }
-                            }
-                            .tag(index)
+                            ZoomableImageView(imageUrl: imageUrl)
+                                .tag(index)
                         }
                     }
                     .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
+                    .frame(width: geometry.size.width, height: geometry.size.height - 100)
                 }
             }
+        }
+    }
+}
+
+struct ZoomableImageView: View {
+    let imageUrl: String
+    @State private var scale: CGFloat = 1.0
+    @State private var lastScale: CGFloat = 1.0
+    @State private var offset: CGSize = .zero
+    @State private var lastOffset: CGSize = .zero
+    
+    var body: some View {
+        GeometryReader { geometry in
+            AsyncImage(url: URL(string: imageUrl)) { phase in
+                switch phase {
+                case .empty:
+                    ProgressView()
+                case .success(let image):
+                    image
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .scaleEffect(scale)
+                        .offset(offset)
+                        .gesture(
+                            MagnificationGesture()
+                                .onChanged { value in
+                                    let delta = value / lastScale
+                                    lastScale = value
+                                    
+                                    // Limitar el zoom entre 1x y 4x
+                                    scale = min(max(scale * delta, 1), 4)
+                                }
+                                .onEnded { _ in
+                                    lastScale = 1.0
+                                }
+                        )
+                        .gesture(
+                            DragGesture()
+                                .onChanged { gesture in
+                                    if scale > 1 {
+                                        offset = CGSize(
+                                            width: lastOffset.width + gesture.translation.width,
+                                            height: lastOffset.height + gesture.translation.height
+                                        )
+                                    }
+                                }
+                                .onEnded { _ in
+                                    lastOffset = offset
+                                    
+                                    // Si escala es 1, resetear offset
+                                    if scale <= 1 {
+                                        withAnimation {
+                                            offset = .zero
+                                            lastOffset = .zero
+                                        }
+                                    }
+                                }
+                        )
+                        .gesture(
+                            TapGesture(count: 2)
+                                .onEnded {
+                                    withAnimation {
+                                        if scale > 1 {
+                                            scale = 1
+                                            offset = .zero
+                                            lastOffset = .zero
+                                        } else {
+                                            scale = 2
+                                        }
+                                    }
+                                }
+                        )
+                case .failure:
+                    Image(systemName: "photo")
+                        .font(.largeTitle)
+                        .foregroundColor(.gray)
+                @unknown default:
+                    EmptyView()
+                }
+            }
+            .frame(width: geometry.size.width, height: geometry.size.height)
+        }
+        .onChange(of: imageUrl) { _ in
+            // Resetear zoom y posición cuando cambia la imagen
+            scale = 1.0
+            lastScale = 1.0
+            offset = .zero
+            lastOffset = .zero
         }
     }
 }

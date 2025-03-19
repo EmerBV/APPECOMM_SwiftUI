@@ -14,7 +14,6 @@ protocol NetworkLoggerProtocol {
 }
 
 final class NetworkLogger: NetworkLoggerProtocol {
-    private let logger = Logger(subsystem: Bundle.main.bundleIdentifier ?? "com.emerbv.APPECOMM-SwiftUI", category: "Network")
     private let isDebugMode: Bool
     
     init(isDebugMode: Bool = true) {
@@ -24,41 +23,41 @@ final class NetworkLogger: NetworkLoggerProtocol {
     func logRequest(_ request: URLRequest) {
         guard isDebugMode else { return }
         
-        logger.debug("⬆️ OUTGOING REQUEST")
+        Logger.debug("⬆️ OUTGOING REQUEST")
         
         if let url = request.url?.absoluteString {
-            logger.debug("URL: \(url)")
+            Logger.debug("URL: \(url)")
         }
         
         if let method = request.httpMethod {
-            logger.debug("Method: \(method)")
+            Logger.debug("Method: \(method)")
         }
         
         if let headers = request.allHTTPHeaderFields, !headers.isEmpty {
-            logger.debug("Headers: \(self.prettyPrint(headers))")
+            Logger.debug("Headers: \(self.prettyPrint(headers))")
         }
         
         if let body = request.httpBody, !body.isEmpty, let bodyString = String(data: body, encoding: .utf8) {
             let sanitizedBody = self.sanitizeJSON(bodyString)
-            logger.debug("Body: \(sanitizedBody)")
+            Logger.debug("Body: \(sanitizedBody)")
         }
     }
     
     func logResponse(_ response: URLResponse?, data: Data?, error: Error?) {
         guard isDebugMode else { return }
         
-        logger.debug("⬇️ INCOMING RESPONSE")
+        Logger.debug("⬇️ INCOMING RESPONSE")
         
         if let error = error {
-            logger.error("Error: \(error.localizedDescription)")
+            Logger.error("Error: \(error.localizedDescription)")
             return
         }
         
         if let httpResponse = response as? HTTPURLResponse {
-            logger.debug("Status Code: \(httpResponse.statusCode)")
+            Logger.debug("Status Code: \(httpResponse.statusCode)")
             
             if !httpResponse.allHeaderFields.isEmpty {
-                logger.debug("Headers: \(self.prettyPrint(httpResponse.allHeaderFields as? [String: Any] ?? [:]))")
+                Logger.debug("Headers: \(self.prettyPrint(httpResponse.allHeaderFields as? [String: Any] ?? [:]))")
             }
         }
         
@@ -66,12 +65,12 @@ final class NetworkLogger: NetworkLoggerProtocol {
             if let responseString = String(data: data, encoding: .utf8) {
                 let sanitizedResponse = self.sanitizeJSON(responseString)
                 if sanitizedResponse.count > 1000 {
-                    logger.debug("Response: \(sanitizedResponse.prefix(1000))... (truncated)")
+                    Logger.debug("Response: \(sanitizedResponse.prefix(1000))... (truncated)")
                 } else {
-                    logger.debug("Response: \(sanitizedResponse)")
+                    Logger.debug("Response: \(sanitizedResponse)")
                 }
             } else {
-                logger.debug("Response: Unable to convert data to string")
+                Logger.debug("Response: Unable to convert data to string")
             }
         }
     }
@@ -80,8 +79,8 @@ final class NetworkLogger: NetworkLoggerProtocol {
         var result = "{\n"
         for (key, value) in dict {
             let sanitizedValue = key.lowercased().contains("password") || key.lowercased().contains("token")
-                ? "***REDACTED***"
-                : "\(value)"
+            ? "***REDACTED***"
+            : "\(value)"
             result += "  \(key): \(sanitizedValue)\n"
         }
         result += "}"

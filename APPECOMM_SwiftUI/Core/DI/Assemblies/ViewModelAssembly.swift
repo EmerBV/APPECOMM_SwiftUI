@@ -10,23 +10,27 @@ import Swinject
 
 final class ViewModelAssembly: Assembly {
     func assemble(container: Container) {
-        // Auth ViewModel
-        container.register(AuthViewModel.self) { r in
-            let authRepository = r.resolve(AuthRepositoryProtocol.self)!
-            let validator = r.resolve(InputValidatorProtocol.self)!
-            return AuthViewModel(authRepository: authRepository, validator: validator)
-        }
-        
         // Input Validator
         container.register(InputValidatorProtocol.self) { _ in
             InputValidator()
         }.inObjectScope(.container)
         
+        // Auth ViewModel
+        container.register(AuthViewModel.self) { r in
+            let authRepository = r.resolve(AuthRepositoryProtocol.self)!
+            let validator = r.resolve(InputValidatorProtocol.self)!
+            return AuthViewModel(authRepository: authRepository, validator: validator)
+        }.inObjectScope(.container) // Singleton para mantener estado consistente
+        
         // Product List ViewModel
         container.register(ProductListViewModel.self) { r in
             let productRepository = r.resolve(ProductRepositoryProtocol.self)!
-            return ProductListViewModel(productRepository: productRepository)
-        }
+            let cartRepository = r.resolve(CartRepositoryProtocol.self)!
+            return ProductListViewModel(
+                productRepository: productRepository,
+                cartRepository: cartRepository
+            )
+        }.inObjectScope(.container) // Singleton para mantener estado consistente
         
         // Profile ViewModel
         container.register(ProfileViewModel.self) { r in
@@ -36,6 +40,6 @@ final class ViewModelAssembly: Assembly {
                 userRepository: userRepository,
                 authRepository: authRepository
             )
-        }
+        }.inObjectScope(.container) // Singleton para mantener estado consistente
     }
 }

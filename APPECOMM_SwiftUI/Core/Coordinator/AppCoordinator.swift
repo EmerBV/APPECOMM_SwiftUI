@@ -20,34 +20,22 @@ class AppCoordinator: ObservableObject {
         self.authRepository = authRepository
         self.tokenManager = tokenManager
         
-        print("AppCoordinator: Initializing")
-        
         // Observar cambios en el estado de autenticación
         authRepository.authState
             .receive(on: DispatchQueue.main)
             .sink { [weak self] state in
-                print("AppCoordinator: Received auth state: \(state)")
+                guard let self = self else { return }
                 
                 switch state {
                 case .loggedIn(let user):
-                    print("AppCoordinator: User logged in: \(user.id), setting screen to main")
-                    DispatchQueue.main.async {
-                        self?.currentScreen = .main
-                        print("AppCoordinator: Screen set to main")
-                        self?.setupFailsafeTimer()
-                    }
+                    Logger.info("Usuario logueado: \(user.id), cambiando a pantalla principal")
+                    self.currentScreen = .main
                 case .loggedOut:
-                    print("AppCoordinator: User logged out, setting screen to login")
-                    DispatchQueue.main.async {
-                        self?.currentScreen = .login
-                        print("AppCoordinator: Screen set to login")
-                    }
+                    Logger.info("Usuario deslogueado, cambiando a pantalla de login")
+                    self.currentScreen = .login
                 case .loading:
-                    print("AppCoordinator: Auth state loading, setting screen to splash")
-                    DispatchQueue.main.async {
-                        self?.currentScreen = .splash
-                        print("AppCoordinator: Screen set to splash")
-                    }
+                    Logger.info("Estado de autenticación cargando, cambiando a splash")
+                    self.currentScreen = .splash
                 }
             }
             .store(in: &cancellables)
@@ -57,23 +45,34 @@ class AppCoordinator: ObservableObject {
     }
     
     private func checkAuth() {
-        print("AppCoordinator: Checking auth status...")
-    }
-    
-    private func setupFailsafeTimer() {
-        // Si después de 3 segundos todavía estamos en la pantalla de splash después de un login exitoso
-        // forzar la transición a la pantalla principal
-        DispatchQueue.main.asyncAfter(deadline: .now() + 3) { [weak self] in
-            guard let self = self else { return }
+        Logger.info("Verificando estado de autenticación...")
+        
+        // Si tenemos un token válido, intentamos obtener el usuario
+        if tokenManager.hasValidToken() {
+            Logger.info("Token válido encontrado, verificando usuario...")
             
-            if case .splash = self.currentScreen, self.tokenManager.hasValidToken() {
-                print("AppCoordinator: Failsafe triggered - Forcing transition to main")
-                self.currentScreen = .main
-            }
+            // Verificar si hay un usuario guardado
+            authRepository.checkAuthStatus()
+                .sink { completion in
+                    if case .failure(let error) = completion {
+                        Logger.error("Error al verificar estado de autenticación: \(error)")
+                        self.currentScreen = .login
+                    }
+                } receiveValue: { [weak self] user in
+                    if let user = user {
+                        Logger.info("Usuario recuperado correctamente: \(user.id)")
+                        self?.currentScreen = .main
+                    } else {
+                        Logger.warning("No se encontró información de usuario a pesar de tener token")
+                        self?.currentScreen = .login
+                    }
+                }
+                .store(in: &cancellables)
+        } else {
+            Logger.info("No hay token válido, redirigiendo a login")
+            currentScreen = .login
         }
     }
-    
-    
 }
 
 enum AppScreen {

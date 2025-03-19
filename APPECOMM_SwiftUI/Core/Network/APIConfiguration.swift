@@ -6,7 +6,6 @@
 //
 
 import Foundation
-import UIKit
 
 protocol APIConfigurationProtocol {
     var baseURL: URL { get }
@@ -20,26 +19,19 @@ struct APIConfiguration: APIConfigurationProtocol {
     let defaultHeaders: [String: String]
     
     init() {
-        // Idealmente este valor sería inyectado desde la configuración del entorno (desarrollo, staging, producción)
-        guard let url = URL(string: "http://localhost:9091/ecommdb/api/v1") else {
-            fatalError("URL base inválida")
+        // Usar la configuración centralizada desde AppConfig
+        let config = AppConfig.shared
+        
+        guard let url = URL(string: config.apiBaseUrl) else {
+            fatalError("URL base inválida: \(config.apiBaseUrl)")
         }
         
         self.baseURL = url
-        self.timeoutInterval = 30.0
+        self.timeoutInterval = config.apiTimeout
         self.defaultHeaders = [
             "Content-Type": "application/json",
             "Accept": "application/json",
-            "User-Agent": Self.generateUserAgent()
+            "User-Agent": config.getUserAgent()
         ]
-    }
-    
-    private static func generateUserAgent() -> String {
-        let appVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "Unknown"
-        let buildNumber = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "Unknown"
-        let deviceModel = UIDevice.current.model
-        let systemVersion = UIDevice.current.systemVersion
-        
-        return "eCommDB-iOS/\(appVersion) (\(buildNumber); \(deviceModel); iOS \(systemVersion))"
     }
 }

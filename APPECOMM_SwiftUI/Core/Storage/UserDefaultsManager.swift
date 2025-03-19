@@ -14,7 +14,9 @@ protocol UserDefaultsManagerProtocol {
     func getString(forKey key: String) -> String?
     func getInt(forKey key: String) -> Int?
     func getBool(forKey key: String) -> Bool?
+    func getDate(forKey key: String) -> Date?
     func remove(forKey key: String)
+    func clearAll()
 }
 
 final class UserDefaultsManager: UserDefaultsManagerProtocol {
@@ -52,7 +54,21 @@ final class UserDefaultsManager: UserDefaultsManagerProtocol {
         return defaults.object(forKey: key) as? Bool
     }
     
+    func getDate(forKey key: String) -> Date? {
+        return defaults.object(forKey: key) as? Date
+    }
+    
     func remove(forKey key: String) {
         defaults.removeObject(forKey: key)
+    }
+    
+    func clearAll() {
+        let dictionary = defaults.dictionaryRepresentation()
+        dictionary.keys.forEach { key in
+            // Evitar borrar configuraciones del sistema
+            if !key.starts(with: "com.apple") {
+                defaults.removeObject(forKey: key)
+            }
+        }
     }
 }

@@ -15,10 +15,13 @@ final class RepositoryAssembly: Assembly {
             let authService = r.resolve(AuthServiceProtocol.self)!
             let tokenManager = r.resolve(TokenManagerProtocol.self)!
             let userDefaultsManager = r.resolve(UserDefaultsManagerProtocol.self)!
+            let userService = r.resolve(UserServiceProtocol.self)!
+            
             return AuthRepository(
                 authService: authService,
                 tokenManager: tokenManager,
-                userDefaultsManager: userDefaultsManager
+                userDefaultsManager: userDefaultsManager,
+                userService: userService
             )
         }.inObjectScope(.container)
         
