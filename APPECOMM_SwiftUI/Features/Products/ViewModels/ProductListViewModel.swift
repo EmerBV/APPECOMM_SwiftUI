@@ -1,5 +1,5 @@
 //
-//  ProductViewModel.swift
+//  ProductListViewModel.swift
 //  APPECOMM_SwiftUI
 //
 //  Created by Emerson Balahan Varona on 18/3/25.
@@ -7,30 +7,62 @@
 
 import Foundation
 import Combine
-import SwiftUI
 
-class ProductViewModel: ObservableObject {
+class ProductListViewModel: ObservableObject {
+    // Published properties
     @Published var products: [Product] = []
     @Published var isLoading = false
     @Published var errorMessage: String?
     
-    private let productService: ProductServiceProtocol
+    // Filtrado y búsqueda
+    @Published var searchText = ""
+    @Published var selectedCategory: String?
+    
+    // Computed properties
+    var filteredProducts: [Product] {
+        var result = products
+        
+        // Filtrar por categoría
+        if let category = selectedCategory, !category.isEmpty {
+            result = result.filter { $0.category.name == category }
+        }
+        
+        // Filtrar por texto de búsqueda
+        if !searchText.isEmpty {
+            result = result.filter {
+                $0.name.localizedCaseInsensitiveContains(searchText) ||
+                $0.brand.localizedCaseInsensitiveContains(searchText) ||
+                $0.description?.localizedCaseInsensitiveContains(searchText) ?? false
+            }
+        }
+        
+        return result
+    }
+    
+    var categories: [String] {
+        let categoryNames = Set(products.map { $0.category.name })
+        return Array(categoryNames).sorted()
+    }
+    
+    // Dependencies
+    private let productRepository: ProductRepositoryProtocol
     private var cancellables = Set<AnyCancellable>()
     
-    init(productService: ProductServiceProtocol = ProductService()) {
-        self.productService = productService
+    init(productRepository: ProductRepositoryProtocol) {
+        self.productRepository = productRepository
     }
     
     func loadProducts() {
         isLoading = true
         errorMessage = nil
         
-        productService.fetchProducts()
+        productRepository.getAllProducts()
             .receive(on: DispatchQueue.main)
             .sink { [weak self] completion in
                 self?.isLoading = false
+                
                 if case .failure(let error) = completion {
-                    self?.handleError(error)
+                    self?.errorMessage = error.localizedDescription
                 }
             } receiveValue: { [weak self] products in
                 self?.products = products
@@ -38,24 +70,26 @@ class ProductViewModel: ObservableObject {
             .store(in: &cancellables)
     }
     
-    private func handleError(_ error: NetworkError) {
-        switch error {
-        case .invalidURL:
-            errorMessage = "URL inválida"
-        case .invalidResponse:
-            errorMessage = "Respuesta inválida del servidor"
-        case .invalidData:
-            errorMessage = "Datos inválidos"
-        case .serverError(let message):
-            errorMessage = "Error del servidor: \(message)"
-        case .decodingError:
-            errorMessage = "Error al procesar la respuesta"
-        case .unknown:
-            errorMessage = "Error desconocido"
-        }
+    func loadProductsByCategory(category: String) {
+        isLoading = true
+        errorMessage = nil
+        
+        productRepository.getProductsByCategory(category: category)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] completion in
+                self?.isLoading = false
+                
+                if case .failure(let error) = completion {
+                    self?.errorMessage = error.localizedDescription
+                }
+            } receiveValue: { [weak self] products in
+                self?.products = products
+                self?.selectedCategory = category
+            }
+            .store(in: &cancellables)
     }
     
-    // Formato de precio con símbolo de moneda
+    // Formateo de precios
     func formattedPrice(for product: Product) -> String {
         let formatter = NumberFormatter()
         formatter.numberStyle = .currency
@@ -67,14 +101,13 @@ class ProductViewModel: ObservableObject {
         return "$\(product.price)"
     }
     
-    // Calcular precio con descuento
     func discountedPrice(for product: Product) -> Decimal? {
         guard product.discountPercentage > 0 else { return nil }
+        
         let discount = product.price * Decimal(product.discountPercentage) / 100
         return product.price - discount
     }
     
-    // Formato para precio con descuento
     func formattedDiscountedPrice(for product: Product) -> String? {
         guard let discountedPrice = discountedPrice(for: product) else { return nil }
         

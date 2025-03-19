@@ -6,6 +6,11 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		1D7000E02D8AA8B600A348EC /* Kingfisher in Frameworks */ = {isa = PBXBuildFile; productRef = 1D7000DF2D8AA8B600A348EC /* Kingfisher */; };
+		1D7001552D8AC87100A348EC /* Swinject in Frameworks */ = {isa = PBXBuildFile; productRef = 1D7001542D8AC87100A348EC /* Swinject */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
 		1D70007F2D89AABF00A348EC /* APPECOMM_SwiftUI.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = APPECOMM_SwiftUI.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -23,6 +28,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1D7000E02D8AA8B600A348EC /* Kingfisher in Frameworks */,
+				1D7001552D8AC87100A348EC /* Swinject in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -65,6 +72,8 @@
 			);
 			name = APPECOMM_SwiftUI;
 			packageProductDependencies = (
+				1D7000DF2D8AA8B600A348EC /* Kingfisher */,
+				1D7001542D8AC87100A348EC /* Swinject */,
 			);
 			productName = APPECOMM_SwiftUI;
 			productReference = 1D70007F2D89AABF00A348EC /* APPECOMM_SwiftUI.app */;
@@ -94,6 +103,10 @@
 			);
 			mainGroup = 1D7000762D89AABE00A348EC;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				1D7000DE2D8AA8B600A348EC /* XCRemoteSwiftPackageReference "Kingfisher" */,
+				1D7001532D8AC87100A348EC /* XCRemoteSwiftPackageReference "Swinject" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 1D7000802D89AABF00A348EC /* Products */;
 			projectDirPath = "";
@@ -324,6 +337,38 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		1D7000DE2D8AA8B600A348EC /* XCRemoteSwiftPackageReference "Kingfisher" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/onevcat/Kingfisher.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 8.3.1;
+			};
+		};
+		1D7001532D8AC87100A348EC /* XCRemoteSwiftPackageReference "Swinject" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/Swinject/Swinject";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.8.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		1D7000DF2D8AA8B600A348EC /* Kingfisher */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 1D7000DE2D8AA8B600A348EC /* XCRemoteSwiftPackageReference "Kingfisher" */;
+			productName = Kingfisher;
+		};
+		1D7001542D8AC87100A348EC /* Swinject */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 1D7001532D8AC87100A348EC /* XCRemoteSwiftPackageReference "Swinject" */;
+			productName = Swinject;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 1D7000772D89AABE00A348EC /* Project object */;
 }

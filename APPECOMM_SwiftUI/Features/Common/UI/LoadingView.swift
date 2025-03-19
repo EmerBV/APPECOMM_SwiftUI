@@ -13,12 +13,12 @@ struct LoadingView: View {
             Color.black.opacity(0.3)
                 .edgesIgnoringSafeArea(.all)
             
-            VStack {
+            VStack(spacing: 16) {
                 ProgressView()
                     .scaleEffect(1.5)
-                    .padding()
+                    .progressViewStyle(CircularProgressViewStyle(tint: .white))
                 
-                Text("Cargando...")
+                Text("Loading...")
                     .font(.headline)
                     .foregroundColor(.white)
             }
@@ -29,5 +29,6 @@ struct LoadingView: View {
                     .shadow(radius: 10)
             )
         }
+        .zIndex(1000)
     }
 }

@@ -8,11 +8,30 @@
 import SwiftUI
 
 struct PrimaryButton: View {
+    let title: String
+    let isLoading: Bool
+    let isEnabled: Bool
+    let action: () -> Void
+    
     var body: some View {
-        Text(/*@START_MENU_TOKEN@*/"Hello, World!"/*@END_MENU_TOKEN@*/)
+        Button(action: action) {
+            HStack {
+                if isLoading {
+                    ProgressView()
+                        .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                        .padding(.trailing, 8)
+                }
+                
+                Text(title)
+                    .font(.headline)
+                    .fontWeight(.semibold)
+            }
+            .frame(maxWidth: .infinity)
+            .padding()
+            .background(isEnabled ? Color.blue : Color.gray)
+            .foregroundColor(.white)
+            .cornerRadius(10)
+        }
+        .disabled(!isEnabled || isLoading)
     }
-}
-
-#Preview {
-    PrimaryButton()
 }

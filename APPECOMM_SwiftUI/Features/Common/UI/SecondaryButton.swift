@@ -8,11 +8,19 @@
 import SwiftUI
 
 struct SecondaryButton: View {
+    let title: String
+    let action: () -> Void
+    
     var body: some View {
-        Text(/*@START_MENU_TOKEN@*/"Hello, World!"/*@END_MENU_TOKEN@*/)
+        Button(action: action) {
+            Text(title)
+                .font(.headline)
+                .fontWeight(.semibold)
+                .frame(maxWidth: .infinity)
+                .padding()
+                .background(Color(.systemGray6))
+                .foregroundColor(.primary)
+                .cornerRadius(10)
+        }
     }
-}
-
-#Preview {
-    SecondaryButton()
 }

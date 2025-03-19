@@ -8,11 +8,36 @@
 import SwiftUI
 
 struct ErrorToast: View {
+    let message: String
+    let onDismiss: () -> Void
+    
     var body: some View {
-        Text(/*@START_MENU_TOKEN@*/"Hello, World!"/*@END_MENU_TOKEN@*/)
+        VStack {
+            Spacer()
+            
+            HStack(spacing: 12) {
+                Image(systemName: "exclamationmark.circle.fill")
+                    .foregroundColor(.white)
+                
+                Text(message)
+                    .foregroundColor(.white)
+                    .font(.subheadline)
+                
+                Spacer()
+                
+                Button(action: onDismiss) {
+                    Image(systemName: "xmark")
+                        .foregroundColor(.white)
+                }
+            }
+            .padding()
+            .background(Color.red)
+            .cornerRadius(10)
+            .padding(.horizontal)
+            .padding(.bottom)
+        }
+        .transition(.move(edge: .bottom))
+        .animation(.spring())
+        .zIndex(100)
     }
-}
-
-#Preview {
-    ErrorToast()
 }

@@ -1,5 +1,5 @@
 //
-//  Product.swift
+//  ProductModels.swift
 //  APPECOMM_SwiftUI
 //
 //  Created by Emerson Balahan Varona on 18/3/25.
@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct Product: Identifiable, Codable {
+struct Product: Identifiable, Codable, Equatable {
     let id: Int
     let name: String
     let brand: String
@@ -24,8 +24,30 @@ struct Product: Identifiable, Codable {
     let variants: [Variant]?
     let images: [ImageDto]?
     
-    enum CodingKeys: String, CodingKey {
-        case id, name, brand, price, inventory, description, category
-        case discountPercentage, status, salesCount, wishCount, preOrder, createdAt, variants, images
+    static func == (lhs: Product, rhs: Product) -> Bool {
+        return lhs.id == rhs.id
     }
+}
+
+struct Category: Codable, Equatable {
+    let id: Int
+    let name: String
+}
+
+struct Variant: Identifiable, Codable, Equatable {
+    let id: Int
+    let name: String
+    let price: Decimal
+    let inventory: Int
+}
+
+struct ImageDto: Identifiable, Codable, Equatable {
+    let id: Int
+    let fileName: String
+    let downloadUrl: String
+}
+
+enum ProductStatus: String, Codable, Equatable {
+    case inStock = "IN_STOCK"
+    case outOfStock = "OUT_OF_STOCK"
 }
