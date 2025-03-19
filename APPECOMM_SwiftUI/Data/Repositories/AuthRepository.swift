@@ -14,6 +14,8 @@ protocol AuthRepositoryProtocol {
     func login(email: String, password: String) -> AnyPublisher<User, Error>
     func logout() -> AnyPublisher<Void, Error>
     func checkAuthStatus() -> AnyPublisher<User?, Error>
+    
+    func debugAuthState()
 }
 
 enum AuthState: Equatable {
@@ -69,29 +71,24 @@ final class AuthRepository: AuthRepositoryProtocol {
     }
     
     func login(email: String, password: String) -> AnyPublisher<User, Error> {
+        print("AuthRepository: Starting login process")
         authState.send(.loading)
         
         return authService.login(email: email, password: password)
-            .tryMap { [weak self] response -> AuthToken in
-                guard let self = self else {
-                    throw NSError(domain: "AuthRepository", code: -1, userInfo: [NSLocalizedDescriptionKey: "Self is nil"])
-                }
-                
-                try self.tokenManager.saveTokens(
-                    accessToken: response.data.token,
-                    refreshToken: nil, // La API no devuelve refresh token
-                    userId: response.data.id
+            .map { authToken -> AuthToken in
+                print("AuthRepository: Processing login response")
+                try? self.tokenManager.saveTokens(
+                    accessToken: authToken.token,
+                    refreshToken: nil,
+                    userId: authToken.id
                 )
                 
-                return response.data
+                return authToken
             }
-            .flatMap { [weak self] authToken -> AnyPublisher<User, Error> in
-                guard let self = self else {
-                    return Fail(error: NSError(domain: "AuthRepository", code: -1, userInfo: [NSLocalizedDescriptionKey: "Self is nil"])).eraseToAnyPublisher()
-                }
+            .map { authToken -> User in
+                print("AuthRepository: Creating user object for ID: \(authToken.id)")
                 
-                // Crear un usuario ficticio para esta demostración
-                // En un caso real, haríamos una llamada al servidor para obtener los datos completos del usuario
+                // Crear un usuario con los datos que tenemos
                 let user = User(
                     id: authToken.id,
                     firstName: "Usuario",
@@ -105,13 +102,16 @@ final class AuthRepository: AuthRepositoryProtocol {
                 // Guardar el usuario en UserDefaults
                 self.userDefaultsManager.save(object: user, forKey: Self.userKey)
                 
+                print("AuthRepository: Sending loggedIn state with user ID: \(user.id)")
                 self.authState.send(.loggedIn(user))
                 
-                return Just(user)
-                    .setFailureType(to: Error.self)
-                    .eraseToAnyPublisher()
+                return user
             }
-            .mapError { $0 }
+            .mapError { error -> Error in
+                print("AuthRepository: Login failed with error: \(error)")
+                self.authState.send(.loggedOut)
+                return error
+            }
             .eraseToAnyPublisher()
     }
     
@@ -151,5 +151,21 @@ final class AuthRepository: AuthRepositoryProtocol {
         return Just(nil)
             .setFailureType(to: Error.self)
             .eraseToAnyPublisher()
+    }
+    
+    func debugAuthState() {
+        // Verificar el token
+        print("DEBUG: Token exists: \(tokenManager.hasValidToken())")
+        
+        // Verificar el usuario guardado
+        if let user: User = userDefaultsManager.get(objectType: User.self, forKey: Self.userKey) {
+            print("DEBUG: User exists: \(user.id) - \(user.email)")
+        } else {
+            print("DEBUG: No user found in storage")
+        }
+        
+        // Estado actual
+        let currentAuthState = authState.value
+        print("DEBUG: Current auth state: \(currentAuthState)")
     }
 }

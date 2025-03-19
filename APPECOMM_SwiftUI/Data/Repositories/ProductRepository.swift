@@ -23,7 +23,17 @@ final class ProductRepository: ProductRepositoryProtocol {
     }
     
     func getAllProducts() -> AnyPublisher<[Product], Error> {
+        print("ProductRepository: Getting all products")
         return productService.getAllProducts()
+            .handleEvents(receiveOutput: { products in
+                print("ProductRepository: Received \(products.count) products")
+            }, receiveCompletion: { completion in
+                if case .failure(let error) = completion {
+                    print("ProductRepository: Failed to get products: \(error)")
+                } else {
+                    print("ProductRepository: Successfully completed products request")
+                }
+            })
             .mapError { $0 }
             .eraseToAnyPublisher()
     }

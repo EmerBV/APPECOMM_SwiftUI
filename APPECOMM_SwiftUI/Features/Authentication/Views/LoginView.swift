@@ -128,7 +128,11 @@ struct LoginView: View {
                 // Loading overlay
                 if viewModel.isLoginInProgress {
                     LoadingView()
+                        .onReceive(NotificationCenter.default.publisher(for: Notification.Name("UserLoggedIn"))) { _ in
+                            print("LoginView: Received UserLoggedIn notification")
+                        }
                 }
+                
             }
             .navigationBarHidden(true)
         }

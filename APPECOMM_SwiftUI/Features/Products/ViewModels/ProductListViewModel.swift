@@ -53,6 +53,7 @@ class ProductListViewModel: ObservableObject {
     }
     
     func loadProducts() {
+        print("ProductListViewModel: Loading products")
         isLoading = true
         errorMessage = nil
         
@@ -62,9 +63,28 @@ class ProductListViewModel: ObservableObject {
                 self?.isLoading = false
                 
                 if case .failure(let error) = completion {
-                    self?.errorMessage = error.localizedDescription
+                    print("ProductListViewModel: Error loading products: \(error)")
+                    
+                    // Mensajes de error más específicos basados en el tipo de error
+                    if let networkError = error as? NetworkError {
+                        switch networkError {
+                        case .decodingError:
+                            self?.errorMessage = "Error al procesar la respuesta. Formato inesperado de datos."
+                        case .serverError:
+                            self?.errorMessage = "Error del servidor. Intente más tarde."
+                        case .unauthorized:
+                            self?.errorMessage = "Sesión expirada. Inicie sesión nuevamente."
+                        default:
+                            self?.errorMessage = networkError.localizedDescription
+                        }
+                    } else {
+                        self?.errorMessage = error.localizedDescription
+                    }
+                } else {
+                    print("ProductListViewModel: Products loaded successfully")
                 }
             } receiveValue: { [weak self] products in
+                print("ProductListViewModel: Received \(products.count) products")
                 self?.products = products
             }
             .store(in: &cancellables)

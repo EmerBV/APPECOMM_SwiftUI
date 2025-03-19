@@ -20,9 +20,15 @@ struct Product: Identifiable, Codable, Equatable {
     let salesCount: Int
     let wishCount: Int
     let preOrder: Bool
-    let createdAt: String
+    let createdAt: String  // Asegurarnos de que esto sea String para la fecha
     let variants: [Variant]?
     let images: [ImageDto]?
+    
+    // Añadir CodingKeys solo si los nombres no coinciden exactamente
+    enum CodingKeys: String, CodingKey {
+        case id, name, brand, price, inventory, description, category
+        case discountPercentage, status, salesCount, wishCount, preOrder, createdAt, variants, images
+    }
     
     static func == (lhs: Product, rhs: Product) -> Bool {
         return lhs.id == rhs.id

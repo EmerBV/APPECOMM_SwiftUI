@@ -10,6 +10,10 @@ import SwiftUI
 struct MainTabView: View {
     @State private var selectedTab = 0
     
+    init() {
+        print("MainTabView: Initializing")
+    }
+    
     var body: some View {
         TabView(selection: $selectedTab) {
             NavigationView {
@@ -19,6 +23,9 @@ struct MainTabView: View {
                 Label("Products", systemImage: "bag")
             }
             .tag(0)
+            .onAppear {
+                print("MainTabView: Products tab appeared")
+            }
             
             NavigationView {
                 Text("Cart Screen")
@@ -36,6 +43,9 @@ struct MainTabView: View {
                 Label("Profile", systemImage: "person")
             }
             .tag(2)
+        }
+        .onAppear {
+            print("MainTabView: TabView appeared")
         }
     }
 }

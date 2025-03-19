@@ -13,7 +13,11 @@ struct ContentView: View {
     init() {
         // Obtener las dependencias necesarias
         let authRepository = DependencyInjector.shared.resolve(AuthRepositoryProtocol.self)
-        _coordinator = StateObject(wrappedValue: AppCoordinator(authRepository: authRepository))
+        let tokenManager = DependencyInjector.shared.resolve(TokenManagerProtocol.self)
+        _coordinator = StateObject(wrappedValue: AppCoordinator(
+            authRepository: authRepository,
+            tokenManager: tokenManager
+        ))
     }
     
     var body: some View {
@@ -21,13 +25,26 @@ struct ContentView: View {
             switch coordinator.currentScreen {
             case .splash:
                 SplashView()
+                    .onAppear {
+                        print("ContentView: SplashView appeared")
+                    }
             case .login:
                 LoginView(viewModel: DependencyInjector.shared.resolve(AuthViewModel.self))
+                    .onAppear {
+                        print("ContentView: LoginView appeared")
+                    }
             case .main:
                 MainTabView()
+                    .onAppear {
+                        print("ContentView: MainTabView appeared")
+                    }
             }
         }
+        .onChange(of: coordinator.currentScreen) { newValue in
+            print("ContentView: Screen changed to \(newValue)")
+        }
     }
+    
 }
 
 struct SplashView: View {
@@ -42,7 +59,7 @@ struct SplashView: View {
                     .frame(width: 100, height: 100)
                     .foregroundColor(.white)
                 
-                Text("APPECOMM")
+                Text("eCommDB")
                     .font(.largeTitle)
                     .fontWeight(.bold)
                     .foregroundColor(.white)
@@ -53,5 +70,9 @@ struct SplashView: View {
                     .padding(.top, 32)
             }
         }
+        .onAppear {
+            print("SplashView: appeared")
+        }
     }
+    
 }

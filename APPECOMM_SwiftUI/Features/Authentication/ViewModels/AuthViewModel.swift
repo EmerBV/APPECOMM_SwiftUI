@@ -75,11 +75,15 @@ class AuthViewModel: ObservableObject {
     
     // Acciones
     func login() {
+        print("AuthViewModel: Starting login process")
         // Validar todos los campos antes de enviar
         validateEmail()
         validatePassword()
         
-        guard isFormValid else { return }
+        guard isFormValid else {
+            print("AuthViewModel: Form validation failed")
+            return
+        }
         
         isLoginInProgress = true
         errorMessage = nil
@@ -87,14 +91,20 @@ class AuthViewModel: ObservableObject {
         authRepository.login(email: email, password: password)
             .receive(on: DispatchQueue.main)
             .sink { [weak self] completion in
+                print("AuthViewModel: Login process completed")
                 self?.isLoginInProgress = false
                 
                 if case .failure(let error) = completion {
+                    print("AuthViewModel: Login failed with error: \(error.localizedDescription)")
                     self?.errorMessage = error.localizedDescription
                 }
-            } receiveValue: { [weak self] _ in
+            } receiveValue: { [weak self] user in
+                print("AuthViewModel: Login succeeded for user ID: \(user.id)")
                 self?.successMessage = "Login successful"
                 self?.resetForm()
+                
+                // Notificar explícitamente el login exitoso
+                NotificationCenter.default.post(name: Notification.Name("UserLoggedIn"), object: user)
             }
             .store(in: &cancellables)
     }
