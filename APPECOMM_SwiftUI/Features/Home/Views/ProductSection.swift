@@ -65,7 +65,18 @@ private struct ProductCardView: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            ProductImage(imageUrl: product.images?.first?.downloadUrl, baseURL: baseURL)
+            ZStack(alignment: .topTrailing) {
+                ProductImage(
+                    imageUrl: product.images?.first?.downloadUrl,
+                    baseURL: baseURL,
+                    isOutOfStock: product.status == .outOfStock
+                )
+                
+                if product.preOrder {
+                    StatusBadge.preOrder
+                        .padding(8)
+                }
+            }
             
             ProductInfo(product: product, viewModel: viewModel)
         }
@@ -76,6 +87,7 @@ private struct ProductCardView: View {
 private struct ProductImage: View {
     let imageUrl: String?
     let baseURL: String
+    let isOutOfStock: Bool
     
     var body: some View {
         if let imageUrl = imageUrl {
@@ -94,6 +106,17 @@ private struct ProductImage: View {
                     .frame(width: 160, height: 160)
                     .clipped()
                     .cornerRadius(8)
+                    .overlay {
+                        if isOutOfStock {
+                            Color.black.opacity(0.3)
+                                .overlay {
+                                    Text("Sin Stock")
+                                        .font(.caption)
+                                        .fontWeight(.semibold)
+                                        .foregroundColor(.white)
+                                }
+                        }
+                    }
             } else {
                 Image(systemName: "photo")
                     .font(.largeTitle)

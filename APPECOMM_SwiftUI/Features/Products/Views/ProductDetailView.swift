@@ -252,7 +252,7 @@ struct ProductHeaderView: View {
                 .foregroundColor(.secondary)
             
             HStack {
-                StatusBadge(status: product.status)
+                ProductDetailStatusBadge(status: product.status)
                 
                 Spacer()
                 

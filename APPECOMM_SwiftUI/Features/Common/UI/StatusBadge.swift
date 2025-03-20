@@ -7,17 +7,36 @@
 
 import SwiftUI
 
-struct StatusBadge: View {
-    let status: ProductStatus
+enum StatusBadge: View {
+    case outOfStock
+    case preOrder
     
     var body: some View {
-        Text(status == .inStock ? "In Stock" : "Out of Stock")
+        Text(text)
             .font(.caption)
             .fontWeight(.semibold)
             .padding(.horizontal, 8)
             .padding(.vertical, 4)
-            .background(status == .inStock ? Color.green : Color.red)
+            .background(color)
             .foregroundColor(.white)
             .cornerRadius(4)
+    }
+    
+    private var text: String {
+        switch self {
+        case .outOfStock:
+            return "Sin Stock"
+        case .preOrder:
+            return "Pre-order"
+        }
+    }
+    
+    private var color: Color {
+        switch self {
+        case .outOfStock:
+            return .red
+        case .preOrder:
+            return .blue
+        }
     }
 }
