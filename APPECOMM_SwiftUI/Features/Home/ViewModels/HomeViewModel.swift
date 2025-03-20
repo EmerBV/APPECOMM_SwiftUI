@@ -21,6 +21,9 @@ class HomeViewModel: ObservableObject {
     private let productRepository: ProductRepositoryProtocol
     private var cancellables = Set<AnyCancellable>()
     
+    // Product List ViewModel
+    let productListViewModel: ProductListViewModel
+    
     // Formatters - reused for better performance
     private let currencyFormatter: NumberFormatter = {
         let formatter = NumberFormatter()
@@ -31,81 +34,52 @@ class HomeViewModel: ObservableObject {
     
     init(productRepository: ProductRepositoryProtocol) {
         self.productRepository = productRepository
+        self.productListViewModel = DependencyInjector.shared.resolve(ProductListViewModel.self)
         
         // Set up notification observer for user login
         NotificationCenter.default.publisher(for: Notification.Name("UserLoggedInPreloadHome"))
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in
                 Logger.info("Received user login notification, preloading Home data")
-                self?.loadData()
+                Task { @MainActor in
+                    await self?.loadData()
+                }
             }
             .store(in: &cancellables)
     }
     
-    func loadData() {
+    @MainActor
+    func loadInitialDataIfNeeded() async {
+        guard newProducts.isEmpty && bestSellingProducts.isEmpty && categories.isEmpty else { return }
+        await loadData()
+    }
+    
+    func dismissError() {
+        errorMessage = nil
+    }
+    
+    @MainActor
+    func loadData() async {
         guard !isLoading else { return }
         
         isLoading = true
         errorMessage = nil
         
-        // Using a dispatch group to coordinate multiple requests
-        let dispatchGroup = DispatchGroup()
-        
-        // Load categories from API
-        dispatchGroup.enter()
-        loadCategories { [weak self] in
-            dispatchGroup.leave()
-        }
-        
-        // Load products
-        dispatchGroup.enter()
-        loadProducts { [weak self] in
-            dispatchGroup.leave()
-        }
-        
-        // When all requests complete, update the UI
-        dispatchGroup.notify(queue: .main) { [weak self] in
-            self?.isLoading = false
-            Logger.info("Home data loading completed")
-        }
-    }
-    
-    private func loadCategories(completion: @escaping () -> Void) {
-        Logger.info("Loading categories from API")
-        
-        productRepository.getAllCategories()
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] completionStatus in
-                if case .failure(let error) = completionStatus {
-                    Logger.error("Error loading categories: \(error)")
-                    self?.errorMessage = "Failed to load categories: \(error.localizedDescription)"
-                }
-                completion()
-            } receiveValue: { [weak self] categories in
-                // Extract category names and sort them
-                self?.categories = categories.map { $0.name }.sorted()
-                Logger.info("Loaded \(categories.count) categories from API")
+        do {
+            // Load categories
+            let categoriesPublisher = productRepository.getAllCategories()
+            for try await categories in categoriesPublisher.values {
+                self.categories = categories.map { $0.name }.sorted()
+                Logger.info("Loaded \(self.categories.count) categories from API")
+                break
             }
-            .store(in: &cancellables)
-    }
-    
-    private func loadProducts(completion: @escaping () -> Void) {
-        Logger.info("Loading products for home screen")
-        
-        productRepository.getAllProducts()
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] completionStatus in
-                if case .failure(let error) = completionStatus {
-                    Logger.error("Error loading products: \(error)")
-                    self?.errorMessage = "Failed to load products: \(error.localizedDescription)"
-                }
-                completion()
-            } receiveValue: { [weak self] products in
-                guard let self = self else { return }
-                
+            
+            // Load products
+            let productsPublisher = productRepository.getAllProducts()
+            for try await products in productsPublisher.values {
                 // Process recent products (newest first)
                 self.newProducts = products
-                    .sorted(by: { self.compareCreationDates($0.createdAt, $1.createdAt) })
+                    .sorted(by: { compareCreationDates($0.createdAt, $1.createdAt) })
                     .prefix(10)
                     .map { $0 }
                 Logger.info("Loaded \(self.newProducts.count) recent products")
@@ -116,8 +90,16 @@ class HomeViewModel: ObservableObject {
                     .prefix(10)
                     .map { $0 }
                 Logger.info("Loaded \(self.bestSellingProducts.count) best selling products")
+                break
             }
-            .store(in: &cancellables)
+            
+        } catch {
+            Logger.error("Error loading data: \(error)")
+            self.errorMessage = "Failed to load data: \(error.localizedDescription)"
+        }
+        
+        isLoading = false
+        Logger.info("Home data loading completed")
     }
     
     // Helper function to compare creation dates
