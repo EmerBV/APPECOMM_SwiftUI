@@ -5,6 +5,11 @@ struct SearchView: View {
     @ObservedObject var viewModel: ProductListViewModel
     @State private var searchText = ""
     
+    private let columns = [
+        GridItem(.flexible(), spacing: 16),
+        GridItem(.flexible(), spacing: 16)
+    ]
+    
     var body: some View {
         NavigationView {
             VStack(spacing: 0) {
@@ -53,12 +58,25 @@ struct SearchView: View {
                     }
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else {
-                    List(viewModel.filteredProducts) { product in
-                        NavigationLink(destination: ProductDetailView(product: product, viewModel: viewModel)) {
-                            ProductRowView(product: product, viewModel: viewModel)
+                    ScrollView(showsIndicators: false) {
+                        LazyVGrid(columns: columns, spacing: 16) {
+                            ForEach(viewModel.filteredProducts) { product in
+                                NavigationLink(
+                                    destination: ProductDetailView(
+                                        product: product,
+                                        viewModel: viewModel
+                                    )
+                                ) {
+                                    ProductRowView(
+                                        product: product,
+                                        viewModel: viewModel
+                                    )
+                                }
+                            }
                         }
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 16)
                     }
-                    .listStyle(PlainListStyle())
                 }
             }
             .navigationTitle("Search")
