@@ -5,24 +5,38 @@ struct ProductRowView: View {
     let product: Product
     let viewModel: ProductListViewModel
     
+    private var baseURL: String {
+        AppConfig.shared.imageBaseUrl
+    }
+    
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             // Imagen del producto
-            if let firstImage = product.images?.first,
-               let imageUrl = URL(string: firstImage.downloadUrl) {
-                KFImage(imageUrl)
-                    .placeholder {
-                        ProgressView()
-                            .frame(height: 180)
-                    }
-                    .onFailure { error in
-                        print("Error cargando imagen: \(error.localizedDescription)")
-                    }
-                    .fade(duration: 0.3)
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
-                    .frame(height: 180)
-                    .clipped()
+            if let firstImage = product.images?.first {
+                let fullImageUrl = "\(baseURL)\(firstImage.downloadUrl)"
+                
+                if let imageUrl = URL(string: fullImageUrl) {
+                    KFImage(imageUrl)
+                        .placeholder {
+                            ProgressView()
+                                .frame(height: 180)
+                        }
+                        .onFailure { error in
+                            Logger.error("Error al cargar imagen: \(error.localizedDescription)")
+                        }
+                        .fade(duration: 0.3)
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                        .frame(height: 180)
+                        .clipped()
+                } else {
+                    Image(systemName: "photo")
+                        .font(.system(size: 30))
+                        .foregroundColor(.gray)
+                        .frame(height: 180)
+                        .frame(maxWidth: .infinity)
+                        .background(Color.gray.opacity(0.2))
+                }
             } else {
                 Image(systemName: "photo")
                     .font(.system(size: 30))

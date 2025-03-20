@@ -25,6 +25,17 @@ enum AppEnvironment: String {
         }
     }
     
+    var imageBaseUrl: String {
+        switch self {
+        case .development:
+            return "http://localhost:9091/ecommdb"
+        case .staging:
+            return "https://staging-api.ecommdb.example.com"
+        case .production:
+            return "https://api.ecommdb.example.com"
+        }
+    }
+    
     var timeout: TimeInterval {
         switch self {
         case .development:
@@ -47,6 +58,7 @@ class AppConfig {
     private(set) var appVersion: String
     private(set) var buildNumber: String
     private(set) var apiBaseUrl: String
+    private(set) var imageBaseUrl: String
     private(set) var apiTimeout: TimeInterval
     private(set) var enableAnalytics: Bool
     private(set) var enableCrashReporting: Bool
@@ -75,6 +87,7 @@ class AppConfig {
         self.buildNumber = bundle.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "1"
         
         self.apiBaseUrl = environment.baseUrl
+        self.imageBaseUrl = environment.imageBaseUrl
         self.apiTimeout = environment.timeout
         
         // Log de la configuración para debug
@@ -83,6 +96,7 @@ class AppConfig {
             Logger.info("- Entorno: \(environment.rawValue)")
             Logger.info("- Versión: \(appVersion) (\(buildNumber))")
             Logger.info("- API URL: \(apiBaseUrl)")
+            Logger.info("- Image URL: \(imageBaseUrl)")
             Logger.info("- Timeout: \(apiTimeout)s")
             Logger.info("- Analytics: \(enableAnalytics ? "Habilitado" : "Deshabilitado")")
             Logger.info("- Crash Reporting: \(enableCrashReporting ? "Habilitado" : "Deshabilitado")")

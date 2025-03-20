@@ -1,4 +1,5 @@
 import SwiftUI
+import Kingfisher
 
 struct ProductSection: View {
     let title: String
@@ -6,11 +7,15 @@ struct ProductSection: View {
     let products: [Product]
     let viewModel: HomeViewModel
     
+    private var baseURL: String {
+        AppConfig.shared.imageBaseUrl
+    }
+    
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             SectionHeader(title: title, subtitle: subtitle)
             
-            ProductScrollView(products: products, viewModel: viewModel)
+            ProductScrollView(products: products, viewModel: viewModel, baseURL: baseURL)
         }
         .padding(.vertical, 8)
     }
@@ -37,13 +42,14 @@ private struct SectionHeader: View {
 private struct ProductScrollView: View {
     let products: [Product]
     let viewModel: HomeViewModel
+    let baseURL: String
     
     var body: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 16) {
                 ForEach(products) { product in
                     NavigationLink(destination: ProductDetailView(product: product, viewModel: viewModel.productListViewModel)) {
-                        ProductCardView(product: product, viewModel: viewModel)
+                        ProductCardView(product: product, viewModel: viewModel, baseURL: baseURL)
                     }
                 }
             }
@@ -55,10 +61,11 @@ private struct ProductScrollView: View {
 private struct ProductCardView: View {
     let product: Product
     let viewModel: HomeViewModel
+    let baseURL: String
     
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            ProductImage(imageUrl: product.images?.first?.downloadUrl)
+            ProductImage(imageUrl: product.images?.first?.downloadUrl, baseURL: baseURL)
             
             ProductInfo(product: product, viewModel: viewModel)
         }
@@ -68,38 +75,40 @@ private struct ProductCardView: View {
 
 private struct ProductImage: View {
     let imageUrl: String?
+    let baseURL: String
     
     var body: some View {
-        if let imageUrl = imageUrl, let url = URL(string: imageUrl) {
-            AsyncImage(url: url) { phase in
-                switch phase {
-                case .empty:
-                    ProgressView()
-                case .success(let image):
-                    image
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                case .failure:
-                    Image(systemName: "photo")
-                        .font(.largeTitle)
-                        .foregroundColor(.gray)
-                @unknown default:
-                    Color.gray
-                }
+        if let imageUrl = imageUrl {
+            let fullImageUrl = "\(baseURL)\(imageUrl)"
+            if let url = URL(string: fullImageUrl) {
+                KFImage(url)
+                    .placeholder {
+                        ProgressView()
+                    }
+                    .onFailure { error in
+                        Logger.error("Error al cargar imagen: \(error.localizedDescription)")
+                    }
+                    .fade(duration: 0.3)
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+                    .frame(width: 160, height: 160)
+                    .clipped()
+                    .cornerRadius(8)
+            } else {
+                Image(systemName: "photo")
+                    .font(.largeTitle)
+                    .foregroundColor(.gray)
+                    .frame(width: 160, height: 160)
+                    .background(Color.gray.opacity(0.3))
+                    .cornerRadius(8)
             }
-            .frame(width: 160, height: 160)
-            .clipped()
-            .cornerRadius(8)
         } else {
-            Rectangle()
-                .fill(Color.gray.opacity(0.3))
+            Image(systemName: "photo")
+                .font(.largeTitle)
+                .foregroundColor(.gray)
                 .frame(width: 160, height: 160)
+                .background(Color.gray.opacity(0.3))
                 .cornerRadius(8)
-                .overlay(
-                    Image(systemName: "photo")
-                        .font(.largeTitle)
-                        .foregroundColor(.gray)
-                )
         }
     }
 }
