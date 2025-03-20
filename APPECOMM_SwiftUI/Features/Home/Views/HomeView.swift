@@ -21,7 +21,7 @@ struct HomeView: View {
             HomeContentView(viewModel: viewModel)
                 .toolbar {
                     ToolbarItem(placement: .navigationBarLeading) {
-                        Image("logo") // Asegúrate de tener una imagen llamada "logo" en tus assets
+                        Image("logo")
                             .resizable()
                             .scaledToFit()
                             .frame(height: 30)
@@ -128,11 +128,12 @@ private struct CategoriesSection: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             Text("Featured Categories")
-                .font(.headline)
+                .font(.title3)
+                .fontWeight(.bold)
                 .padding(.horizontal)
             
             ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 16) {
+                HStack(alignment: .top, spacing: 20) {
                     if isLoading {
                         ForEach(0..<6, id: \.self) { _ in
                             CategoryPlaceholderView()
@@ -142,10 +143,12 @@ private struct CategoriesSection: View {
                             NavigationLink(destination: makeCategoryDestination(for: category)) {
                                 CategoryItemView(name: category)
                             }
+                            .buttonStyle(PlainButtonStyle())
                         }
                     }
                 }
                 .padding(.horizontal)
+                .padding(.bottom, 8)
             }
         }
         .padding(.top, 8)
@@ -160,4 +163,3 @@ private struct CategoriesSection: View {
     }
 }
 
-// Rest of the code remains the same...
