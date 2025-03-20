@@ -6,49 +6,110 @@
 //
 
 import SwiftUI
+import Combine
+import UserNotifications
 
 @main
 struct APPECOMM_SwiftUIApp: App {
-    // Inicializar dependencias al inicio de la aplicación
+    @StateObject private var appState = AppState()
+    @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
+    
     init() {
-        // Configuración de la app
-        _ = AppConfig.shared
-        
-        // Inicializar el contenedor de DI
-        _ = DependencyInjector.shared
-        
-        // Configurar apariencia global
+        // Initialize core app dependencies
+        configureDependencies()
         configureAppearance()
         
-        Logger.info("Aplicación inicializada correctamente")
+        #if DEBUG
+        Logger.info("App initialized in debug mode [Version: \(Bundle.main.fullVersion)]")
+        Logger.debug("Debug logging enabled")
+        #else
+        Logger.info("App initialized in production mode [Version: \(Bundle.main.fullVersion)]")
+        Logger.configure(level: .info) // Restrict logging in production
+        #endif
     }
     
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .environmentObject(appState)
+                .onAppear {
+                    registerForPushNotifications()
+                }
+                .onReceive(NotificationCenter.default.publisher(for: UIApplication.willEnterForegroundNotification)) { _ in
+                    appState.refreshData()
+                }
         }
     }
     
+    private func configureDependencies() {
+        // Initialize app configuration
+        _ = AppConfig.shared
+        
+        // Setup dependency injection
+        _ = DependencyInjector.shared
+    }
+    
     private func configureAppearance() {
-        // Configuración de navegación para toda la app
-        let navigationBarAppearance = UINavigationBarAppearance()
-        navigationBarAppearance.configureWithOpaqueBackground()
-        navigationBarAppearance.backgroundColor = UIColor.systemBackground
-        navigationBarAppearance.titleTextAttributes = [.foregroundColor: UIColor.label]
-        navigationBarAppearance.largeTitleTextAttributes = [.foregroundColor: UIColor.label]
+        configureNavigationBar()
+        configureTabBar()
+    }
+    
+    private func configureNavigationBar() {
+        let appearance = UINavigationBarAppearance()
+        appearance.configureWithOpaqueBackground()
+        appearance.backgroundColor = .systemBackground
+        appearance.titleTextAttributes = [.foregroundColor: UIColor.label]
+        appearance.largeTitleTextAttributes = [.foregroundColor: UIColor.label]
         
-        UINavigationBar.appearance().standardAppearance = navigationBarAppearance
-        UINavigationBar.appearance().compactAppearance = navigationBarAppearance
-        UINavigationBar.appearance().scrollEdgeAppearance = navigationBarAppearance
+        UINavigationBar.appearance().standardAppearance = appearance
+        UINavigationBar.appearance().compactAppearance = appearance
+        UINavigationBar.appearance().scrollEdgeAppearance = appearance
+    }
+    
+    private func configureTabBar() {
+        let appearance = UITabBarAppearance()
+        appearance.configureWithOpaqueBackground()
+        appearance.backgroundColor = .systemBackground
         
-        // Configuración de TabBar
-        let tabBarAppearance = UITabBarAppearance()
-        tabBarAppearance.configureWithOpaqueBackground()
-        tabBarAppearance.backgroundColor = UIColor.systemBackground
-        
-        UITabBar.appearance().standardAppearance = tabBarAppearance
+        UITabBar.appearance().standardAppearance = appearance
         if #available(iOS 15.0, *) {
-            UITabBar.appearance().scrollEdgeAppearance = tabBarAppearance
+            UITabBar.appearance().scrollEdgeAppearance = appearance
         }
+    }
+    
+    private func registerForPushNotifications() {
+        Task {
+            do {
+                try await NotificationManager.shared.requestAuthorization()
+                await NotificationManager.shared.registerForRemoteNotifications()
+            } catch {
+                Logger.error("Failed to register for notifications: \(error)")
+            }
+        }
+    }
+}
+
+class AppDelegate: NSObject, UIApplicationDelegate {
+    func application(_ application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
+        NotificationManager.shared.handleNotificationRegistration(application, didRegisterForRemoteNotificationsWithDeviceToken: deviceToken)
+    }
+    
+    func application(_ application: UIApplication, didFailToRegisterForRemoteNotificationsWithError error: Error) {
+        NotificationManager.shared.handleNotificationRegistration(application, didFailToRegisterForRemoteNotificationsWithError: error)
+    }
+    
+    // MARK: - Deep Linking
+    
+    func application(_ app: UIApplication, open url: URL, options: [UIApplication.OpenURLOptionsKey : Any] = [:]) -> Bool {
+        DeepLinkManager.shared.handleDeepLink(url)
+        return true
+    }
+    
+    func application(_ application: UIApplication, continue userActivity: NSUserActivity, restorationHandler: @escaping ([UIUserActivityRestoring]?) -> Void) -> Bool {
+        if let url = userActivity.webpageURL {
+            DeepLinkManager.shared.handleDeepLink(url)
+            return true
+        }
+        return false
     }
 }
