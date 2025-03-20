@@ -32,6 +32,12 @@ final class ViewModelAssembly: Assembly {
             )
         }.inObjectScope(.container) // Singleton para mantener estado consistente
         
+        // Home ViewModel
+        container.register(HomeViewModel.self) { r in
+            let productRepository = r.resolve(ProductRepositoryProtocol.self)!
+            return HomeViewModel(productRepository: productRepository)
+        }.inObjectScope(.container) // Singleton para mantener estado consistente
+        
         // Profile ViewModel
         container.register(ProfileViewModel.self) { r in
             let userRepository = r.resolve(UserRepositoryProtocol.self)!

@@ -17,12 +17,23 @@ struct MainTabView: View {
     var body: some View {
         TabView(selection: $selectedTab) {
             NavigationView {
+                HomeView(viewModel: DependencyInjector.shared.resolve(HomeViewModel.self))
+            }
+            .tabItem {
+                Label("Home", systemImage: "house")
+            }
+            .tag(0)
+            .onAppear {
+                print("MainTabView: Home tab appeared")
+            }
+            
+            NavigationView {
                 ProductListView(viewModel: DependencyInjector.shared.resolve(ProductListViewModel.self))
             }
             .tabItem {
                 Label("Products", systemImage: "bag")
             }
-            .tag(0)
+            .tag(1)
             .onAppear {
                 print("MainTabView: Products tab appeared")
             }
@@ -34,7 +45,7 @@ struct MainTabView: View {
             .tabItem {
                 Label("Cart", systemImage: "cart")
             }
-            .tag(1)
+            .tag(2)
             
             NavigationView {
                 ProfileView(viewModel: DependencyInjector.shared.resolve(ProfileViewModel.self))
@@ -42,7 +53,7 @@ struct MainTabView: View {
             .tabItem {
                 Label("Profile", systemImage: "person")
             }
-            .tag(2)
+            .tag(3)
         }
         .onAppear {
             print("MainTabView: TabView appeared")

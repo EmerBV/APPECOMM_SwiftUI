@@ -30,6 +30,13 @@ class AppCoordinator: ObservableObject {
                 case .loggedIn(let user):
                     Logger.info("Usuario logueado: \(user.id), cambiando a pantalla principal")
                     self.currentScreen = .main
+                    
+                    // Send a notification to pre-load data for the home view
+                    NotificationCenter.default.post(
+                        name: Notification.Name("UserLoggedInPreloadHome"),
+                        object: nil,
+                        userInfo: ["userId": user.id]
+                    )
                 case .loggedOut:
                     Logger.info("Usuario deslogueado, cambiando a pantalla de login")
                     self.currentScreen = .login
@@ -62,6 +69,13 @@ class AppCoordinator: ObservableObject {
                     if let user = user {
                         Logger.info("Usuario recuperado correctamente: \(user.id)")
                         self?.currentScreen = .main
+                        
+                        // Also trigger home data preload
+                        NotificationCenter.default.post(
+                            name: Notification.Name("UserLoggedInPreloadHome"),
+                            object: nil,
+                            userInfo: ["userId": user.id]
+                        )
                     } else {
                         Logger.warning("No se encontró información de usuario a pesar de tener token")
                         self?.currentScreen = .login
