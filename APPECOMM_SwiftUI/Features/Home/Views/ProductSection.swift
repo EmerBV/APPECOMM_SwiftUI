@@ -93,30 +93,30 @@ private struct ProductImage: View {
         if let imageUrl = imageUrl {
             let fullImageUrl = "\(baseURL)\(imageUrl)"
             if let url = URL(string: fullImageUrl) {
-                KFImage(url)
-                    .placeholder {
-                        ProgressView()
-                    }
-                    .onFailure { error in
-                        Logger.error("Error al cargar imagen: \(error.localizedDescription)")
-                    }
-                    .fade(duration: 0.3)
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
-                    .frame(width: 160, height: 160)
-                    .clipped()
-                    .cornerRadius(8)
-                    .overlay {
-                        if isOutOfStock {
-                            Color.black.opacity(0.3)
-                                .overlay {
-                                    Text("Sin Stock")
-                                        .font(.caption)
-                                        .fontWeight(.semibold)
-                                        .foregroundColor(.white)
-                                }
+                ZStack {
+                    KFImage(url)
+                        .placeholder {
+                            ProgressView()
                         }
+                        .onFailure { error in
+                            Logger.error("Error al cargar imagen: \(error.localizedDescription)")
+                        }
+                        .fade(duration: 0.3)
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                        .frame(width: 160, height: 160)
+                        .clipped()
+                    
+                    if isOutOfStock {
+                        Color.black.opacity(0.6)
+                        
+                        Text("Sin Stock")
+                            .font(.system(size: 16, weight: .bold))
+                            .foregroundColor(.white)
+                            .shadow(color: .black.opacity(0.5), radius: 3, x: 0, y: 1)
                     }
+                }
+                .cornerRadius(8)
             } else {
                 Image(systemName: "photo")
                     .font(.largeTitle)
