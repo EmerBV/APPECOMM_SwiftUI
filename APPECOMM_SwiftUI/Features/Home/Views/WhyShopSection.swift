@@ -17,35 +17,36 @@ struct WhyShopSection: View {
             }
             
             // Grid de beneficios
-            LazyVGrid(columns: [
-                GridItem(.flexible()),
-                GridItem(.flexible())
-            ], spacing: 24) {
-                BenefitCard(
-                    icon: "gift",
-                    title: "EARN REWARDS AND SHOP WITH POINTS",
-                    description: "Get points with every purchase"
-                )
+            VStack(spacing: 16) {
+                HStack(spacing: 16) {
+                    BenefitCard(
+                        icon: "gift",
+                        title: "EARN REWARDS AND SHOP WITH POINTS",
+                        description: "Get points with every purchase"
+                    )
+                    
+                    BenefitCard(
+                        icon: "list.clipboard.fill",
+                        title: "RSVP & WAITLISTS",
+                        description: "Never miss out on new releases"
+                    )
+                }
                 
-                BenefitCard(
-                    icon: "list.clipboard.fill",
-                    title: "RSVP & WAITLISTS",
-                    description: "Never miss out on new releases"
-                )
-                
-                BenefitCard(
-                    icon: "creditcard",
-                    title: "FLEXIBLE PAYMENT OPTIONS",
-                    description: "Choose how you want to pay"
-                )
-                
-                BenefitCard(
-                    icon: "ticket",
-                    title: "CONTESTS & GIVEAWAYS",
-                    description: "Win exclusive prizes"
-                )
+                HStack(spacing: 16) {
+                    BenefitCard(
+                        icon: "creditcard",
+                        title: "FLEXIBLE PAYMENT OPTIONS",
+                        description: "Choose how you want to pay"
+                    )
+                    
+                    BenefitCard(
+                        icon: "ticket",
+                        title: "CONTESTS & GIVEAWAYS",
+                        description: "Win exclusive prizes"
+                    )
+                }
             }
-            .padding()
+            .padding(.horizontal)
         }
         .padding(.vertical, 24)
     }
@@ -57,7 +58,7 @@ private struct BenefitCard: View {
     let description: String
     
     var body: some View {
-        VStack(spacing: 12) {
+        VStack(alignment: .center, spacing: 12) {
             Image(systemName: icon)
                 .font(.system(size: 32))
                 .foregroundColor(.blue)
@@ -66,6 +67,7 @@ private struct BenefitCard: View {
                 .font(.caption)
                 .fontWeight(.bold)
                 .multilineTextAlignment(.center)
+                .fixedSize(horizontal: false, vertical: true)
             
             Text(description)
                 .font(.caption)
@@ -73,9 +75,12 @@ private struct BenefitCard: View {
                 .multilineTextAlignment(.center)
         }
         .frame(maxWidth: .infinity)
+        .frame(height: 160) // Altura fija para todas las tarjetas
         .padding()
-        .background(Color(.systemBackground))
-        .cornerRadius(12)
-        .shadow(color: Color.black.opacity(0.1), radius: 5, x: 0, y: 2)
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(Color(.systemBackground))
+                .shadow(color: Color.black.opacity(0.05), radius: 8, x: 0, y: 2)
+        )
     }
 } 
