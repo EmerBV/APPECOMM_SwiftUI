@@ -19,8 +19,14 @@ struct HomeView: View {
     var body: some View {
         NavigationStack {
             HomeContentView(viewModel: viewModel)
-                .navigationTitle("Home")
                 .toolbar {
+                    ToolbarItem(placement: .navigationBarLeading) {
+                        Image("logo") // Asegúrate de tener una imagen llamada "logo" en tus assets
+                            .resizable()
+                            .scaledToFit()
+                            .frame(height: 30)
+                    }
+                    
                     ToolbarItem(placement: .navigationBarTrailing) {
                         SearchButton(isSearchPresented: $isSearchPresented)
                     }
@@ -67,6 +73,16 @@ private struct HomeContentView: View {
                         viewModel: viewModel
                     )
                 }
+                
+                Divider()
+                    .padding(.vertical)
+                
+                WhyShopSection()
+                
+                Divider()
+                    .padding(.vertical)
+                
+                ConnectSection()
                 
                 Spacer(minLength: 40)
             }
