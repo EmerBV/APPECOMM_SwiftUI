@@ -114,7 +114,8 @@ private struct ProductInfo: View {
             ProductBrand(brand: product.brand)
             ProductPrice(product: product, viewModel: viewModel)
         }
-        .padding(.horizontal, 4)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, 8)
     }
 }
 
@@ -125,6 +126,7 @@ private struct ProductName: View {
         Text(name)
             .font(.headline)
             .lineLimit(2)
+            .multilineTextAlignment(.leading)
     }
 }
 
@@ -135,6 +137,7 @@ private struct ProductBrand: View {
         Text(brand)
             .font(.subheadline)
             .foregroundColor(.secondary)
+            .lineLimit(1)
     }
 }
 
