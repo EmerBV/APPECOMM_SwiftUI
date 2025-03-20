@@ -8,169 +8,43 @@
 import SwiftUI
 
 struct LoginView: View {
-    @ObservedObject var viewModel: AuthViewModel
-    @Environment(\.colorScheme) var colorScheme
+    @StateObject private var viewModel: AuthViewModel
+    @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.scenePhase) private var scenePhase
     @State private var isKeyboardVisible = false
     @State private var showBiometricPrompt = false
+    
+    init(viewModel: AuthViewModel) {
+        _viewModel = StateObject(wrappedValue: viewModel)
+    }
     
     var body: some View {
         GeometryReader { geometry in
             NavigationView {
-                ScrollView {
-                    VStack(spacing: 30) {
-                        // Espaciador superior - se ajusta cuando el teclado está visible
-                        if !isKeyboardVisible {
-                            Spacer().frame(height: geometry.size.height * 0.05)
-                        }
-                        
-                        // Logo y título
-                        VStack(spacing: 16) {
-                            Image("logo")
-                                .resizable()
-                                .aspectRatio(contentMode: .fit)
-                                .frame(width: 100, height: 100)
-                            
-                            Text("Welcome to Kaioland")
-                                .font(.title)
-                                .fontWeight(.bold)
-                                .multilineTextAlignment(.center)
-                                .foregroundColor(.primary)
-                            
-                            Text("Sign in to your account")
-                                .font(.subheadline)
-                                .foregroundColor(.secondary)
-                        }
-                        .padding(.bottom, isKeyboardVisible ? 10 : 30)
-                        
-                        // Login Form
-                        VStack(spacing: 20) {
-                            // Email field
-                            CustomTextField(
-                                title: "Email",
-                                placeholder: "example@email.com",
-                                type: .regular,
-                                state: viewModel.emailState,
-                                text: $viewModel.email,
-                                onEditingChanged: { isEditing in
-                                    if !isEditing && !viewModel.email.isEmpty {
-                                        viewModel.validateEmail()
-                                    }
-                                }
-                            )
-                            
-                            // Password field
-                            CustomTextField(
-                                title: "Password",
-                                placeholder: "Your password",
-                                type: .secure,
-                                state: viewModel.passwordState,
-                                text: $viewModel.password,
-                                onEditingChanged: { isEditing in
-                                    if !isEditing && !viewModel.password.isEmpty {
-                                        viewModel.validatePassword()
-                                    }
-                                }
-                            )
-                            
-                            // Forgot password
-                            HStack {
-                                Spacer()
-                                Button(action: {
-                                    // Mostrar pantalla de recuperación de contraseña
-                                    NotificationService.shared.showInfo(
-                                        title: "Recuperación de contraseña",
-                                        message: "Esta función estará disponible próximamente."
-                                    )
-                                }) {
-                                    Text("Forgot your password?")
-                                        .font(.footnote)
-                                        .foregroundColor(.blue)
-                                }
-                            }
-                            .padding(.top, -10)
-                            
-                            // Remember me
-                            if !isKeyboardVisible {
-                                Toggle(isOn: $viewModel.rememberMe) {
-                                    Text("Remember me")
-                                        .font(.subheadline)
-                                        .foregroundColor(.secondary)
-                                }
-                                .padding(.vertical, 5)
-                            }
-                            
-                            // Login button
-                            PrimaryButton(
-                                title: "Sign In",
-                                isLoading: viewModel.isLoginInProgress,
-                                isEnabled: viewModel.isFormValid,
-                                action: {
-                                    // Ocultar teclado
-                                    UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
-                                    viewModel.login()
-                                }
-                            )
-                            .padding(.top, 10)
-                            
-                            // Separator
-                            if !isKeyboardVisible {
-                                HStack {
-                                    VStack { Divider() }
-                                    
-                                    Text("or")
-                                        .font(.footnote)
-                                        .foregroundColor(.secondary)
-                                    
-                                    VStack { Divider() }
-                                }
-                                .padding(.vertical, 10)
-                                
-                                // Biometric login
-                                if viewModel.isBiometricAvailable {
-                                    Button(action: {
-                                        showBiometricPrompt = true
-                                    }) {
-                                        HStack {
-                                            Image(systemName: viewModel.biometricType == .face ? "faceid" : "touchid")
-                                                .font(.headline)
-                                            
-                                            Text("Sign in with \(viewModel.biometricType == .face ? "Face ID" : "Touch ID")")
-                                                .font(.headline)
-                                        }
-                                        .frame(maxWidth: .infinity)
-                                        .padding()
-                                        .background(Color(.systemGray6))
-                                        .foregroundColor(.primary)
-                                        .cornerRadius(10)
-                                    }
-                                    .padding(.bottom, 10)
-                                }
-                                
-                                // Register button
-                                NavigationLink(destination: RegistrationView()) {
-                                    Text("Create an account")
-                                        .fontWeight(.semibold)
-                                        .frame(maxWidth: .infinity)
-                                        .padding()
-                                        .background(Color(.systemGray6))
-                                        .foregroundColor(.primary)
-                                        .cornerRadius(10)
-                                }
-                            }
-                        }
-                        .padding(.horizontal)
+                VStack(spacing: 30) {
+                    if !isKeyboardVisible {
+                        Spacer()
+                            .frame(height: geometry.size.height * 0.05)
+                            .accessibilityHidden(true)
                     }
-                    .padding()
-                    .frame(minHeight: geometry.size.height - (isKeyboardVisible ? 0 : 20))
+                    
+                    LogoHeaderView()
+                        .padding(.bottom, isKeyboardVisible ? 10 : 30)
+                    
+                    LoginFormView(
+                        viewModel: viewModel,
+                        isKeyboardVisible: isKeyboardVisible,
+                        showBiometricPrompt: $showBiometricPrompt
+                    )
+                    .padding(.horizontal)
+                    
+                    Spacer()
                 }
+                .padding()
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .background(backgroundColor.edgesIgnoringSafeArea(.all))
                 .navigationBarHidden(true)
-                .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillShowNotification)) { _ in
-                    isKeyboardVisible = true
-                }
-                .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification)) { _ in
-                    isKeyboardVisible = false
-                }
+                .keyboardAdaptive(isKeyboardVisible: $isKeyboardVisible)
                 .alert(isPresented: $viewModel.showAuthAlert) {
                     Alert(
                         title: Text(viewModel.authAlertTitle),
@@ -180,21 +54,15 @@ struct LoginView: View {
                 }
                 .sheet(isPresented: $showBiometricPrompt) {
                     BiometricAuthView(
-                        onSuccess: {
-                            showBiometricPrompt = false
-                            viewModel.loginWithBiometrics()
-                        },
-                        onFailure: { error in
-                            showBiometricPrompt = false
-                            if let error = error {
-                                NotificationService.shared.showError(
-                                    title: "Error de autenticación",
-                                    message: error.localizedDescription
-                                )
-                            }
-                        },
+                        onSuccess: handleBiometricSuccess,
+                        onFailure: handleBiometricFailure,
                         biometricType: viewModel.biometricType
                     )
+                }
+                .onChange(of: scenePhase) { phase in
+                    if phase == .active {
+                        viewModel.checkBiometricAvailability()
+                    }
                 }
             }
             .accentColor(.blue)
@@ -202,7 +70,203 @@ struct LoginView: View {
     }
     
     private var backgroundColor: Color {
-        colorScheme == .dark ? Color.black : Color.white
+        colorScheme == .dark ? .black : .white
+    }
+    
+    private func handleBiometricSuccess() {
+        showBiometricPrompt = false
+        Task {
+            await viewModel.loginWithBiometrics()
+        }
+    }
+    
+    private func handleBiometricFailure(_ error: Error?) {
+        showBiometricPrompt = false
+        if let error = error {
+            NotificationService.shared.showError(
+                title: "Authentication Error",
+                message: error.localizedDescription
+            )
+        }
+    }
+}
+
+private struct LogoHeaderView: View {
+    var body: some View {
+        VStack(spacing: 16) {
+            Image("logo")
+                .resizable()
+                .aspectRatio(contentMode: .fit)
+                .frame(width: 100, height: 100)
+                .accessibilityLabel("App Logo")
+            
+            Text("Welcome to Kaioland")
+                .font(.title)
+                .fontWeight(.bold)
+                .multilineTextAlignment(.center)
+                .foregroundColor(.primary)
+                .accessibilityAddTraits(.isHeader)
+            
+            Text("Sign in to your account")
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+        }
+    }
+}
+
+private struct LoginFormView: View {
+    @ObservedObject var viewModel: AuthViewModel
+    let isKeyboardVisible: Bool
+    @Binding var showBiometricPrompt: Bool
+    
+    var body: some View {
+        VStack(spacing: 20) {
+            emailField
+            passwordField
+            forgotPasswordButton
+            
+            if !isKeyboardVisible {
+                rememberMeToggle
+            }
+            
+            loginButton
+            
+            if !isKeyboardVisible {
+                divider
+                if viewModel.isBiometricAvailable {
+                    biometricLoginButton
+                }
+                registerButton
+            }
+        }
+    }
+    
+    private var emailField: some View {
+        CustomTextField(
+            title: "Email",
+            placeholder: "example@email.com",
+            type: .regular,
+            state: viewModel.emailState,
+            text: $viewModel.email,
+            onEditingChanged: { isEditing in
+                if !isEditing {
+                    viewModel.validateEmail()
+                }
+            }
+        )
+        .textContentType(.emailAddress)
+        .keyboardType(.emailAddress)
+        .autocapitalization(.none)
+    }
+    
+    private var passwordField: some View {
+        CustomTextField(
+            title: "Password",
+            placeholder: "Your password",
+            type: .secure,
+            state: viewModel.passwordState,
+            text: $viewModel.password,
+            onEditingChanged: { isEditing in
+                if !isEditing {
+                    viewModel.validatePassword()
+                }
+            }
+        )
+        .textContentType(.password)
+    }
+    
+    private var forgotPasswordButton: some View {
+        HStack {
+            Spacer()
+            Button(action: handleForgotPassword) {
+                Text("Forgot your password?")
+                    .font(.footnote)
+                    .foregroundColor(.blue)
+            }
+        }
+        .padding(.top, -10)
+    }
+    
+    private var rememberMeToggle: some View {
+        Toggle(isOn: $viewModel.rememberMe) {
+            Text("Remember me")
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+        }
+        .padding(.vertical, 5)
+    }
+    
+    private var loginButton: some View {
+        PrimaryButton(
+            title: "Sign In",
+            isLoading: viewModel.isLoginInProgress,
+            isEnabled: viewModel.isFormValid
+        ) {
+            hideKeyboard()
+            Task {
+                await viewModel.login()
+            }
+        }
+        .padding(.top, 10)
+    }
+    
+    private var divider: some View {
+        HStack {
+            VStack { Divider() }
+            Text("or")
+                .font(.footnote)
+                .foregroundColor(.secondary)
+            VStack { Divider() }
+        }
+        .padding(.vertical, 10)
+    }
+    
+    @ViewBuilder
+    private var biometricLoginButton: some View {
+        if viewModel.isBiometricAvailable {
+            Button(action: { showBiometricPrompt = true }) {
+                HStack {
+                    Image(systemName: viewModel.biometricType == .face ? "faceid" : "touchid")
+                        .font(.headline)
+                    Text("Sign in with \(viewModel.biometricType == .face ? "Face ID" : "Touch ID")")
+                        .font(.headline)
+                }
+                .frame(maxWidth: .infinity)
+                .padding()
+                .background(Color(.systemGray6))
+                .foregroundColor(.primary)
+                .cornerRadius(10)
+            }
+            .padding(.bottom, 10)
+        }
+    }
+    
+    private var registerButton: some View {
+        NavigationLink(destination: RegistrationView()) {
+            Text("Create an account")
+                .fontWeight(.semibold)
+                .frame(maxWidth: .infinity)
+                .padding()
+                .background(Color(.systemGray6))
+                .foregroundColor(.primary)
+                .cornerRadius(10)
+        }
+    }
+    
+    private func handleForgotPassword() {
+        NotificationService.shared.showInfo(
+            title: "Password Recovery",
+            message: "This feature will be available soon."
+        )
+    }
+    
+    private func hideKeyboard() {
+        UIApplication.shared.sendAction(
+            #selector(UIResponder.resignFirstResponder),
+            to: nil,
+            from: nil,
+            for: nil
+        )
     }
 }
 

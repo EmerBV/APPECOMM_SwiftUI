@@ -237,7 +237,7 @@ class AuthViewModel: ObservableObject {
     }
     
     // Biometric authentication
-    private func checkBiometricAvailability() {
+    func checkBiometricAvailability() {
         let context = LAContext()
         var error: NSError?
         
