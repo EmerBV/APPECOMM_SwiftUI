@@ -31,6 +31,10 @@ class ProductListViewModel: ObservableObject {
     }()
     
     // Computed properties
+    var hasActiveFilters: Bool {
+        !searchText.isEmpty || selectedCategory != nil
+    }
+    
     var filteredProducts: [Product] {
         var result = products
         
@@ -74,6 +78,15 @@ class ProductListViewModel: ObservableObject {
             self.products = cachedProducts
             Logger.info("Productos cargados desde caché: \(cachedProducts.count)")
         }
+    }
+    
+    func clearFilters() {
+        searchText = ""
+        selectedCategory = nil
+    }
+    
+    func dismissError() {
+        errorMessage = nil
     }
     
     func loadProducts(forceRefresh: Bool = false) {
