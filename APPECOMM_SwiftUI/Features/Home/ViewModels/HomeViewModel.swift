@@ -32,10 +32,6 @@ class HomeViewModel: ObservableObject {
     init(productRepository: ProductRepositoryProtocol) {
         self.productRepository = productRepository
         
-        // Pre-load product categories for our featured section
-        categories = ["Dragon Ball", "One Piece", "Naruto", "Demon Slayer",
-                      "Jujutsu Kaisen", "Bleach", "Chainsaw Man", "Spy x Family"]
-        
         // Set up notification observer for user login
         NotificationCenter.default.publisher(for: Notification.Name("UserLoggedInPreloadHome"))
             .receive(on: DispatchQueue.main)
@@ -55,73 +51,71 @@ class HomeViewModel: ObservableObject {
         // Using a dispatch group to coordinate multiple requests
         let dispatchGroup = DispatchGroup()
         
-        // Load recent products
+        // Load categories from API
         dispatchGroup.enter()
-        loadRecentProducts { [weak self] in
+        loadCategories { [weak self] in
             dispatchGroup.leave()
         }
         
-        // Load best sellers
+        // Load products
         dispatchGroup.enter()
-        loadBestSellingProducts { [weak self] in
+        loadProducts { [weak self] in
             dispatchGroup.leave()
         }
         
-        // When both requests complete, update the UI
+        // When all requests complete, update the UI
         dispatchGroup.notify(queue: .main) { [weak self] in
             self?.isLoading = false
             Logger.info("Home data loading completed")
         }
     }
     
-    private func loadRecentProducts(completion: @escaping () -> Void) {
-        Logger.info("Loading recent products")
+    private func loadCategories(completion: @escaping () -> Void) {
+        Logger.info("Loading categories from API")
         
-        productRepository.getAllProducts()
+        productRepository.getAllCategories()
             .receive(on: DispatchQueue.main)
             .sink { [weak self] completionStatus in
                 if case .failure(let error) = completionStatus {
-                    Logger.error("Error loading recent products: \(error)")
-                    self?.errorMessage = "Failed to load new products: \(error.localizedDescription)"
+                    Logger.error("Error loading categories: \(error)")
+                    self?.errorMessage = "Failed to load categories: \(error.localizedDescription)"
                 }
                 completion()
-            } receiveValue: { [weak self] products in
-                // Sort products by creation date (newest first) and take up to 10
-                self?.newProducts = products
-                    .sorted(by: { self?.compareCreationDates($0.createdAt, $1.createdAt) ?? false })
-                    .prefix(10)
-                    .map { $0 }
-                
-                Logger.info("Loaded \(self?.newProducts.count ?? 0) recent products")
-                
-                // Extract categories for the featured section if not already populated
-                let categories = Set(products.map { $0.category.name })
-                if !categories.isEmpty {
-                    self?.categories = Array(categories).sorted()
-                }
+            } receiveValue: { [weak self] categories in
+                // Extract category names and sort them
+                self?.categories = categories.map { $0.name }.sorted()
+                Logger.info("Loaded \(categories.count) categories from API")
             }
             .store(in: &cancellables)
     }
     
-    private func loadBestSellingProducts(completion: @escaping () -> Void) {
-        Logger.info("Loading best selling products")
+    private func loadProducts(completion: @escaping () -> Void) {
+        Logger.info("Loading products for home screen")
         
         productRepository.getAllProducts()
             .receive(on: DispatchQueue.main)
             .sink { [weak self] completionStatus in
                 if case .failure(let error) = completionStatus {
-                    Logger.error("Error loading best selling products: \(error)")
-                    self?.errorMessage = "Failed to load best sellers: \(error.localizedDescription)"
+                    Logger.error("Error loading products: \(error)")
+                    self?.errorMessage = "Failed to load products: \(error.localizedDescription)"
                 }
                 completion()
             } receiveValue: { [weak self] products in
-                // Sort products by sales count (highest first) and take top 10
-                self?.bestSellingProducts = products
+                guard let self = self else { return }
+                
+                // Process recent products (newest first)
+                self.newProducts = products
+                    .sorted(by: { self.compareCreationDates($0.createdAt, $1.createdAt) })
+                    .prefix(10)
+                    .map { $0 }
+                Logger.info("Loaded \(self.newProducts.count) recent products")
+                
+                // Process best selling products
+                self.bestSellingProducts = products
                     .sorted(by: { $0.salesCount > $1.salesCount })
                     .prefix(10)
                     .map { $0 }
-                
-                Logger.info("Loaded \(self?.bestSellingProducts.count ?? 0) best selling products")
+                Logger.info("Loaded \(self.bestSellingProducts.count) best selling products")
             }
             .store(in: &cancellables)
     }

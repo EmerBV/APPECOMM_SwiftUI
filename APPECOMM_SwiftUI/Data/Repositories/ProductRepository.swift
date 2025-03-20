@@ -13,6 +13,7 @@ protocol ProductRepositoryProtocol {
     func getProductById(id: Int) -> AnyPublisher<Product, Error>
     func getProductsByCategory(category: String) -> AnyPublisher<[Product], Error>
     func getProductsByBrand(brand: String) -> AnyPublisher<[Product], Error>
+    func getAllCategories() -> AnyPublisher<[Category], Error>
 }
 
 final class ProductRepository: ProductRepositoryProtocol {
@@ -52,6 +53,21 @@ final class ProductRepository: ProductRepositoryProtocol {
     
     func getProductsByBrand(brand: String) -> AnyPublisher<[Product], Error> {
         return productService.getProductsByBrand(brand: brand)
+            .mapError { $0 }
+            .eraseToAnyPublisher()
+    }
+    
+    func getAllCategories() -> AnyPublisher<[Category], Error> {
+        return productService.getAllCategories()
+            .handleEvents(receiveOutput: { categories in
+                print("ProductRepository: Received \(categories.count) categories")
+            }, receiveCompletion: { completion in
+                if case .failure(let error) = completion {
+                    print("ProductRepository: Failed to get categories: \(error)")
+                } else {
+                    print("ProductRepository: Successfully completed categories request")
+                }
+            })
             .mapError { $0 }
             .eraseToAnyPublisher()
     }

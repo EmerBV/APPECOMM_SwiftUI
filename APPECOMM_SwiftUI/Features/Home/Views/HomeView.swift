@@ -20,7 +20,26 @@ struct HomeView: View {
                         PromotionBannerView()
                         
                         // Featured categories section
-                        FeaturedCategoriesView(categories: viewModel.categories)
+                        if !viewModel.categories.isEmpty {
+                            FeaturedCategoriesView(categories: viewModel.categories)
+                        } else {
+                            VStack(alignment: .leading) {
+                                Text("Featured Categories")
+                                    .font(.headline)
+                                    .padding(.horizontal)
+                                
+                                // Show loading placeholder for categories
+                                ScrollView(.horizontal, showsIndicators: false) {
+                                    HStack(spacing: 16) {
+                                        ForEach(0..<6, id: \.self) { _ in
+                                            CategoryPlaceholderView()
+                                        }
+                                    }
+                                    .padding(.horizontal)
+                                }
+                            }
+                            .padding(.top, 8)
+                        }
                         
                         // New arrivals
                         if !viewModel.newProducts.isEmpty {
@@ -213,8 +232,45 @@ struct CategoryItemView: View {
             return "shield.fill"
         case let name where name.contains("punch"):
             return "hand.raised.fill"
+        case let name where name.contains("tokyo"):
+            return "bicycle"
+        case let name where name.contains("fullmetal"):
+            return "gear"
+        case let name where name.contains("spirited"):
+            return "cloud.fill"
+        case let name where name.contains("dandadan"):
+            return "alien"
         default:
             return "star.fill"
+        }
+    }
+}
+
+struct CategoryPlaceholderView: View {
+    @State private var isAnimating = false
+    
+    var body: some View {
+        VStack {
+            Circle()
+                .fill(Color.gray.opacity(0.2))
+                .frame(width: 70, height: 70)
+                .overlay(
+                    Circle()
+                        .fill(Color.gray.opacity(0.3))
+                        .frame(width: 70, height: 70)
+                        .opacity(isAnimating ? 1 : 0)
+                )
+            
+            Rectangle()
+                .fill(Color.gray.opacity(0.2))
+                .frame(width: 60, height: 16)
+                .cornerRadius(4)
+        }
+        .frame(width: 80)
+        .onAppear {
+            withAnimation(Animation.easeInOut(duration: 1.0).repeatForever()) {
+                isAnimating = true
+            }
         }
     }
 }

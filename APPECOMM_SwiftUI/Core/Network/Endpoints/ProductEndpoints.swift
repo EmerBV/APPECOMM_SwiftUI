@@ -12,6 +12,7 @@ enum ProductEndpoints: APIEndpoint {
     case getProductById(id: Int)
     case getProductsByCategory(category: String)
     case getProductsByBrand(brand: String)
+    case getAllCategories
     
     var path: String {
         switch self {
@@ -23,6 +24,8 @@ enum ProductEndpoints: APIEndpoint {
             return "/products/product/\(category)/all/products"
         case .getProductsByBrand:
             return "/products/product/by-brand"
+        case .getAllCategories:
+            return "/categories/all"
         }
     }
     

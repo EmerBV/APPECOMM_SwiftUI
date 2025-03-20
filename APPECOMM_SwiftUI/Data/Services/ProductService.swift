@@ -13,6 +13,7 @@ protocol ProductServiceProtocol {
     func getProductById(id: Int) -> AnyPublisher<Product, NetworkError>
     func getProductsByCategory(category: String) -> AnyPublisher<[Product], NetworkError>
     func getProductsByBrand(brand: String) -> AnyPublisher<[Product], NetworkError>
+    func getAllCategories() -> AnyPublisher<[Category], NetworkError>
 }
 
 final class ProductService: ProductServiceProtocol {
@@ -61,6 +62,19 @@ final class ProductService: ProductServiceProtocol {
         
         return networkDispatcher.dispatch(ApiResponse<[Product]>.self, endpoint)
             .map { response -> [Product] in
+                return response.data
+            }
+            .eraseToAnyPublisher()
+    }
+    
+    func getAllCategories() -> AnyPublisher<[Category], NetworkError> {
+        let endpoint = ProductEndpoints.getAllCategories
+        
+        print("ProductService: Fetching all categories")
+        
+        return networkDispatcher.dispatch(ApiResponse<[Category]>.self, endpoint)
+            .map { response -> [Category] in
+                print("ProductService: Successfully decoded response with \(response.data.count) categories")
                 return response.data
             }
             .eraseToAnyPublisher()
