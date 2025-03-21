@@ -6,8 +6,8 @@ struct SearchView: View {
     @State private var searchText = ""
     
     private let columns = [
-        GridItem(.flexible(), spacing: 16),
-        GridItem(.flexible(), spacing: 16)
+        GridItem(.fixed(160), spacing: 16),
+        GridItem(.fixed(160), spacing: 16)
     ]
     
     var body: some View {
