@@ -9,9 +9,10 @@ import SwiftUI
 
 struct MainTabView: View {
     @State private var selectedTab = 0
+    @StateObject private var profileViewModel = DependencyInjector.shared.resolve(ProfileViewModel.self)
     
     init() {
-        print("MainTabView: Initializing")
+       
     }
     
     var body: some View {
@@ -20,43 +21,38 @@ struct MainTabView: View {
                 HomeView(viewModel: DependencyInjector.shared.resolve(HomeViewModel.self))
             }
             .tabItem {
-                Label("Home", systemImage: "house")
+                Image(systemName: "house")
             }
             .tag(0)
-            .onAppear {
-                print("MainTabView: Home tab appeared")
-            }
             
             NavigationView {
                 ProductListView(viewModel: DependencyInjector.shared.resolve(ProductListViewModel.self))
             }
             .tabItem {
-                Label("Products", systemImage: "bag")
+                Image(systemName: "bag")
             }
             .tag(1)
-            .onAppear {
-                print("MainTabView: Products tab appeared")
-            }
             
             NavigationView {
                 Text("Cart Screen")
                     .navigationTitle("My Cart")
             }
             .tabItem {
-                Label("Cart", systemImage: "cart")
+                Image(systemName: "cart")
             }
             .tag(2)
             
             NavigationView {
-                ProfileView(viewModel: DependencyInjector.shared.resolve(ProfileViewModel.self))
+                ProfileView(viewModel: profileViewModel)
             }
             .tabItem {
-                Label("Profile", systemImage: "person")
+                if let firstName = profileViewModel.user?.firstName.first {
+                    Image(systemName: "\(firstName.lowercased()).circle")
+                } else {
+                    Image(systemName: "person")
+                }
             }
             .tag(3)
-        }
-        .onAppear {
-            print("MainTabView: TabView appeared")
         }
     }
 }
