@@ -1,4 +1,5 @@
 import SwiftUI
+import Kingfisher
 
 struct ProductDetailView: View {
     let product: Product
@@ -183,32 +184,31 @@ struct ProductImageCarousel: View {
     @Binding var showingImageViewer: Bool
     @Binding var selectedImageIndex: Int
     
+    private var baseURL: String {
+        AppConfig.shared.imageBaseUrl
+    }
+    
     var body: some View {
         ZStack(alignment: .topTrailing) {
             if let images = product.images, !images.isEmpty {
                 TabView {
                     ForEach(Array(images.enumerated()), id: \.element.id) { index, image in
-                        AsyncImage(url: URL(string: image.downloadUrl)) { phase in
-                            switch phase {
-                            case .empty:
+                        let imageUrl = "\(baseURL)\(image.downloadUrl)"
+                        
+                        KFImage(URL(string: imageUrl))
+                            .placeholder {
                                 ProgressView()
-                            case .success(let image):
-                                image
-                                    .resizable()
-                                    .aspectRatio(contentMode: .fit)
-                                    .onTapGesture {
-                                        selectedImageIndex = index
-                                        showingImageViewer = true
-                                    }
-                            case .failure:
-                                Image(systemName: "photo")
-                                    .font(.largeTitle)
-                                    .foregroundColor(.gray)
-                            @unknown default:
-                                EmptyView()
                             }
-                        }
-                        .padding(.bottom, 20)
+                            .onFailure { error in
+                                print("Error loading image: \(error)")
+                            }
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                            .onTapGesture {
+                                selectedImageIndex = index
+                                showingImageViewer = true
+                            }
+                            .padding(.bottom, 20)
                     }
                 }
                 .tabViewStyle(PageTabViewStyle(indexDisplayMode: .automatic))
@@ -257,15 +257,14 @@ struct ProductHeaderView: View {
                 Spacer()
                 
                 HStack(spacing: 8) {
-                    Image(systemName: "star.fill")
-                        .foregroundColor(.yellow)
+                    Image(systemName: "cart.fill")
+                        .foregroundColor(.gray)
                     
-                    // Ratings would normally come from API
-                    // Using mock data for this example
-                    Text("4.5")
-                        .fontWeight(.semibold)
+                    Text("Unidades vendidas")
+                        .font(.footnote)
+                        .fontWeight(.medium)
                     
-                    Text("(120)")
+                    Text("(\(product.salesCount))")
                         .foregroundColor(.secondary)
                 }
             }
@@ -351,7 +350,14 @@ struct ProductPriceVariantView: View {
             Button(action: onAddToCart) {
                 HStack {
                     Image(systemName: "cart.badge.plus")
-                    Text("Add to Cart")
+                    
+                    if product.preOrder {
+                        Text("Pre-order")
+                    } else {
+                        Text("Add to Cart")
+                    }
+                    
+                    //Text("Add to Cart")
                 }
                 .frame(maxWidth: .infinity)
                 .padding()
@@ -624,74 +630,67 @@ struct ZoomableImageView: View {
     
     var body: some View {
         GeometryReader { geometry in
-            AsyncImage(url: URL(string: imageUrl)) { phase in
-                switch phase {
-                case .empty:
+            KFImage(URL(string: imageUrl))
+                .placeholder {
                     ProgressView()
-                case .success(let image):
-                    image
-                        .resizable()
-                        .aspectRatio(contentMode: .fit)
-                        .scaleEffect(scale)
-                        .offset(offset)
-                        .gesture(
-                            MagnificationGesture()
-                                .onChanged { value in
-                                    let delta = value / lastScale
-                                    lastScale = value
-                                    
-                                    // Limitar el zoom entre 1x y 4x
-                                    scale = min(max(scale * delta, 1), 4)
-                                }
-                                .onEnded { _ in
-                                    lastScale = 1.0
-                                }
-                        )
-                        .gesture(
-                            DragGesture()
-                                .onChanged { gesture in
-                                    if scale > 1 {
-                                        offset = CGSize(
-                                            width: lastOffset.width + gesture.translation.width,
-                                            height: lastOffset.height + gesture.translation.height
-                                        )
-                                    }
-                                }
-                                .onEnded { _ in
-                                    lastOffset = offset
-                                    
-                                    // Si escala es 1, resetear offset
-                                    if scale <= 1 {
-                                        withAnimation {
-                                            offset = .zero
-                                            lastOffset = .zero
-                                        }
-                                    }
-                                }
-                        )
-                        .gesture(
-                            TapGesture(count: 2)
-                                .onEnded {
-                                    withAnimation {
-                                        if scale > 1 {
-                                            scale = 1
-                                            offset = .zero
-                                            lastOffset = .zero
-                                        } else {
-                                            scale = 2
-                                        }
-                                    }
-                                }
-                        )
-                case .failure:
-                    Image(systemName: "photo")
-                        .font(.largeTitle)
-                        .foregroundColor(.gray)
-                @unknown default:
-                    EmptyView()
                 }
-            }
-            .frame(width: geometry.size.width, height: geometry.size.height)
+                .onFailure { error in
+                    print("Error loading image: \(error)")
+                }
+                .resizable()
+                .aspectRatio(contentMode: .fit)
+                .scaleEffect(scale)
+                .offset(offset)
+                .gesture(
+                    MagnificationGesture()
+                        .onChanged { value in
+                            let delta = value / lastScale
+                            lastScale = value
+                            
+                            // Limitar el zoom entre 1x y 4x
+                            scale = min(max(scale * delta, 1), 4)
+                        }
+                        .onEnded { _ in
+                            lastScale = 1.0
+                        }
+                )
+                .gesture(
+                    DragGesture()
+                        .onChanged { gesture in
+                            if scale > 1 {
+                                offset = CGSize(
+                                    width: lastOffset.width + gesture.translation.width,
+                                    height: lastOffset.height + gesture.translation.height
+                                )
+                            }
+                        }
+                        .onEnded { _ in
+                            lastOffset = offset
+                            
+                            // Si escala es 1, resetear offset
+                            if scale <= 1 {
+                                withAnimation {
+                                    offset = .zero
+                                    lastOffset = .zero
+                                }
+                            }
+                        }
+                )
+                .gesture(
+                    TapGesture(count: 2)
+                        .onEnded {
+                            withAnimation {
+                                if scale > 1 {
+                                    scale = 1
+                                    offset = .zero
+                                    lastOffset = .zero
+                                } else {
+                                    scale = 2
+                                }
+                            }
+                        }
+                )
+                .frame(width: geometry.size.width, height: geometry.size.height)
         }
         .onChange(of: imageUrl) { _ in
             // Resetear zoom y posición cuando cambia la imagen
