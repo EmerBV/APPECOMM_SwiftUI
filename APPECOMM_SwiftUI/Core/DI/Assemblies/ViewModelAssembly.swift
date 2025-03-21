@@ -32,6 +32,16 @@ final class ViewModelAssembly: Assembly {
             )
         }.inObjectScope(.container) // Singleton para mantener estado consistente
         
+        // Cart ViewModel
+        container.register(CartViewModel.self) { r in
+            let cartRepository = r.resolve(CartRepositoryProtocol.self)!
+            let authRepository = r.resolve(AuthRepositoryProtocol.self)!
+            return CartViewModel(
+                cartRepository: cartRepository,
+                authRepository: authRepository
+            )
+        }.inObjectScope(.container) // Singleton para mantener estado consistente
+        
         // Home ViewModel
         container.register(HomeViewModel.self) { r in
             let productRepository = r.resolve(ProductRepositoryProtocol.self)!

@@ -12,7 +12,7 @@ struct MainTabView: View {
     @StateObject private var profileViewModel = DependencyInjector.shared.resolve(ProfileViewModel.self)
     
     init() {
-       
+        
     }
     
     var body: some View {
@@ -40,8 +40,7 @@ struct MainTabView: View {
             }
             
             NavigationView {
-                Text("Cart Screen")
-                    .navigationTitle("My Cart")
+                CartView(viewModel: DependencyInjector.shared.resolve(CartViewModel.self))
             }
             .tabItem {
                 Image(systemName: "cart")

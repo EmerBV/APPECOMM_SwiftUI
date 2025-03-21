@@ -12,6 +12,8 @@ enum CartEndpoints: APIEndpoint {
     case clearCart(cartId: Int)
     case getTotalPrice(cartId: Int)
     case addItemToCart(productId: Int, quantity: Int, variantId: Int?)
+    case updateItemQuantity(cartId: Int, itemId: Int, quantity: Int)
+    case removeItem(cartId: Int, itemId: Int)
     
     var path: String {
         switch self {
@@ -23,6 +25,10 @@ enum CartEndpoints: APIEndpoint {
             return "/carts/\(cartId)/cart/total-price"
         case .addItemToCart:
             return "/cartItems/item/add"
+        case .updateItemQuantity(let cartId, let itemId, _):
+            return "/cartItems/cart/\(cartId)/item/\(itemId)/update"
+        case .removeItem(let cartId, let itemId):
+            return "/cartItems/cart/\(cartId)/item/\(itemId)/remove"
         }
     }
     
@@ -30,10 +36,12 @@ enum CartEndpoints: APIEndpoint {
         switch self {
         case .getUserCart, .getTotalPrice:
             return HTTPMethod.get.rawValue
-        case .clearCart:
+        case .clearCart, .removeItem:
             return HTTPMethod.delete.rawValue
         case .addItemToCart:
             return HTTPMethod.post.rawValue
+        case .updateItemQuantity:
+            return HTTPMethod.put.rawValue
         }
     }
     
@@ -50,6 +58,10 @@ enum CartEndpoints: APIEndpoint {
             }
             
             return params
+            
+        case .updateItemQuantity(_, _, let quantity):
+            return ["quantity": quantity]
+            
         default:
             return nil
         }
@@ -58,7 +70,7 @@ enum CartEndpoints: APIEndpoint {
     var encoding: ParameterEncoding {
         switch self {
         case .addItemToCart:
-            return .url  // Esta API usa query params en lugar de JSON
+            return .url
         default:
             return .json
         }

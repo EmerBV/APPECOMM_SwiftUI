@@ -13,6 +13,8 @@ protocol CartRepositoryProtocol {
     func clearCart(cartId: Int) -> AnyPublisher<Void, Error>
     func getTotalPrice(cartId: Int) -> AnyPublisher<Decimal, Error>
     func addItemToCart(productId: Int, quantity: Int, variantId: Int?) -> AnyPublisher<Void, Error>
+    func updateItemQuantity(cartId: Int, itemId: Int, quantity: Int) -> AnyPublisher<Void, Error>
+    func removeItem(cartId: Int, itemId: Int) -> AnyPublisher<Void, Error>
 }
 
 final class CartRepository: CartRepositoryProtocol {
@@ -42,6 +44,18 @@ final class CartRepository: CartRepositoryProtocol {
     
     func addItemToCart(productId: Int, quantity: Int, variantId: Int?) -> AnyPublisher<Void, Error> {
         return cartService.addItemToCart(productId: productId, quantity: quantity, variantId: variantId)
+            .mapError { $0 }
+            .eraseToAnyPublisher()
+    }
+    
+    func updateItemQuantity(cartId: Int, itemId: Int, quantity: Int) -> AnyPublisher<Void, Error> {
+        return cartService.updateItemQuantity(cartId: cartId, itemId: itemId, quantity: quantity)
+            .mapError { $0 }
+            .eraseToAnyPublisher()
+    }
+    
+    func removeItem(cartId: Int, itemId: Int) -> AnyPublisher<Void, Error> {
+        return cartService.removeItem(cartId: cartId, itemId: itemId)
             .mapError { $0 }
             .eraseToAnyPublisher()
     }
