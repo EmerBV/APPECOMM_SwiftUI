@@ -24,6 +24,9 @@ struct MainTabView: View {
                 Image(systemName: "house")
             }
             .tag(0)
+            .onAppear {
+                Logger.info("HomeView appeared")
+            }
             
             NavigationView {
                 ProductListView(viewModel: DependencyInjector.shared.resolve(ProductListViewModel.self))
@@ -32,6 +35,9 @@ struct MainTabView: View {
                 Image(systemName: "bag")
             }
             .tag(1)
+            .onAppear {
+                Logger.info("ProductListView appeared")
+            }
             
             NavigationView {
                 Text("Cart Screen")
@@ -41,6 +47,9 @@ struct MainTabView: View {
                 Image(systemName: "cart")
             }
             .tag(2)
+            .onAppear {
+                Logger.info("CartView appeared")
+            }
             
             NavigationView {
                 ProfileView(viewModel: profileViewModel)
@@ -53,6 +62,9 @@ struct MainTabView: View {
                 }
             }
             .tag(3)
+            .onAppear {
+                Logger.info("ProfileView appeared")
+            }
         }
     }
 }
