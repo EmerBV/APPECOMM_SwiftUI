@@ -10,7 +10,7 @@ import SwiftUI
 struct LoadingView: View {
     var body: some View {
         ZStack {
-            Color.black.opacity(0.3)
+            Color.black.opacity(0.4)
                 .edgesIgnoringSafeArea(.all)
             
             VStack(spacing: 16) {
@@ -23,11 +23,16 @@ struct LoadingView: View {
                     .foregroundColor(.white)
             }
             .padding(24)
+            
+            // Dejar este código por si en el futuro queremos encapsular el loading dentro de un rectángulo
+            /*
             .background(
                 RoundedRectangle(cornerRadius: 12)
                     .fill(Color(UIColor.systemBackground))
                     .shadow(radius: 10)
             )
+             */
+          
         }
         .zIndex(1000)
     }
