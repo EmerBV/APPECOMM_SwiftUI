@@ -12,7 +12,7 @@ struct ProfileView: View {
     @State private var showingLogoutConfirmation = false
     
     var body: some View {
-        NavigationView {
+        NavigationStack {
             ZStack {
                 if viewModel.isEditingProfile {
                     editProfileView
@@ -35,7 +35,6 @@ struct ProfileView: View {
                     }
                 }
             }
-            .navigationTitle("My Profile")
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     if viewModel.isEditingProfile {
@@ -135,7 +134,7 @@ struct ProfileView: View {
                     
                     // Name and Email
                     VStack(spacing: 8) {
-                        Text(user.fullName)
+                        Text("Hola, \(user.firstName)")
                             .font(.title3)
                             .fontWeight(.bold)
                         
