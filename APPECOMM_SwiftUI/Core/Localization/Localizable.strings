@@ -120,4 +120,32 @@
 "name_too_short" = "Name must be at least 2 characters";
 
 // Notifications
-"dismiss_notification" = "Dismiss notification"; 
+"dismiss_notification" = "Dismiss notification";
+
+// Home View
+"search" = "Search";
+"featured_categories" = "Featured Categories";
+"new_arrivals" = "New Arrivals";
+"new_arrivals_subtitle" = "Check out our latest products";
+"best_sellers" = "Best Sellers";
+"best_sellers_subtitle" = "Our most popular products";
+"connect_with_us" = "CONNECT WITH US";
+"newsletter_title" = "Want $20 Off? Sign up for our Newsletter.";
+"newsletter_subtitle" = "Sign up for SMS alerts and be the first to know!";
+"get_in_the_loop" = "GET IN THE LOOP!";
+
+// Search View
+"search_products" = "Search products";
+"no_products_found" = "No products found";
+"try_different_keywords" = "Try different keywords";
+
+// Promotion Banner
+"summer_sale" = "Summer Sale";
+"summer_sale_subtitle" = "Up to 50% off on selected items";
+"shop_now" = "Shop Now";
+"new_collection" = "New Collection";
+"new_collection_subtitle" = "Check out our latest collection";
+"view_collection" = "View Collection";
+"special_offer" = "Special Offer";
+"special_offer_subtitle" = "Free shipping on orders over $50";
+"learn_more" = "Learn More"; 

@@ -46,7 +46,7 @@ private struct HomeContentView: View {
     @ObservedObject var viewModel: HomeViewModel
     
     var body: some View {
-        ScrollView {
+        ScrollView(showsIndicators: false) {
             LazyVStack(spacing: 16) {
                 PromotionBannerView()
                     .padding(.top)
@@ -58,8 +58,8 @@ private struct HomeContentView: View {
                 
                 if !viewModel.newProducts.isEmpty {
                     ProductSection(
-                        title: "New Arrivals",
-                        subtitle: "Check out our latest products",
+                        title: "new_arrivals".localized,
+                        subtitle: "new_arrivals_subtitle".localized,
                         products: viewModel.newProducts,
                         viewModel: viewModel
                     )
@@ -67,8 +67,8 @@ private struct HomeContentView: View {
                 
                 if !viewModel.bestSellingProducts.isEmpty {
                     ProductSection(
-                        title: "Best Sellers", 
-                        subtitle: "Our most popular products",
+                        title: "best_sellers".localized,
+                        subtitle: "best_sellers_subtitle".localized,
                         products: viewModel.bestSellingProducts,
                         viewModel: viewModel
                     )
@@ -115,7 +115,7 @@ private struct SearchButton: View {
         } label: {
             Image(systemName: "magnifyingglass")
                 .imageScale(.large)
-                .accessibilityLabel("Search")
+                .accessibilityLabel("search".localized)
         }
     }
 }
@@ -127,7 +127,7 @@ private struct CategoriesSection: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("Featured Categories")
+            Text("featured_categories".localized)
                 .font(.title3)
                 .fontWeight(.bold)
                 .padding(.horizontal)

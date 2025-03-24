@@ -6,26 +6,26 @@ struct PromotionBannerView: View {
     private let promotions = [
         Promotion(
             id: "1",
-            title: "Summer Sale",
-            subtitle: "Up to 50% off on selected items",
+            title: "summer_sale".localized,
+            subtitle: "summer_sale_subtitle".localized,
             imageUrl: "https://example.com/summer-sale.jpg",
-            actionTitle: "Shop Now",
+            actionTitle: "shop_now".localized,
             actionUrl: "https://example.com/summer-sale"
         ),
         Promotion(
             id: "2",
-            title: "New Arrivals",
-            subtitle: "Check out our latest collection",
+            title: "new_collection".localized,
+            subtitle: "new_collection_subtitle".localized,
             imageUrl: "https://example.com/new-arrivals.jpg",
-            actionTitle: "View Collection",
+            actionTitle: "view_collection".localized,
             actionUrl: "https://example.com/new-arrivals"
         ),
         Promotion(
             id: "3",
-            title: "Special Offer",
-            subtitle: "Free shipping on orders over $50",
+            title: "special_offer".localized,
+            subtitle: "special_offer_subtitle".localized,
             imageUrl: "https://example.com/special-offer.jpg",
-            actionTitle: "Learn More",
+            actionTitle: "learn_more".localized,
             actionUrl: "https://example.com/special-offer"
         )
     ]

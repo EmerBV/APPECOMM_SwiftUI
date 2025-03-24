@@ -13,7 +13,7 @@ struct ConnectSection: View {
     var body: some View {
         VStack(spacing: 32) {
             // Título
-            Text("CONNECT WITH US")
+            Text("connect_with_us".localized)
                 .font(.title2)
                 .fontWeight(.bold)
             
@@ -27,10 +27,10 @@ struct ConnectSection: View {
             
             // Newsletter signup
             VStack(spacing: 16) {
-                Text("Want $20 Off? Sign up for our Newsletter.")
+                Text("newsletter_title".localized)
                     .font(.headline)
                 
-                Text("Sign up for SMS alerts and be the first to know!")
+                Text("newsletter_subtitle".localized)
                     .font(.subheadline)
                     .foregroundColor(.secondary)
                 
@@ -40,7 +40,7 @@ struct ConnectSection: View {
                     HStack(spacing: 8) {
                         Image(systemName: "envelope.fill")
                         Image(systemName: "message.fill")
-                        Text("GET IN THE LOOP!")
+                        Text("get_in_the_loop".localized)
                             .fontWeight(.bold)
                     }
                     .font(.headline)
@@ -88,7 +88,7 @@ private struct SocialButton: View {
             Image(icon)
                 .resizable()
                 .scaledToFit()
-                .frame(width: 32, height: 32) // Aumentado un poco el tamaño
+                .frame(width: 32, height: 32)
         }
     }
 }

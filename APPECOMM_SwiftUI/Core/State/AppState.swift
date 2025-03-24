@@ -5,6 +5,7 @@ class AppState: ObservableObject {
     @Published var isLoading = false
     @Published var errorMessage: String?
     @Published var successMessage: String?
+    @Published var languageChanged = false
     
     private var cancellables = Set<AnyCancellable>()
     
@@ -23,6 +24,15 @@ class AppState: ObservableObject {
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in
                 self?.refreshData()
+            }
+            .store(in: &cancellables)
+            
+        // Observar cambios de idioma
+        NotificationCenter.default.publisher(for: Notification.Name("LanguageChanged"))
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in
+                self?.languageChanged.toggle()
+                Logger.info("Language changed, forcing view refresh")
             }
             .store(in: &cancellables)
     }

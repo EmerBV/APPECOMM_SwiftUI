@@ -10,6 +10,7 @@ import SwiftUI
 struct ContentView: View {
     @StateObject private var coordinator: AppCoordinator
     @ObservedObject private var notificationService = NotificationService.shared
+    @EnvironmentObject private var appState: AppState
     
     init() {
         let dependencies = DependencyInjector.shared
@@ -28,6 +29,7 @@ struct ContentView: View {
                 .onChange(of: coordinator.currentScreen) { newScreen in
                     Logger.info("Screen changed to: \(newScreen)")
                 }
+                .id(appState.languageChanged)
             
             NotificationOverlayView(notificationService: notificationService)
         }

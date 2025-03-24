@@ -18,7 +18,7 @@ struct SearchView: View {
                     Image(systemName: "magnifyingglass")
                         .foregroundColor(.gray)
                     
-                    TextField("Search products", text: $searchText)
+                    TextField("search_products".localized, text: $searchText)
                         .textFieldStyle(PlainTextFieldStyle())
                         .autocapitalization(.none)
                         .disableAutocorrection(true)
@@ -47,11 +47,11 @@ struct SearchView: View {
                             .font(.system(size: 64))
                             .foregroundColor(.gray)
                         
-                        Text("No products found")
+                        Text("no_products_found".localized)
                             .font(.headline)
                         
                         if !searchText.isEmpty {
-                            Text("Try different keywords")
+                            Text("try_different_keywords".localized)
                                 .font(.subheadline)
                                 .foregroundColor(.secondary)
                         }
@@ -79,11 +79,11 @@ struct SearchView: View {
                     }
                 }
             }
-            .navigationTitle("Search")
+            .navigationTitle("search".localized)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Cancel") {
+                    Button("cancel".localized) {
                         dismiss()
                     }
                 }
