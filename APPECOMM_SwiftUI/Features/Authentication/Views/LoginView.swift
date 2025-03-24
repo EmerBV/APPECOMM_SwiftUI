@@ -198,7 +198,7 @@ private struct LoginFormView: View {
     
     private var loginButton: some View {
         PrimaryButton(
-            title: "Sign In",
+            title: ("login_button".localized),
             isLoading: viewModel.isLoginInProgress,
             isEnabled: viewModel.isFormValid
         ) {

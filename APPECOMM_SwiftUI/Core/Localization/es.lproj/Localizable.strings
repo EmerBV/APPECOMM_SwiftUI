@@ -1,0 +1,61 @@
+// General
+"app_name" = "APPECOMM";
+
+// Authentication
+"login" = "Iniciar Sesión";
+"register" = "Registrarse";
+"email" = "Correo Electrónico";
+"password" = "Contraseña";
+"forgot_password" = "¿Olvidaste tu contraseña?";
+"login_button" = "Iniciar Sesión";
+"register_button" = "Registrarse";
+
+// Profile
+"profile" = "Perfil";
+"settings" = "Configuración";
+"logout" = "Cerrar Sesión";
+"logout_confirmation" = "¿Estás seguro de que quieres cerrar sesión?";
+"edit" = "Editar";
+"cancel" = "Cancelar";
+"personal_information" = "Información Personal";
+"first_name" = "Nombre";
+"last_name" = "Apellido";
+"first_name_placeholder" = "Tu nombre";
+"last_name_placeholder" = "Tu apellido";
+"save_changes" = "Guardar Cambios";
+"hello_user" = "Hola,";
+"shipping_information" = "Información de Envío";
+"add_shipping_address" = "Añadir Dirección de Envío";
+"my_orders" = "Mis Pedidos";
+"order_details" = "Detalles del Pedido";
+"order_number" = "Pedido #";
+"no_orders" = "No hay pedidos aún";
+"my_wishlist" = "Mi Lista de Deseos";
+"payment_methods" = "Métodos de Pago";
+"notifications" = "Notificaciones";
+"help_support" = "Ayuda y Soporte";
+
+// Products
+"products" = "Productos";
+"add_to_cart" = "Añadir al Carrito";
+"price" = "Precio";
+"description" = "Descripción";
+
+// Cart
+"cart" = "Carrito";
+"checkout" = "Pagar";
+"total" = "Total";
+"empty_cart" = "Tu carrito está vacío";
+
+// Orders
+"orders" = "Pedidos";
+"order_history" = "Historial de Pedidos";
+"order_status" = "Estado del Pedido";
+"order_date" = "Fecha del Pedido";
+
+// Settings
+"preferences" = "Preferencias";
+"language" = "Idioma";
+"language_settings" = "Configuración de Idioma";
+"about" = "Acerca de";
+"version" = "Versión"; 

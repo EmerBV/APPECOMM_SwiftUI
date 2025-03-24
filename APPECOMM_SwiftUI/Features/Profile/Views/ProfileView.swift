@@ -38,11 +38,11 @@ struct ProfileView: View {
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     if viewModel.isEditingProfile {
-                        Button("Cancel") {
+                        Button("cancel".localized) {
                             viewModel.cancelEditing()
                         }
                     } else {
-                        Button("Edit") {
+                        Button("edit".localized) {
                             viewModel.isEditingProfile = true
                         }
                     }
@@ -51,10 +51,10 @@ struct ProfileView: View {
         }
         .actionSheet(isPresented: $showingLogoutConfirmation) {
             ActionSheet(
-                title: Text("Logout"),
-                message: Text("Are you sure you want to logout?"),
+                title: Text("logout".localized),
+                message: Text("logout_confirmation".localized),
                 buttons: [
-                    .destructive(Text("Logout")) {
+                    .destructive(Text("logout".localized)) {
                         viewModel.logout()
                     },
                     .cancel()
@@ -70,10 +70,10 @@ struct ProfileView: View {
     
     private var editProfileView: some View {
         Form {
-            Section(header: Text("Personal Information")) {
+            Section(header: Text("personal_information".localized)) {
                 CustomTextField(
-                    title: "First Name",
-                    placeholder: "Your first name",
+                    title: "first_name".localized,
+                    placeholder: "first_name_placeholder".localized,
                     type: .regular,
                     state: viewModel.firstNameState,
                     text: $viewModel.firstName,
@@ -86,8 +86,8 @@ struct ProfileView: View {
                 .padding(.vertical, 8)
                 
                 CustomTextField(
-                    title: "Last Name",
-                    placeholder: "Your last name",
+                    title: "last_name".localized,
+                    placeholder: "last_name_placeholder".localized,
                     type: .regular,
                     state: viewModel.lastNameState,
                     text: $viewModel.lastName,
@@ -110,7 +110,7 @@ struct ProfileView: View {
                                 .padding(.trailing, 8)
                         }
                         
-                        Text("Save Changes")
+                        Text("save_changes".localized)
                             .frame(maxWidth: .infinity)
                     }
                 }
@@ -122,7 +122,7 @@ struct ProfileView: View {
     private func profileView(user: User) -> some View {
         List {
             // User Info
-            Section(header: Text("Personal Information")) {
+            Section(header: Text("personal_information".localized)) {
                 VStack(spacing: 20) {
                     // Avatar
                     Image(systemName: "person.circle.fill")
@@ -134,7 +134,7 @@ struct ProfileView: View {
                     
                     // Name and Email
                     VStack(spacing: 8) {
-                        Text("Hola, \(user.firstName)")
+                        Text("hello_user".localized + " \(user.firstName)")
                             .font(.title3)
                             .fontWeight(.bold)
                         
@@ -148,7 +148,7 @@ struct ProfileView: View {
             }
             
             // Shipping Information
-            Section(header: Text("Shipping Information")) {
+            Section(header: Text("shipping_information".localized)) {
                 if let shipping = user.shippingDetails, shipping.address != nil {
                     VStack(alignment: .leading, spacing: 8) {
                         Text(shipping.address ?? "")
@@ -158,19 +158,19 @@ struct ProfileView: View {
                     }
                     .padding(.vertical, 8)
                 } else {
-                    NavigationLink(destination: Text("Add Shipping Address")) {
-                        Text("Add Shipping Address")
+                    NavigationLink(destination: Text("add_shipping_address".localized)) {
+                        Text("add_shipping_address".localized)
                     }
                 }
             }
             
             // Orders
-            Section(header: Text("My Orders")) {
+            Section(header: Text("my_orders".localized)) {
                 if let orders = user.orders, !orders.isEmpty {
                     ForEach(orders) { order in
-                        NavigationLink(destination: Text("Order Details")) {
+                        NavigationLink(destination: Text("order_details".localized)) {
                             VStack(alignment: .leading, spacing: 4) {
-                                Text("Order #\(order.id)")
+                                Text("order_number".localized + " \(order.id)")
                                     .font(.subheadline)
                                     .fontWeight(.semibold)
                                 
@@ -184,7 +184,7 @@ struct ProfileView: View {
                                     OrderStatusBadge(status: order.status)
                                 }
                                 
-                                Text("Total: $\(order.totalAmount)")
+                                Text("total".localized + ": $\(order.totalAmount)")
                                     .font(.caption)
                                     .foregroundColor(.primary)
                                     .padding(.top, 4)
@@ -193,7 +193,7 @@ struct ProfileView: View {
                         }
                     }
                 } else {
-                    Text("No orders yet")
+                    Text("no_orders".localized)
                         .foregroundColor(.secondary)
                         .padding(.vertical, 8)
                 }
@@ -201,27 +201,31 @@ struct ProfileView: View {
             
             // Actions
             Section {
-                NavigationLink(destination: Text("My Wishlist")) {
-                    Label("My Wishlist", systemImage: "heart")
+                NavigationLink(destination: Text("my_wishlist".localized)) {
+                    Label("my_wishlist".localized, systemImage: "heart")
                 }
                 
-                NavigationLink(destination: Text("Payment Methods")) {
-                    Label("Payment Methods", systemImage: "creditcard")
+                NavigationLink(destination: Text("payment_methods".localized)) {
+                    Label("payment_methods".localized, systemImage: "creditcard")
                 }
                 
-                NavigationLink(destination: Text("Notifications")) {
-                    Label("Notifications", systemImage: "bell")
+                NavigationLink(destination: Text("notifications".localized)) {
+                    Label("notifications".localized, systemImage: "bell")
                 }
                 
-                NavigationLink(destination: Text("Help & Support")) {
-                    Label("Help & Support", systemImage: "questionmark.circle")
+                NavigationLink(destination: LanguageSettingsView()) {
+                    Label("language".localized, systemImage: "globe")
+                }
+                
+                NavigationLink(destination: Text("help_support".localized)) {
+                    Label("help_support".localized, systemImage: "questionmark.circle")
                 }
                 
                 Button(action: {
                     showingLogoutConfirmation = true
                 }) {
                     HStack {
-                        Label("Logout", systemImage: "arrow.right.square")
+                        Label("logout".localized, systemImage: "arrow.right.square")
                             .foregroundColor(.red)
                         
                         Spacer()

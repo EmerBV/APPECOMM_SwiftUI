@@ -1,0 +1,34 @@
+// General
+"app_name" = "APPECOMM";
+
+// Authentication
+"login" = "Login";
+"register" = "Register";
+"email" = "Email";
+"password" = "Password";
+"forgot_password" = "Forgot Password?";
+"login_button" = "Sign In";
+"register_button" = "Sign Up";
+
+// Profile
+"profile" = "Profile";
+"settings" = "Settings";
+"logout" = "Logout";
+
+// Products
+"products" = "Products";
+"add_to_cart" = "Add to Cart";
+"price" = "Price";
+"description" = "Description";
+
+// Cart
+"cart" = "Cart";
+"checkout" = "Checkout";
+"total" = "Total";
+"empty_cart" = "Your cart is empty";
+
+// Orders
+"orders" = "Orders";
+"order_history" = "Order History";
+"order_status" = "Order Status";
+"order_date" = "Order Date"; 

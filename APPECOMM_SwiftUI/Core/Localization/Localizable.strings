@@ -1,0 +1,61 @@
+// General
+"app_name" = "APPECOMM";
+
+// Authentication
+"login" = "Login";
+"register" = "Register";
+"email" = "Email";
+"password" = "Password";
+"forgot_password" = "Forgot Password?";
+"login_button" = "Sign In";
+"register_button" = "Sign Up";
+
+// Profile
+"profile" = "Profile";
+"settings" = "Settings";
+"logout" = "Logout";
+"logout_confirmation" = "Are you sure you want to logout?";
+"edit" = "Edit";
+"cancel" = "Cancel";
+"personal_information" = "Personal Information";
+"first_name" = "First Name";
+"last_name" = "Last Name";
+"first_name_placeholder" = "Your first name";
+"last_name_placeholder" = "Your last name";
+"save_changes" = "Save Changes";
+"hello_user" = "Hello,";
+"shipping_information" = "Shipping Information";
+"add_shipping_address" = "Add Shipping Address";
+"my_orders" = "My Orders";
+"order_details" = "Order Details";
+"order_number" = "Order #";
+"no_orders" = "No orders yet";
+"my_wishlist" = "My Wishlist";
+"payment_methods" = "Payment Methods";
+"notifications" = "Notifications";
+"help_support" = "Help & Support";
+
+// Products
+"products" = "Products";
+"add_to_cart" = "Add to Cart";
+"price" = "Price";
+"description" = "Description";
+
+// Cart
+"cart" = "Cart";
+"checkout" = "Checkout";
+"total" = "Total";
+"empty_cart" = "Your cart is empty";
+
+// Orders
+"orders" = "Orders";
+"order_history" = "Order History";
+"order_status" = "Order Status";
+"order_date" = "Order Date";
+
+// Settings
+"preferences" = "Preferences";
+"language" = "Language";
+"language_settings" = "Language Settings";
+"about" = "About";
+"version" = "Version"; 

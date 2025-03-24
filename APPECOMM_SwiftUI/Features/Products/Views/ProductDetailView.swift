@@ -354,7 +354,7 @@ struct ProductPriceVariantView: View {
                     if product.preOrder {
                         Text("Pre-order")
                     } else {
-                        Text("Add to Cart")
+                        Text("add_to_cart".localized)
                     }
                 }
                 .frame(maxWidth: .infinity)
