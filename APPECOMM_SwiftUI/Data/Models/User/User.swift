@@ -35,8 +35,19 @@ struct ShippingDetails: Codable, Equatable {
 }
 
 struct CartSummary: Codable, Equatable {
-    let id: Int
-    let totalAmount: Decimal
+    let id: Int?
+    let totalAmount: Decimal?
+    
+    enum CodingKeys: String, CodingKey {
+        case id
+        case totalAmount = "total_amount"
+    }
+    
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decodeIfPresent(Int.self, forKey: .id)
+        totalAmount = try container.decodeIfPresent(Decimal.self, forKey: .totalAmount)
+    }
 }
 
 struct OrderSummary: Codable, Equatable, Identifiable {
