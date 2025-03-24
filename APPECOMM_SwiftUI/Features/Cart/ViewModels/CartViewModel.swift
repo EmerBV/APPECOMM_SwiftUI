@@ -83,8 +83,8 @@ class CartViewModel: ObservableObject {
                     return Fail(error: NSError(domain: "CartViewModel", code: -1, userInfo: nil)).eraseToAnyPublisher()
                 }
                 
-                // Then, we update the cart item
-                return self.cartRepository.updateItemQuantity(cartId: cart.cartId, itemId: itemId, quantity: newQuantity)
+                // Usamos productId en lugar de itemId para la actualización
+                return self.cartRepository.updateItemQuantity(cartId: cart.cartId, itemId: productId, quantity: newQuantity)
             }
             .receive(on: DispatchQueue.main)
             .sink { [weak self] completion in

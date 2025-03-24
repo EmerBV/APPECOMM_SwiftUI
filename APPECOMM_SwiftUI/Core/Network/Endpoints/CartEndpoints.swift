@@ -69,7 +69,7 @@ enum CartEndpoints: APIEndpoint {
     
     var encoding: ParameterEncoding {
         switch self {
-        case .addItemToCart:
+        case .addItemToCart, .updateItemQuantity:
             return .url
         default:
             return .json
