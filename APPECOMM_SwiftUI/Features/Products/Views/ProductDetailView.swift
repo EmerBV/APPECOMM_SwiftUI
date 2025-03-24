@@ -356,18 +356,28 @@ struct ProductPriceVariantView: View {
                     } else {
                         Text("Add to Cart")
                     }
-                    
-                    //Text("Add to Cart")
                 }
                 .frame(maxWidth: .infinity)
                 .padding()
-                .background(!isOutOfStock ? Color.blue : Color.gray)
+                .background(shouldEnableButton ? Color.blue : Color.gray)
                 .foregroundColor(.white)
                 .cornerRadius(10)
             }
-            .disabled(isOutOfStock || viewModel.isAddingToCart)
+            .disabled(isOutOfStock || viewModel.isAddingToCart || (product.variants?.isEmpty == false && selectedVariant == nil))
         }
         .padding(.horizontal)
+    }
+    
+    private var shouldEnableButton: Bool {
+        if isOutOfStock {
+            return false
+        }
+        
+        if let variants = product.variants, !variants.isEmpty {
+            return selectedVariant != nil
+        }
+        
+        return true
     }
 }
 
