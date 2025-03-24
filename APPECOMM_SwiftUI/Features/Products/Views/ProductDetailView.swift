@@ -291,7 +291,7 @@ struct ProductPriceVariantView: View {
             HStack(alignment: .center) {
                 if product.discountPercentage > 0 && selectedVariant == nil {
                     VStack(alignment: .leading, spacing: 2) {
-                        Text("Original price:")
+                        Text("original_price".localized)
                             .font(.caption)
                             .foregroundColor(.secondary)
                         
@@ -303,7 +303,7 @@ struct ProductPriceVariantView: View {
                     Spacer()
                     
                     VStack(alignment: .trailing, spacing: 2) {
-                        Text("Discounted price:")
+                        Text("discounted_price".localized)
                             .font(.caption)
                             .foregroundColor(.secondary)
                         
@@ -314,7 +314,7 @@ struct ProductPriceVariantView: View {
                     }
                 } else {
                     VStack(alignment: .leading, spacing: 2) {
-                        Text("Price:")
+                        Text("price_label".localized)
                             .font(.caption)
                             .foregroundColor(.secondary)
                         
@@ -403,7 +403,7 @@ struct VariantsSelectionView: View {
     var body: some View {
         if let variants = product.variants, !variants.isEmpty {
             VStack(alignment: .leading, spacing: 8) {
-                Text("Available Variants")
+                Text("available_variants".localized)
                     .font(.headline)
                 
                 ScrollView(.horizontal, showsIndicators: false) {
@@ -534,15 +534,15 @@ struct ProductDetailsView: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("Product Details")
+            Text("product_details".localized)
                 .font(.headline)
             
             VStack(spacing: 12) {
-                DetailRow(label: "Category", value: product.category.name)
-                DetailRow(label: "Brand", value: product.brand)
-                DetailRow(label: "Status", value: product.status == .inStock ? "In Stock" : "Out of Stock")
-                DetailRow(label: "Pre-Order", value: product.preOrder ? "Yes" : "No")
-                DetailRow(label: "Added", value: formattedDate(product.createdAt))
+                DetailRow(label: "category_label".localized, value: product.category.name)
+                DetailRow(label: "brand_label".localized, value: product.brand)
+                DetailRow(label: "status_label".localized, value: product.status == .inStock ? "in_stock".localized : "out_of_stock".localized)
+                DetailRow(label: "pre_order_label".localized, value: product.preOrder ? "yes".localized : "no".localized)
+                DetailRow(label: "added_label".localized, value: formattedDate(product.createdAt))
             }
         }
         .padding(.horizontal)

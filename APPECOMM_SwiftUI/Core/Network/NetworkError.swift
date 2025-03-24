@@ -50,25 +50,25 @@ extension NetworkError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .invalidURL:
-            return NSLocalizedString("La URL no es válida", comment: "")
+            return "invalid_url".localized
         case .invalidResponse:
-            return NSLocalizedString("Respuesta del servidor inválida", comment: "")
+            return "invalid_response".localized
         case .noData:
-            return NSLocalizedString("No se recibieron datos", comment: "")
+            return "no_data".localized
         case .unauthorized:
-            return NSLocalizedString("No autorizado. Por favor inicie sesión nuevamente", comment: "")
+            return "unauthorized".localized
         case .forbidden:
-            return NSLocalizedString("No tiene permisos para realizar esta acción", comment: "")
+            return "forbidden".localized
         case .notFound:
-            return NSLocalizedString("El recurso solicitado no existe", comment: "")
+            return "not_found".localized
         case .badRequest(let apiError):
-            return apiError?.message ?? NSLocalizedString("Solicitud inválida", comment: "")
+            return apiError?.message ?? "invalid_request".localized
         case .serverError(let apiError):
-            return apiError?.message ?? NSLocalizedString("Error en el servidor", comment: "")
+            return apiError?.message ?? "server_error".localized
         case .decodingError:
-            return NSLocalizedString("Error al procesar la respuesta", comment: "")
+            return "processing_error".localized
         case .unknown:
-            return NSLocalizedString("Error desconocido", comment: "")
+            return "unknown_error".localized
         }
     }
 }

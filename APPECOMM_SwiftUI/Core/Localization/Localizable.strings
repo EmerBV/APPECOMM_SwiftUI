@@ -42,10 +42,25 @@
 "description" = "Description";
 
 // Cart
-"cart" = "Cart";
+"cart" = "My Cart";
 "checkout" = "Checkout";
 "total" = "Total";
 "empty_cart" = "Your cart is empty";
+"clear_cart" = "Clear Cart";
+"clear" = "Clear";
+"clear_cart_confirmation" = "Are you sure you want to remove all items from your cart?";
+"empty_cart_message" = "Looks like you haven't added any items to your cart yet";
+"browse_products" = "Browse Products";
+"order_summary" = "Order Summary";
+"subtotal" = "Subtotal";
+"shipping" = "Shipping";
+"shipping_calculated" = "Calculated at checkout";
+"proceed_to_checkout" = "Proceed to Checkout";
+"remove_item" = "Remove Item";
+"remove" = "Remove";
+"remove_item_confirmation" = "Are you sure you want to remove this item from your cart?";
+"variant_label" = "Variant:";
+"quantity_label" = "Quantity:";
 
 // Orders
 "orders" = "Orders";
@@ -58,4 +73,51 @@
 "language" = "Language";
 "language_settings" = "Language Settings";
 "about" = "About";
-"version" = "Version"; 
+"version" = "Version";
+
+// Product Details
+"product_details" = "Product Details";
+"available_variants" = "Available Variants";
+"original_price" = "Original price:";
+"discounted_price" = "Discounted price:";
+"price_label" = "Price:";
+"category_label" = "Category:";
+"brand_label" = "Brand:";
+"status_label" = "Status:";
+"pre_order_label" = "Pre-Order:";
+"added_label" = "Added:";
+"in_stock" = "In Stock";
+"out_of_stock" = "Out of Stock";
+"yes" = "Yes";
+"no" = "No";
+
+// Why Shop Section
+"why_shop_title" = "WHY SHOP WITH US?";
+"why_shop_subtitle" = "Shopping with us comes with unique perks not available anywhere else. Discover all the reasons to stay and play.";
+"rewards_title" = "EARN REWARDS AND SHOP WITH POINTS";
+"rewards_description" = "Get points with every purchase";
+"rsvp_title" = "RSVP & WAITLISTS";
+"rsvp_description" = "Never miss out on new releases";
+"payment_title" = "FLEXIBLE PAYMENT OPTIONS";
+"payment_description" = "Choose how you want to pay";
+"contests_title" = "CONTESTS & GIVEAWAYS";
+"contests_description" = "Win exclusive prizes";
+
+// Network Errors
+"invalid_url" = "The URL is not valid";
+"invalid_response" = "Invalid server response";
+"no_data" = "No data received";
+"unauthorized" = "Unauthorized. Please login again";
+"forbidden" = "You don't have permission to perform this action";
+"not_found" = "The requested resource does not exist";
+"invalid_request" = "Invalid request";
+"server_error" = "Server error";
+"processing_error" = "Error processing the response";
+"unknown_error" = "Unknown error";
+
+// Validation
+"name_empty" = "Name cannot be empty";
+"name_too_short" = "Name must be at least 2 characters";
+
+// Notifications
+"dismiss_notification" = "Dismiss notification"; 

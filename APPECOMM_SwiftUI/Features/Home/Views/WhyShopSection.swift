@@ -5,11 +5,11 @@ struct WhyShopSection: View {
         VStack(spacing: 24) {
             // Título principal
             VStack(spacing: 16) {
-                Text("WHY SHOP WITH US?")
+                Text("why_shop_title".localized)
                     .font(.title)
                     .fontWeight(.bold)
                 
-                Text("Shopping with us comes with unique perks not available anywhere else. Discover all the reasons to stay and play.")
+                Text("why_shop_subtitle".localized)
                     .font(.subheadline)
                     .foregroundColor(.secondary)
                     .multilineTextAlignment(.center)
@@ -21,28 +21,28 @@ struct WhyShopSection: View {
                 HStack(spacing: 16) {
                     BenefitCard(
                         icon: "gift",
-                        title: "EARN REWARDS AND SHOP WITH POINTS",
-                        description: "Get points with every purchase"
+                        title: "rewards_title".localized,
+                        description: "rewards_description".localized
                     )
                     
                     BenefitCard(
                         icon: "list.clipboard.fill",
-                        title: "RSVP & WAITLISTS",
-                        description: "Never miss out on new releases"
+                        title: "rsvp_title".localized,
+                        description: "rsvp_description".localized
                     )
                 }
                 
                 HStack(spacing: 16) {
                     BenefitCard(
                         icon: "creditcard",
-                        title: "FLEXIBLE PAYMENT OPTIONS",
-                        description: "Choose how you want to pay"
+                        title: "payment_title".localized,
+                        description: "payment_description".localized
                     )
                     
                     BenefitCard(
                         icon: "ticket",
-                        title: "CONTESTS & GIVEAWAYS",
-                        description: "Win exclusive prizes"
+                        title: "contests_title".localized,
+                        description: "contests_description".localized
                     )
                 }
             }

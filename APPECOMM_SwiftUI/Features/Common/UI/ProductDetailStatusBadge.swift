@@ -11,7 +11,7 @@ struct ProductDetailStatusBadge: View {
     let status: ProductStatus
     
     var body: some View {
-        Text(status == .inStock ? "In Stock" : "Out of Stock")
+        Text(status == .inStock ? "in_stock".localized : "out_of_stock".localized)
             .font(.caption)
             .fontWeight(.semibold)
             .padding(.horizontal, 8)

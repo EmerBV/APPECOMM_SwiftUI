@@ -32,7 +32,7 @@ struct CartView: View {
                     }
                 }
             }
-            .navigationTitle("My Cart")
+            .navigationTitle("cart".localized)
             .toolbar {
                 leadingToolbarItems
                 trailingToolbarItems
@@ -40,15 +40,15 @@ struct CartView: View {
             .refreshable {
                 await viewModel.refreshCart()
             }
-            .alert("Clear Cart", isPresented: $shouldShowClearCartAlert) {
-                Button("Clear", role: .destructive) {
+            .alert("clear_cart".localized, isPresented: $shouldShowClearCartAlert) {
+                Button("clear".localized, role: .destructive) {
                     Task {
                         await viewModel.clearCart()
                     }
                 }
-                Button("Cancel", role: .cancel) {}
+                Button("cancel".localized, role: .cancel) {}
             } message: {
-                Text("Are you sure you want to remove all items from your cart?")
+                Text("clear_cart_confirmation".localized)
             }
         }
         .task {
@@ -150,10 +150,10 @@ private struct EmptyCartView: View {
                 .foregroundColor(.secondary)
                 .accessibilityHidden(true)
             
-            Text("Your cart is empty")
+            Text("empty_cart".localized)
                 .font(.title2.weight(.semibold))
             
-            Text("Looks like you haven't added any items to your cart yet")
+            Text("empty_cart_message".localized)
                 .font(.subheadline)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
@@ -162,7 +162,7 @@ private struct EmptyCartView: View {
             NavigationLink {
                 ProductListView(viewModel: DependencyInjector.shared.resolve(ProductListViewModel.self))
             } label: {
-                Label("Browse Products", systemImage: "bag")
+                Label("browse_products".localized, systemImage: "bag")
                     .padding()
                     .foregroundColor(.white)
                     .background(Color.accentColor)
@@ -185,20 +185,20 @@ private struct OrderSummaryView: View {
                 .padding(.bottom, 8)
             
             HStack {
-                Text("Order Summary")
+                Text("order_summary".localized)
                     .font(.headline)
                 Spacer()
             }
             .padding(.horizontal)
             
-            summaryRow(title: "Subtotal", value: viewModel.formattedPrice(cart.totalAmount))
-            summaryRow(title: "Shipping", value: "Calculated at checkout", isSecondary: true)
+            summaryRow(title: "subtotal".localized, value: viewModel.formattedPrice(cart.totalAmount))
+            summaryRow(title: "shipping".localized, value: "shipping_calculated".localized, isSecondary: true)
             
             Divider()
                 .padding(.vertical, 8)
             
             summaryRow(
-                title: "Total",
+                title: "total".localized,
                 value: viewModel.formattedPrice(cart.totalAmount),
                 isBold: true
             )
@@ -239,7 +239,7 @@ private struct CheckoutButton: View {
             }
         } label: {
             HStack {
-                Text("Proceed to Checkout")
+                Text("proceed_to_checkout".localized)
                     .fontWeight(.semibold)
                 
                 if viewModel.isProcessingCheckout {
@@ -301,11 +301,11 @@ struct CartItemRow: View {
         .clipShape(RoundedRectangle(cornerRadius: 10))
         .shadow(color: .black.opacity(0.1), radius: 5, x: 0, y: 2)
         .padding(.horizontal)
-        .alert("Remove Item", isPresented: $shouldShowRemoveAlert) {
-            Button("Remove", role: .destructive, action: onRemove)
-            Button("Cancel", role: .cancel) {}
+        .alert("remove_item".localized, isPresented: $shouldShowRemoveAlert) {
+            Button("remove".localized, role: .destructive, action: onRemove)
+            Button("cancel".localized, role: .cancel) {}
         } message: {
-            Text("Are you sure you want to remove this item from your cart?")
+            Text("remove_item_confirmation".localized)
         }
     }
     
@@ -316,7 +316,7 @@ struct CartItemRow: View {
                 .lineLimit(2)
             
             if let variantName = item.variantName {
-                Text("Variant: \(variantName)")
+                Text("\(String(localized: "variant_label")) \(variantName)")
                     .font(.subheadline)
                     .foregroundColor(.accentColor)
             }
@@ -335,7 +335,7 @@ struct CartItemRow: View {
             } label: {
                 Image(systemName: "trash")
                     .foregroundColor(.red)
-                    .accessibilityLabel("Remove item")
+                    .accessibilityLabel("remove".localized)
             }
             .buttonStyle(PlainButtonStyle())
         }
@@ -343,7 +343,7 @@ struct CartItemRow: View {
     
     private var quantityControls: some View {
         HStack {
-            Text("Quantity:")
+            Text("quantity_label".localized)
                 .font(.subheadline)
                 .foregroundColor(.secondary)
             

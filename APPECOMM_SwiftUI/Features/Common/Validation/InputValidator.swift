@@ -53,11 +53,11 @@ final class InputValidator: InputValidatorProtocol {
         let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
         
         guard !trimmedName.isEmpty else {
-            return .invalid(NSLocalizedString("Name cannot be empty", comment: ""))
+            return .invalid("name_empty".localized)
         }
         
         guard trimmedName.count >= 2 else {
-            return .invalid(NSLocalizedString("Name must be at least 2 characters", comment: ""))
+            return .invalid("name_too_short".localized)
         }
         
         return .valid

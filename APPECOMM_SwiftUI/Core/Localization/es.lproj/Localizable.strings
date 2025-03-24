@@ -42,10 +42,25 @@
 "description" = "Descripción";
 
 // Cart
-"cart" = "Carrito";
+"cart" = "Mi Carrito";
 "checkout" = "Pagar";
 "total" = "Total";
 "empty_cart" = "Tu carrito está vacío";
+"clear_cart" = "Vaciar Carrito";
+"clear" = "Vaciar";
+"clear_cart_confirmation" = "¿Estás seguro de que deseas eliminar todos los artículos de tu carrito?";
+"empty_cart_message" = "Parece que aún no has añadido ningún artículo a tu carrito";
+"browse_products" = "Explorar Productos";
+"order_summary" = "Resumen del Pedido";
+"subtotal" = "Subtotal";
+"shipping" = "Envío";
+"shipping_calculated" = "Calculado en el checkout";
+"proceed_to_checkout" = "Proceder al Pago";
+"remove_item" = "Eliminar Artículo";
+"remove" = "Eliminar";
+"remove_item_confirmation" = "¿Estás seguro de que deseas eliminar este artículo de tu carrito?";
+"variant_label" = "Variante:";
+"quantity_label" = "Cantidad:";
 
 // Orders
 "orders" = "Pedidos";
@@ -58,4 +73,51 @@
 "language" = "Idioma";
 "language_settings" = "Configuración de Idioma";
 "about" = "Acerca de";
-"version" = "Versión"; 
+"version" = "Versión";
+
+// Product Details
+"product_details" = "Detalles del Producto";
+"available_variants" = "Variantes Disponibles";
+"original_price" = "Precio original:";
+"discounted_price" = "Precio con descuento:";
+"price_label" = "Precio:";
+"category_label" = "Categoría:";
+"brand_label" = "Marca:";
+"status_label" = "Estado:";
+"pre_order_label" = "Pre-orden:";
+"added_label" = "Añadido:";
+"in_stock" = "En Stock";
+"out_of_stock" = "Sin Stock";
+"yes" = "Sí";
+"no" = "No";
+
+// Why Shop Section
+"why_shop_title" = "¿POR QUÉ COMPRAR CON NOSOTROS?";
+"why_shop_subtitle" = "Comprar con nosotros viene con beneficios únicos no disponibles en ningún otro lugar. Descubre todas las razones para quedarte y jugar.";
+"rewards_title" = "GANA RECOMPENSAS Y COMPRA CON PUNTOS";
+"rewards_description" = "Obtén puntos con cada compra";
+"rsvp_title" = "RESERVA Y LISTAS DE ESPERA";
+"rsvp_description" = "No te pierdas los nuevos lanzamientos";
+"payment_title" = "OPCIONES DE PAGO FLEXIBLES";
+"payment_description" = "Elige cómo quieres pagar";
+"contests_title" = "CONCURSOS Y SORTEOS";
+"contests_description" = "Gana premios exclusivos";
+
+// Network Errors
+"invalid_url" = "La URL no es válida";
+"invalid_response" = "Respuesta del servidor inválida";
+"no_data" = "No se recibieron datos";
+"unauthorized" = "No autorizado. Por favor inicie sesión nuevamente";
+"forbidden" = "No tiene permisos para realizar esta acción";
+"not_found" = "El recurso solicitado no existe";
+"invalid_request" = "Solicitud inválida";
+"server_error" = "Error en el servidor";
+"processing_error" = "Error al procesar la respuesta";
+"unknown_error" = "Error desconocido";
+
+// Validation
+"name_empty" = "El nombre no puede estar vacío";
+"name_too_short" = "El nombre debe tener al menos 2 caracteres";
+
+// Notifications
+"dismiss_notification" = "Descartar notificación"; 

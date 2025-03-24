@@ -134,7 +134,7 @@ private struct DismissButton: View {
                 .foregroundColor(.white.opacity(0.7))
                 .frame(width: 24, height: 24)
         }
-        .accessibilityLabel("Dismiss notification")
+        .accessibilityLabel("dismiss_notification".localized)
     }
 }
 
