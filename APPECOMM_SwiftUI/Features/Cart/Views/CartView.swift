@@ -283,7 +283,11 @@ struct CartItemRow: View {
     
     var body: some View {
         HStack(alignment: .top, spacing: 16) {
-            ProductImageView(size: 80)
+            ProductImageView(
+                size: 80,
+                imageUrl: "",
+                baseURL: ""
+            )
             
             VStack(alignment: .leading, spacing: 8) {
                 productDetails
