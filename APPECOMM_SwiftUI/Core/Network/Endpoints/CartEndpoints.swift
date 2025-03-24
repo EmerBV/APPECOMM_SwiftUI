@@ -13,7 +13,7 @@ enum CartEndpoints: APIEndpoint {
     case getTotalPrice(cartId: Int)
     case addItemToCart(productId: Int, quantity: Int, variantId: Int?)
     case updateItemQuantity(cartId: Int, itemId: Int, quantity: Int)
-    case removeItem(cartId: Int, itemId: Int)
+    case removeItem(cartId: Int, productId: Int)
     
     var path: String {
         switch self {
@@ -27,8 +27,8 @@ enum CartEndpoints: APIEndpoint {
             return "/cartItems/item/add"
         case .updateItemQuantity(let cartId, let itemId, _):
             return "/cartItems/cart/\(cartId)/item/\(itemId)/update"
-        case .removeItem(let cartId, let itemId):
-            return "/cartItems/cart/\(cartId)/item/\(itemId)/remove"
+        case .removeItem(let cartId, let productId):
+            return "/cartItems/cart/\(cartId)/item/\(productId)/remove"
         }
     }
     

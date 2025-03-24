@@ -110,7 +110,7 @@ final class CartService: CartServiceProtocol {
     }
     
     func removeItem(cartId: Int, itemId: Int) -> AnyPublisher<Void, NetworkError> {
-        let endpoint = CartEndpoints.removeItem(cartId: cartId, itemId: itemId)
+        let endpoint = CartEndpoints.removeItem(cartId: cartId, productId: itemId)
         Logger.info("CartService: Removing item from cart - cartId: \(cartId), itemId: \(itemId)")
         
         return networkDispatcher.dispatch(ApiResponse<EmptyResponse>.self, endpoint)

@@ -8,8 +8,8 @@
 import SwiftUI
 
 struct CartView: View {
-    @StateObject var viewModel: CartViewModel
-    @State private var showingClearCartConfirmation = false
+    @StateObject private var viewModel: CartViewModel
+    @State private var shouldShowClearCartAlert = false
     
     init(viewModel: CartViewModel) {
         _viewModel = StateObject(wrappedValue: viewModel)
@@ -18,117 +18,140 @@ struct CartView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                if viewModel.isLoading {
-                    LoadingView()
-                } else if let cart = viewModel.cart, !cart.items.isEmpty {
-                    cartContentView(cart: cart)
-                } else {
-                    emptyCartView
-                }
+                contentView
                 
-                // Error message
                 if let errorMessage = viewModel.errorMessage {
-                    ErrorToast(message: errorMessage) {
+                    ErrorToastView(message: errorMessage) {
                         viewModel.errorMessage = nil
                     }
                 }
                 
-                // Success message
                 if let successMessage = viewModel.successMessage {
-                    SuccessToast(message: successMessage) {
+                    SuccessToastView(message: successMessage) {
                         viewModel.successMessage = nil
                     }
                 }
             }
             .navigationTitle("My Cart")
             .toolbar {
-                if let cart = viewModel.cart, !cart.items.isEmpty {
-                    ToolbarItem(placement: .navigationBarTrailing) {
-                        Button(action: {
-                            showingClearCartConfirmation = true
-                        }) {
-                            Text("Clear All")
-                                .foregroundColor(.red)
-                        }
-                    }
-                }
-                
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button(action: {
-                        viewModel.refreshCart()
-                    }) {
-                        Image(systemName: "arrow.clockwise")
-                    }
-                }
+                leadingToolbarItems
+                trailingToolbarItems
             }
             .refreshable {
-                viewModel.refreshCart()
+                await viewModel.refreshCart()
             }
-            .alert(isPresented: $showingClearCartConfirmation) {
-                Alert(
-                    title: Text("Clear Cart"),
-                    message: Text("Are you sure you want to remove all items from your cart?"),
-                    primaryButton: .destructive(Text("Clear")) {
-                        viewModel.clearCart()
-                    },
-                    secondaryButton: .cancel()
-                )
+            .alert("Clear Cart", isPresented: $shouldShowClearCartAlert) {
+                Button("Clear", role: .destructive) {
+                    Task {
+                        await viewModel.clearCart()
+                    }
+                }
+                Button("Cancel", role: .cancel) {}
+            } message: {
+                Text("Are you sure you want to remove all items from your cart?")
             }
         }
-        .onAppear {
+        .task {
             if viewModel.isUserLoggedIn {
-                viewModel.refreshCart()
+                await viewModel.refreshCart()
             }
         }
     }
     
-    // MARK: - Cart Content View
-    private func cartContentView(cart: Cart) -> some View {
+    @ViewBuilder
+    private var contentView: some View {
+        if viewModel.isLoading {
+            LoadingView()
+        } else if let cart = viewModel.cart, !cart.items.isEmpty {
+            CartContentView(cart: cart, viewModel: viewModel)
+        } else {
+            EmptyCartView()
+        }
+    }
+    
+    private var leadingToolbarItems: some ToolbarContent {
+        ToolbarItem(placement: .navigationBarLeading) {
+            Button {
+                Task {
+                    await viewModel.refreshCart()
+                }
+            } label: {
+                Image(systemName: "arrow.clockwise")
+                    .accessibilityLabel("Refresh Cart")
+            }
+        }
+    }
+    
+    private var trailingToolbarItems: some ToolbarContent {
+        ToolbarItem(placement: .navigationBarTrailing) {
+            if let cart = viewModel.cart, !cart.items.isEmpty {
+                Button {
+                    shouldShowClearCartAlert = true
+                } label: {
+                    Text("Clear All")
+                        .foregroundColor(.red)
+                }
+            }
+        }
+    }
+}
+
+// MARK: - Cart Content View
+private struct CartContentView: View {
+    let cart: Cart
+    @ObservedObject var viewModel: CartViewModel
+    
+    var body: some View {
         VStack(spacing: 0) {
-            // Cart items list
-            List {
-                ForEach(cart.items) { item in
-                    CartItemRow(
-                        item: item,
-                        formattedPrice: viewModel.formattedPrice(item.totalPrice),
-                        onUpdateQuantity: { newQuantity in
-                            viewModel.updateItemQuantity(
+            cartItemsList
+            OrderSummaryView(cart: cart, viewModel: viewModel)
+            CheckoutButton(viewModel: viewModel)
+        }
+    }
+    
+    private var cartItemsList: some View {
+        List {
+            ForEach(cart.items) { item in
+                CartItemRow(
+                    item: item,
+                    formattedPrice: viewModel.formattedPrice(item.totalPrice),
+                    onUpdateQuantity: { newQuantity in
+                        Task {
+                            await viewModel.updateItemQuantity(
                                 itemId: item.itemId,
                                 productId: item.product.id,
                                 newQuantity: newQuantity
                             )
-                        },
-                        onRemove: {
-                            viewModel.removeItem(
+                        }
+                    },
+                    onRemove: {
+                        Task {
+                            await viewModel.removeItem(
                                 itemId: item.itemId,
                                 productId: item.product.id
                             )
                         }
-                    )
-                    .listRowSeparator(.hidden)
-                    .listRowInsets(EdgeInsets(top: 8, leading: 0, bottom: 8, trailing: 0))
-                }
+                    }
+                )
+                .listRowSeparator(.hidden)
+                .listRowInsets(EdgeInsets(top: 8, leading: 0, bottom: 8, trailing: 0))
             }
-            .listStyle(PlainListStyle())
-            
-            // Order summary
-            orderSummaryView(cart: cart)
-            
-            // Checkout button
-            checkoutButton(cart: cart)
         }
+        .listStyle(.plain)
     }
-    
-    // MARK: - Empty Cart View
-    private var emptyCartView: some View {
+}
+
+// MARK: - Empty Cart View
+private struct EmptyCartView: View {
+    var body: some View {
         VStack(spacing: 20) {
             Image(systemName: "cart")
                 .font(.system(size: 64))
-                .foregroundColor(.gray)
+                .foregroundColor(.secondary)
+                .accessibilityHidden(true)
             
             Text("Your cart is empty")
-                .font(.title2)
-                .fontWeight(.semibold)
+                .font(.title2.weight(.semibold))
             
             Text("Looks like you haven't added any items to your cart yet")
                 .font(.subheadline)
@@ -136,23 +159,27 @@ struct CartView: View {
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 40)
             
-            NavigationLink(destination: ProductListView(viewModel: DependencyInjector.shared.resolve(ProductListViewModel.self))) {
-                HStack {
-                    Image(systemName: "bag")
-                    Text("Browse Products")
-                }
-                .padding()
-                .foregroundColor(.white)
-                .background(Color.blue)
-                .cornerRadius(10)
+            NavigationLink {
+                ProductListView(viewModel: DependencyInjector.shared.resolve(ProductListViewModel.self))
+            } label: {
+                Label("Browse Products", systemImage: "bag")
+                    .padding()
+                    .foregroundColor(.white)
+                    .background(Color.accentColor)
+                    .clipShape(RoundedRectangle(cornerRadius: 10))
             }
             .padding(.top, 20)
         }
         .padding()
     }
+}
+
+// MARK: - Order Summary View
+private struct OrderSummaryView: View {
+    let cart: Cart
+    let viewModel: CartViewModel
     
-    // MARK: - Order Summary View
-    private func orderSummaryView(cart: Cart) -> some View {
+    var body: some View {
         VStack(spacing: 12) {
             Divider()
                 .padding(.bottom, 8)
@@ -164,35 +191,17 @@ struct CartView: View {
             }
             .padding(.horizontal)
             
-            HStack {
-                Text("Subtotal")
-                    .foregroundColor(.secondary)
-                Spacer()
-                Text(viewModel.formattedPrice(cart.totalAmount))
-                    .fontWeight(.semibold)
-            }
-            .padding(.horizontal)
-            
-            HStack {
-                Text("Shipping")
-                    .foregroundColor(.secondary)
-                Spacer()
-                Text("Calculated at checkout")
-                    .foregroundColor(.secondary)
-            }
-            .padding(.horizontal)
+            summaryRow(title: "Subtotal", value: viewModel.formattedPrice(cart.totalAmount))
+            summaryRow(title: "Shipping", value: "Calculated at checkout", isSecondary: true)
             
             Divider()
                 .padding(.vertical, 8)
             
-            HStack {
-                Text("Total")
-                    .font(.headline)
-                Spacer()
-                Text(viewModel.formattedPrice(cart.totalAmount))
-                    .font(.headline)
-            }
-            .padding(.horizontal)
+            summaryRow(
+                title: "Total",
+                value: viewModel.formattedPrice(cart.totalAmount),
+                isBold: true
+            )
             
             Divider()
                 .padding(.top, 8)
@@ -201,11 +210,34 @@ struct CartView: View {
         .background(Color(.systemBackground))
     }
     
-    // MARK: - Checkout Button
-    private func checkoutButton(cart: Cart) -> some View {
-        Button(action: {
-            viewModel.proceedToCheckout()
-        }) {
+    private func summaryRow(
+        title: String,
+        value: String,
+        isBold: Bool = false,
+        isSecondary: Bool = false
+    ) -> some View {
+        HStack {
+            Text(title)
+                .foregroundColor(isSecondary ? .secondary : .primary)
+            Spacer()
+            Text(value)
+                .font(isBold ? .headline : .body)
+                .foregroundColor(isSecondary ? .secondary : .primary)
+        }
+        .padding(.horizontal)
+    }
+}
+
+// MARK: - Checkout Button
+private struct CheckoutButton: View {
+    @ObservedObject var viewModel: CartViewModel
+    
+    var body: some View {
+        Button {
+            Task {
+                await viewModel.proceedToCheckout()
+            }
+        } label: {
             HStack {
                 Text("Proceed to Checkout")
                     .fontWeight(.semibold)
@@ -217,16 +249,16 @@ struct CartView: View {
             }
             .frame(maxWidth: .infinity)
             .padding()
-            .background(Color.blue)
+            .background(Color.accentColor)
             .foregroundColor(.white)
-            .cornerRadius(10)
+            .clipShape(RoundedRectangle(cornerRadius: 10))
             .padding([.horizontal, .bottom])
         }
         .disabled(viewModel.isProcessingCheckout)
     }
 }
 
-// MARK: - CartItemRow
+// MARK: - Cart Item Row
 struct CartItemRow: View {
     let item: CartItem
     let formattedPrice: String
@@ -234,9 +266,14 @@ struct CartItemRow: View {
     let onRemove: () -> Void
     
     @State private var quantity: Int
-    @State private var showingRemoveConfirmation = false
+    @State private var shouldShowRemoveAlert = false
     
-    init(item: CartItem, formattedPrice: String, onUpdateQuantity: @escaping (Int) -> Void, onRemove: @escaping () -> Void) {
+    init(
+        item: CartItem,
+        formattedPrice: String,
+        onUpdateQuantity: @escaping (Int) -> Void,
+        onRemove: @escaping () -> Void
+    ) {
         self.item = item
         self.formattedPrice = formattedPrice
         self.onUpdateQuantity = onUpdateQuantity
@@ -246,57 +283,29 @@ struct CartItemRow: View {
     
     var body: some View {
         HStack(alignment: .top, spacing: 16) {
-            // Product image or placeholder
-            productImageView
+            ProductImageView(size: 80)
             
-            // Product details
             VStack(alignment: .leading, spacing: 8) {
-                // Product name and variant
-                productInfoView
-                
-                // Price and remove button
-                priceAndRemoveView
-                
-                // Quantity controls
-                quantityControlsView
+                productDetails
+                priceAndRemoveButton
+                quantityControls
             }
         }
         .padding(.horizontal)
         .padding(.vertical, 8)
         .background(Color(.systemBackground))
-        .cornerRadius(10)
-        .shadow(color: Color.black.opacity(0.1), radius: 5, x: 0, y: 2)
+        .clipShape(RoundedRectangle(cornerRadius: 10))
+        .shadow(color: .black.opacity(0.1), radius: 5, x: 0, y: 2)
         .padding(.horizontal)
-        .alert(isPresented: $showingRemoveConfirmation) {
-            Alert(
-                title: Text("Remove Item"),
-                message: Text("Are you sure you want to remove this item from your cart?"),
-                primaryButton: .destructive(Text("Remove")) {
-                    onRemove()
-                },
-                secondaryButton: .cancel()
-            )
+        .alert("Remove Item", isPresented: $shouldShowRemoveAlert) {
+            Button("Remove", role: .destructive, action: onRemove)
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("Are you sure you want to remove this item from your cart?")
         }
     }
     
-    // MARK: - Product Image View
-    private var productImageView: some View {
-        ZStack {
-            Rectangle()
-                .fill(Color.gray.opacity(0.3))
-                .frame(width: 80, height: 80)
-                .cornerRadius(8)
-            
-            // This would be an AsyncImage with the product image URL in a real app
-            Image(systemName: "photo")
-                .font(.largeTitle)
-                .foregroundColor(.gray)
-        }
-        .frame(width: 80, height: 80)
-    }
-    
-    // MARK: - Product Info View
-    private var productInfoView: some View {
+    private var productDetails: some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(item.product.name)
                 .font(.headline)
@@ -305,30 +314,30 @@ struct CartItemRow: View {
             if let variantName = item.variantName {
                 Text("Variant: \(variantName)")
                     .font(.subheadline)
-                    .foregroundColor(.blue)
+                    .foregroundColor(.accentColor)
             }
         }
     }
     
-    // MARK: - Price and Remove View
-    private var priceAndRemoveView: some View {
+    private var priceAndRemoveButton: some View {
         HStack {
             Text(formattedPrice)
                 .font(.headline)
             
             Spacer()
             
-            Button(action: {
-                showingRemoveConfirmation = true
-            }) {
+            Button {
+                shouldShowRemoveAlert = true
+            } label: {
                 Image(systemName: "trash")
                     .foregroundColor(.red)
+                    .accessibilityLabel("Remove item")
             }
+            .buttonStyle(PlainButtonStyle())
         }
     }
     
-    // MARK: - Quantity Controls View
-    private var quantityControlsView: some View {
+    private var quantityControls: some View {
         HStack {
             Text("Quantity:")
                 .font(.subheadline)
@@ -336,33 +345,11 @@ struct CartItemRow: View {
             
             Spacer()
             
-            HStack(spacing: 12) {
-                Button(action: {
-                    if quantity > 1 {
-                        quantity -= 1
-                        onUpdateQuantity(quantity)
-                    }
-                }) {
-                    Image(systemName: "minus.circle.fill")
-                        .foregroundColor(quantity > 1 ? .blue : .gray)
-                        .font(.title3)
-                }
-                
-                Text("\(quantity)")
-                    .font(.headline)
-                    .frame(minWidth: 20, alignment: .center)
-                
-                Button(action: {
-                    if quantity < 10 { // Assuming a max of 10 items
-                        quantity += 1
-                        onUpdateQuantity(quantity)
-                    }
-                }) {
-                    Image(systemName: "plus.circle.fill")
-                        .foregroundColor(quantity < 10 ? .blue : .gray)
-                        .font(.title3)
-                }
-            }
+            QuantityStepperView(
+                quantity: $quantity,
+                range: 1...10,
+                onValueChanged: onUpdateQuantity
+            )
         }
     }
 }

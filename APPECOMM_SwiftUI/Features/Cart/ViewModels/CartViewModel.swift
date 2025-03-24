@@ -119,8 +119,8 @@ class CartViewModel: ObservableObject {
                     return Fail(error: NSError(domain: "CartViewModel", code: -1, userInfo: nil)).eraseToAnyPublisher()
                 }
                 
-                // Then, we remove the cart item
-                return self.cartRepository.removeItem(cartId: cart.cartId, itemId: itemId)
+                // Según el backend, parece que necesitamos usar productId, no itemId
+                return self.cartRepository.removeItem(cartId: cart.cartId, itemId: productId)
             }
             .receive(on: DispatchQueue.main)
             .sink { [weak self] completion in
