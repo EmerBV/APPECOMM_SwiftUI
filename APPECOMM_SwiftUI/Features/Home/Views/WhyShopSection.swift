@@ -8,6 +8,7 @@ struct WhyShopSection: View {
                 Text("why_shop_title".localized)
                     .font(.title)
                     .fontWeight(.bold)
+                    .multilineTextAlignment(.center)
                 
                 Text("why_shop_subtitle".localized)
                     .font(.subheadline)

@@ -29,6 +29,7 @@ struct SearchView: View {
                         }) {
                             Image(systemName: "xmark.circle.fill")
                                 .foregroundColor(.gray)
+                                .accessibilityLabel("clear_search".localized)
                         }
                     }
                 }

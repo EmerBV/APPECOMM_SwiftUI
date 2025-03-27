@@ -37,6 +37,7 @@
 
 // Products
 "products" = "Products";
+"all" = "All";
 "add_to_cart" = "Add to Cart";
 "price" = "Price";
 "description" = "Description";
@@ -88,6 +89,12 @@
 "added_label" = "Added:";
 "in_stock" = "In Stock";
 "out_of_stock" = "Out of Stock";
+"low_stock" = "Low Stock";
+"units_sold" = "Units Sold";
+"quantity" = "Quantity";
+"available" = "Available";
+"no_description" = "No description available";
+"added_to_cart" = "Product added to cart";
 "yes" = "Yes";
 "no" = "No";
 
@@ -121,6 +128,21 @@
 
 // Notifications
 "dismiss_notification" = "Dismiss notification";
+"sign_up_exclusive" = "Sign up for exclusive offers";
+
+// Newsletter Form
+"email" = "Email";
+"phone_number_optional" = "Phone Number (optional)";
+"accept_terms" = "I accept the terms and conditions";
+"sign_up" = "Sign Up";
+"newsletter_signup" = "Newsletter Signup";
+"close" = "Close";
+
+// Legal & Accessibility
+"privacy_policy" = "Privacy Policy";
+"terms_conditions" = "Terms & Conditions";
+"accessibility_statement" = "Accessibility Statement";
+"copyright_notice" = "Series content, product specifications, release dates and pricing are subject to change. All Rights Reserved.";
 
 // Home View
 "search" = "Search";
@@ -138,6 +160,7 @@
 "search_products" = "Search products";
 "no_products_found" = "No products found";
 "try_different_keywords" = "Try different keywords";
+"clear_search" = "Clear search";
 
 // Promotion Banner
 "summer_sale" = "Summer Sale";

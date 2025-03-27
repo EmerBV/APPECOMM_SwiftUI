@@ -109,7 +109,7 @@ struct ProductDetailView: View {
             
             // Success message
             if showAddedToCartMessage {
-                SuccessToast(message: "Producto añadido al carrito") {
+                SuccessToast(message: "added_to_cart".localized) {
                     showAddedToCartMessage = false
                 }
             }
@@ -260,7 +260,7 @@ struct ProductHeaderView: View {
                     Image(systemName: "cart.fill")
                         .foregroundColor(.gray)
                     
-                    Text("Unidades vendidas")
+                    Text("units_sold".localized)
                         .font(.footnote)
                         .fontWeight(.medium)
                     
@@ -326,7 +326,7 @@ struct ProductPriceVariantView: View {
                     Spacer()
                     
                     if let variant = selectedVariant {
-                        Text("Variant: \(variant.name)")
+                        Text("\("variant_label".localized) \(variant.name)")
                             .font(.subheadline)
                             .foregroundColor(.blue)
                     }
@@ -431,11 +431,11 @@ struct VariantsSelectionView: View {
                                         Spacer()
                                         
                                         if variant.inventory <= 0 {
-                                            Text("Out of Stock")
+                                            Text("out_of_stock".localized)
                                                 .font(.caption)
                                                 .foregroundColor(.red)
                                         } else if variant.inventory < 5 {
-                                            Text("Low Stock")
+                                            Text("low_stock".localized)
                                                 .font(.caption)
                                                 .foregroundColor(.orange)
                                         }
@@ -467,7 +467,7 @@ struct QuantitySelectionView: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("Quantity")
+            Text("quantity".localized)
                 .font(.headline)
             
             HStack {
@@ -503,7 +503,7 @@ struct QuantitySelectionView: View {
                 
                 Spacer()
                 
-                Text("\(availableInventory) available")
+                Text("\(availableInventory) \("available".localized)")
                     .font(.caption)
                     .foregroundColor(.secondary)
             }
@@ -517,10 +517,10 @@ struct ProductDescriptionView: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Description")
+            Text("description".localized)
                 .font(.headline)
             
-            Text(product.description ?? "No description available")
+            Text(product.description ?? "no_description".localized)
                 .font(.body)
                 .foregroundColor(.secondary)
         }

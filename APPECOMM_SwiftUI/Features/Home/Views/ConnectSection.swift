@@ -56,16 +56,16 @@ struct ConnectSection: View {
             // Footer links
             VStack(spacing: 16) {
                 HStack(spacing: 16) {
-                    Link("Privacy Policy", destination: URL(string: "https://example.com/privacy")!)
+                    Link("privacy_policy".localized, destination: URL(string: "https://example.com/privacy")!)
                     Text("|")
-                    Link("Terms & Conditions", destination: URL(string: "https://example.com/terms")!)
+                    Link("terms_conditions".localized, destination: URL(string: "https://example.com/terms")!)
                     Text("|")
-                    Link("Accessibility Statement", destination: URL(string: "https://example.com/accessibility")!)
+                    Link("accessibility_statement".localized, destination: URL(string: "https://example.com/accessibility")!)
                 }
                 .font(.caption)
                 .foregroundColor(.secondary)
                 
-                Text("Series content, product specifications, release dates and pricing are subject to change. All Rights Reserved.")
+                Text("copyright_notice".localized)
                     .font(.caption2)
                     .foregroundColor(.secondary)
                     .multilineTextAlignment(.center)
@@ -102,30 +102,30 @@ private struct NewsletterSignupView: View {
     var body: some View {
         NavigationView {
             Form {
-                Section(header: Text("Sign up for exclusive offers")) {
-                    TextField("Email", text: $email)
+                Section(header: Text("sign_up_exclusive".localized)) {
+                    TextField("email".localized, text: $email)
                         .keyboardType(.emailAddress)
                         .autocapitalization(.none)
                     
-                    TextField("Phone Number (optional)", text: $phoneNumber)
+                    TextField("phone_number_optional".localized, text: $phoneNumber)
                         .keyboardType(.phonePad)
                     
-                    Toggle("I accept the terms and conditions", isOn: $acceptTerms)
+                    Toggle("accept_terms".localized, isOn: $acceptTerms)
                 }
                 
                 Button(action: {
                     // Aquí iría la lógica de registro
                     dismiss()
                 }) {
-                    Text("Sign Up")
+                    Text("sign_up".localized)
                 }
                 .disabled(!acceptTerms || email.isEmpty)
             }
-            .navigationTitle("Newsletter Signup")
+            .navigationTitle("newsletter_signup".localized)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Close") {
+                    Button("close".localized) {
                         dismiss()
                     }
                 }

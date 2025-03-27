@@ -53,7 +53,7 @@ struct ProductListView: View {
                     }
                 }
             }
-            .navigationTitle("Products")
+            .navigationTitle("products".localized)
             .navigationBarTitleDisplayMode(.large)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
@@ -99,7 +99,7 @@ private struct SearchBar: View {
             Image(systemName: "magnifyingglass")
                 .foregroundColor(.secondary)
             
-            TextField("Search products", text: $text)
+            TextField("search_products".localized, text: $text)
                 .textInputAutocapitalization(.never)
                 .disableAutocorrection(true)
             
@@ -120,7 +120,7 @@ private struct ClearButton: View {
         Button(action: { text = "" }) {
             Image(systemName: "xmark.circle.fill")
                 .foregroundColor(.secondary)
-                .accessibilityLabel("Clear search")
+                .accessibilityLabel("clear_search".localized)
         }
     }
 }
@@ -133,7 +133,7 @@ private struct CategoryFilterScrollView: View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 10) {
                 CategoryFilterItem(
-                    name: "All",
+                    name: "all".localized,
                     isSelected: selectedCategory == nil
                 ) {
                     selectedCategory = nil

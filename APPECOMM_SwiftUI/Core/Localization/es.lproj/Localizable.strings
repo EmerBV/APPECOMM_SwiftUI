@@ -37,6 +37,7 @@
 
 // Products
 "products" = "Productos";
+"all" = "Todos";
 "add_to_cart" = "Añadir al Carrito";
 "price" = "Precio";
 "description" = "Descripción";
@@ -88,6 +89,12 @@
 "added_label" = "Añadido:";
 "in_stock" = "En Stock";
 "out_of_stock" = "Sin Stock";
+"low_stock" = "Stock Bajo";
+"units_sold" = "Unidades Vendidas";
+"quantity" = "Cantidad";
+"available" = "Disponible";
+"no_description" = "No hay descripción disponible";
+"added_to_cart" = "Producto añadido al carrito";
 "yes" = "Sí";
 "no" = "No";
 
@@ -121,6 +128,21 @@
 
 // Notifications
 "dismiss_notification" = "Descartar notificación";
+"sign_up_exclusive" = "Regístrate para ofertas exclusivas";
+
+// Newsletter Form
+"email" = "Correo";
+"phone_number_optional" = "Número de teléfono (opcional)";
+"accept_terms" = "Acepto los términos y condiciones";
+"sign_up" = "Registrarse";
+"newsletter_signup" = "Registro al Boletín";
+"close" = "Cerrar";
+
+// Legal & Accessibility
+"privacy_policy" = "Política de Privacidad";
+"terms_conditions" = "Términos y Condiciones";
+"accessibility_statement" = "Declaración de Accesibilidad";
+"copyright_notice" = "El contenido de las series, especificaciones de productos, fechas de lanzamiento y precios están sujetos a cambios. Todos los derechos reservados.";
 
 // Home View
 "search" = "Buscar";
@@ -138,6 +160,7 @@
 "search_products" = "Buscar productos";
 "no_products_found" = "No se encontraron productos";
 "try_different_keywords" = "Intenta con palabras diferentes";
+"clear_search" = "Limpiar búsqueda";
 
 // Promotion Banner
 "summer_sale" = "Rebajas de Verano";
