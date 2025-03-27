@@ -96,10 +96,9 @@ class HomeViewModel: ObservableObject {
     
     // Helper function to compare creation dates
     private func compareCreationDates(_ date1: String, _ date2: String) -> Bool {
-        let dateFormatter = APPFormatters.dateFormatter
-        
-        guard let date1 = dateFormatter.date(from: date1),
-              let date2 = dateFormatter.date(from: date2) else {
+        guard let date1 = APPFormatters.parseDate(date1),
+              let date2 = APPFormatters.parseDate(date2) else {
+            Logger.warning("No se pudieron parsear las fechas: \(date1) o \(date2)")
             return false
         }
         

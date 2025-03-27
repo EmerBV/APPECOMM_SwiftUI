@@ -89,7 +89,7 @@ struct CartView: View {
                 Button {
                     shouldShowClearCartAlert = true
                 } label: {
-                    Text("Clear All")
+                    Text("clear_all".localized)
                         .foregroundColor(.red)
                 }
             }

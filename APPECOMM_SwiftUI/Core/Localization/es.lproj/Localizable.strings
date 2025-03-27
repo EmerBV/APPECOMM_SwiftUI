@@ -73,6 +73,7 @@
 "empty_cart" = "Tu carrito está vacío";
 "clear_cart" = "Vaciar Carrito";
 "clear" = "Vaciar";
+"clear_all" = "Vaciar Todo";
 "clear_cart_confirmation" = "¿Estás seguro de que deseas eliminar todos los artículos de tu carrito?";
 "empty_cart_message" = "Parece que aún no has añadido ningún artículo a tu carrito";
 "browse_products" = "Explorar Productos";

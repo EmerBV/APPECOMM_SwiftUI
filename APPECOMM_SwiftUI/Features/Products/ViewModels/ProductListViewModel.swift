@@ -216,10 +216,8 @@ class ProductListViewModel: ObservableObject {
     }
     
     func discountedPrice(for product: Product) -> Decimal? {
-        guard product.discountPercentage > 0 else { return nil }
-        
-        let discount = product.price * Decimal(product.discountPercentage) / 100
-        return (product.price - discount).rounded(2)
+        // Aquí iría la lógica de descuento
+        return nil
     }
     
     func formattedDiscountedPrice(for product: Product) -> String? {

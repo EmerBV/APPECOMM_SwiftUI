@@ -25,10 +25,10 @@ struct ProductDetailView: View {
     private var formattedEffectivePrice: String {
         if let variant = selectedVariant {
             return variant.price.toCurrentLocalePrice
-        } else if let discounted = viewModel.formattedDiscountedPrice(for: product) {
-            return discounted
+        } else if let discounted = viewModel.discountedPrice(for: product) {
+            return discounted.toCurrentLocalePrice
         } else {
-            return viewModel.formattedPrice(for: product)
+            return product.price.toCurrentLocalePrice
         }
     }
     

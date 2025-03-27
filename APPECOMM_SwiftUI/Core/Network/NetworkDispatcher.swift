@@ -29,26 +29,13 @@ final class NetworkDispatcher: NetworkDispatcherProtocol {
         
         let decoder = JSONDecoder()
         decoder.keyDecodingStrategy = .convertFromSnakeCase
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSSSS"
         
         decoder.dateDecodingStrategy = .custom { decoder -> Date in
             let container = try decoder.singleValueContainer()
             let dateStr = try container.decode(String.self)
             
-            // Intentar con diferentes formatos de fecha
-            let formats = [
-                "yyyy-MM-dd'T'HH:mm:ss.SSSSSS",
-                "yyyy-MM-dd'T'HH:mm:ss",
-                "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'",
-                "yyyy-MM-dd"
-            ]
-            
-            for format in formats {
-                dateFormatter.dateFormat = format
-                if let date = dateFormatter.date(from: dateStr) {
-                    return date
-                }
+            if let date = APPFormatters.parseDate(dateStr) {
+                return date
             }
             
             throw DecodingError.dataCorruptedError(in: container, debugDescription: "Cannot decode date: \(dateStr)")

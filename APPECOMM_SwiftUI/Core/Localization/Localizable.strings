@@ -73,6 +73,7 @@
 "empty_cart" = "Your cart is empty";
 "clear_cart" = "Clear Cart";
 "clear" = "Clear";
+"clear_all" = "Clear All";
 "clear_cart_confirmation" = "Are you sure you want to remove all items from your cart?";
 "empty_cart_message" = "Looks like you haven't added any items to your cart yet";
 "browse_products" = "Browse Products";

@@ -11,17 +11,104 @@ class APPFormatters {
     private static let currencyFormatter: NumberFormatter = {
         let formatter = NumberFormatter()
         formatter.numberStyle = .currency
-        formatter.currencySymbol = "$"
+        formatter.locale = Locale.current
+        
+        let currencyCode = getCurrencyCode()
+        formatter.currencyCode = currencyCode
+        
         return formatter
     }()
     
-    public static func formattedPrice(_ price: Decimal) -> String {
-        return currencyFormatter.string(from: price as NSDecimalNumber) ?? "$\(price)"
+    private static func getCurrencyCode() -> String {
+        let countryCode = Locale.current.regionCode ?? "US"
+        
+        let currencyMap: [String: String] = [
+            "US": "USD",
+            "ES": "EUR",
+            "MX": "MXN",
+            "AR": "ARS",
+            "CL": "CLP",
+            "CO": "COP",
+            "PE": "PEN",
+            "BR": "BRL",
+            "UY": "UYU",
+            "PY": "PYG",
+            "BO": "BOB",
+            "EC": "USD",
+            "VE": "USD",
+            "GT": "GTQ",
+            "SV": "USD",
+            "HN": "HNL",
+            "NI": "NIO",
+            "CR": "CRC",
+            "PA": "USD",
+            "DO": "DOP",
+            "PR": "USD",
+            "CU": "CUP",
+            "HT": "HTG",
+            "JM": "JMD",
+            "TT": "TTD",
+            "BB": "BBD",
+            "GD": "XCD",
+            "LC": "XCD",
+            "VC": "XCD",
+            "AG": "XCD",
+            "KN": "XCD",
+            "DM": "XCD",
+            "BZ": "BZD",
+            "SR": "SRD",
+            "GY": "GYD",
+            "GF": "EUR",
+            "CA": "CAD",
+            "GB": "GBP",
+            "FR": "EUR",
+            "DE": "EUR",
+            "IT": "EUR",
+            "PT": "EUR",
+            "NL": "EUR",
+            "BE": "EUR",
+            "IE": "EUR",
+            "GR": "EUR",
+            "AT": "EUR",
+            "FI": "EUR",
+            "SE": "SEK",
+            "DK": "DKK",
+            "NO": "NOK",
+            "CH": "CHF",
+            "AU": "AUD",
+            "NZ": "NZD",
+            "JP": "JPY",
+            "CN": "CNY",
+            "KR": "KRW",
+            "IN": "INR",
+            "RU": "RUB",
+            "ZA": "ZAR"
+        ]
+        
+        return currencyMap[countryCode] ?? "USD"
     }
     
-    public static var dateFormatter: DateFormatter = {
+    public static func formattedPrice(_ price: Decimal) -> String {
+        return currencyFormatter.string(from: price as NSDecimalNumber) ?? "\(price)"
+    }
+    
+    private static let dateFormats: [String] = [
+        "yyyy-MM-dd'T'HH:mm:ss.SSSSSS",
+        "yyyy-MM-dd'T'HH:mm:ss",
+        "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'",
+        "yyyy-MM-dd"
+    ]
+    
+    public static func parseDate(_ dateString: String) -> Date? {
         let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSSSS"
-        return formatter
-    }()
+        
+        for format in dateFormats {
+            formatter.dateFormat = format
+            if let date = formatter.date(from: dateString) {
+                return date
+            }
+        }
+        
+        return nil
+    }
 }
