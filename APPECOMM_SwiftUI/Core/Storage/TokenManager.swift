@@ -121,9 +121,9 @@ final class TokenManager: TokenManagerProtocol {
         
         // Verificar cache primero
         /*
-        if let cachedDate = tokenExpirationCache[token] {
-            return cachedDate
-        }
+         if let cachedDate = tokenExpirationCache[token] {
+         return cachedDate
+         }
          */
         
         // Dividir el token en sus 3 partes: header.payload.signature
@@ -152,10 +152,10 @@ final class TokenManager: TokenManagerProtocol {
         
         // Si se encontró una fecha, guardarla en caché
         /*
-        if let expirationDate = /* fecha decodificada */ {
-            tokenExpirationCache[token] = expirationDate
-            return expirationDate
-        }
+         if let expirationDate = /* fecha decodificada */ {
+         tokenExpirationCache[token] = expirationDate
+         return expirationDate
+         }
          */
         
         return nil

@@ -9,6 +9,18 @@
 "forgot_password" = "¿Olvidaste tu contraseña?";
 "login_button" = "Iniciar Sesión";
 "register_button" = "Registrarse";
+"validation_error" = "Error de validación";
+"form_errors" = "Por favor, corrija los errores del formulario";
+"auth_error" = "Error de autenticación";
+"invalid_credentials" = "Email o contraseña incorrectos";
+"server_error" = "Error del servidor";
+"try_again_later" = "Por favor, intente más tarde";
+"login_success" = "Login exitoso";
+"welcome" = "¡Bienvenido!";
+"login_success_message" = "Hola %@, has iniciado sesión correctamente";
+"no_biometric_credentials" = "No hay credenciales guardadas para inicio de sesión biométrico";
+"expired_credentials" = "Las credenciales guardadas han expirado. Por favor, inicie sesión nuevamente.";
+"biometric_login_success" = "Hola %@, has iniciado sesión correctamente con autenticación biométrica";
 
 // Profile
 "profile" = "Perfil";
@@ -118,7 +130,6 @@
 "forbidden" = "No tiene permisos para realizar esta acción";
 "not_found" = "El recurso solicitado no existe";
 "invalid_request" = "Solicitud inválida";
-"server_error" = "Error en el servidor";
 "processing_error" = "Error al procesar la respuesta";
 "unknown_error" = "Error desconocido";
 

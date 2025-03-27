@@ -117,7 +117,7 @@ class AuthViewModel: ObservableObject {
         
         guard isFormValid else {
             Logger.warning("Formulario de login no válido")
-            showAlert(title: "Error de validación", message: "Por favor, corrija los errores del formulario")
+            showAlert(title: "validation_error".localized, message: "form_errors".localized)
             return
         }
         
@@ -138,9 +138,9 @@ class AuthViewModel: ObservableObject {
                     if let networkError = error as? NetworkError {
                         switch networkError {
                         case .unauthorized:
-                            self?.showAlert(title: "Error de autenticación", message: "Email o contraseña incorrectos")
+                            self?.showAlert(title: "auth_error".localized, message: "invalid_credentials".localized)
                         case .serverError:
-                            self?.showAlert(title: "Error del servidor", message: "Por favor, intente más tarde")
+                            self?.showAlert(title: "server_error".localized, message: "try_again_later".localized)
                         default:
                             self?.showAlert(title: "Error", message: networkError.localizedDescription)
                         }
@@ -152,7 +152,7 @@ class AuthViewModel: ObservableObject {
                 guard let self = self else { return }
                 
                 Logger.info("Login exitoso para usuario: \(user.id)")
-                self.successMessage = "Login exitoso"
+                self.successMessage = "login_success".localized
                 
                 // Si el usuario marcó "recordarme", guardar credenciales
                 if self.rememberMe {
@@ -167,8 +167,8 @@ class AuthViewModel: ObservableObject {
                 
                 // Mostrar notificación de bienvenida
                 NotificationService.shared.showSuccess(
-                    title: "¡Bienvenido!",
-                    message: "Hola \(user.firstName), has iniciado sesión correctamente"
+                    title: "welcome".localized,
+                    message: String(format: "login_success_message".localized, user.firstName)
                 )
             }
             .store(in: &cancellables)
@@ -177,7 +177,7 @@ class AuthViewModel: ObservableObject {
     func loginWithBiometrics() {
         guard let credentials = retrieveCredentials() else {
             Logger.warning("No hay credenciales guardadas para login biométrico")
-            showAlert(title: "Error", message: "No hay credenciales guardadas para inicio de sesión biométrico")
+            showAlert(title: "Error", message: "no_biometric_credentials".localized)
             return
         }
         
@@ -196,9 +196,9 @@ class AuthViewModel: ObservableObject {
                     if let networkError = error as? NetworkError {
                         switch networkError {
                         case .unauthorized:
-                            self?.showAlert(title: "Error de autenticación", message: "Las credenciales guardadas han expirado. Por favor, inicie sesión nuevamente.")
+                            self?.showAlert(title: "auth_error".localized, message: "expired_credentials".localized)
                         case .serverError:
-                            self?.showAlert(title: "Error del servidor", message: "Por favor, intente más tarde")
+                            self?.showAlert(title: "server_error".localized, message: "try_again_later".localized)
                         default:
                             self?.showAlert(title: "Error", message: networkError.localizedDescription)
                         }
@@ -208,15 +208,15 @@ class AuthViewModel: ObservableObject {
                 }
             } receiveValue: { [weak self] user in
                 Logger.info("Login biométrico exitoso para usuario: \(user.id)")
-                self?.successMessage = "Login exitoso"
+                self?.successMessage = "login_success".localized
                 
                 // Notificar explícitamente el login exitoso
                 NotificationCenter.default.post(name: Notification.Name("UserLoggedIn"), object: user)
                 
                 // Mostrar notificación de bienvenida
                 NotificationService.shared.showSuccess(
-                    title: "¡Bienvenido!",
-                    message: "Hola \(user.firstName), has iniciado sesión correctamente con autenticación biométrica"
+                    title: "welcome".localized,
+                    message: String(format: "biometric_login_success".localized, user.firstName)
                 )
             }
             .store(in: &cancellables)

@@ -9,6 +9,18 @@
 "forgot_password" = "Forgot Password?";
 "login_button" = "Sign In";
 "register_button" = "Sign Up";
+"validation_error" = "Validation Error";
+"form_errors" = "Please correct the form errors";
+"auth_error" = "Authentication Error";
+"invalid_credentials" = "Invalid email or password";
+"server_error" = "Server Error";
+"try_again_later" = "Please try again later";
+"login_success" = "Login Successful";
+"welcome" = "Welcome!";
+"login_success_message" = "Hello %@, you have successfully logged in";
+"no_biometric_credentials" = "No saved credentials for biometric login";
+"expired_credentials" = "Saved credentials have expired. Please login again.";
+"biometric_login_success" = "Hello %@, you have successfully logged in with biometric authentication";
 
 // Profile
 "profile" = "Profile";

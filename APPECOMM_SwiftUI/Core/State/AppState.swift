@@ -26,7 +26,7 @@ class AppState: ObservableObject {
                 self?.refreshData()
             }
             .store(in: &cancellables)
-            
+        
         // Observar cambios de idioma
         NotificationCenter.default.publisher(for: Notification.Name("LanguageChanged"))
             .receive(on: DispatchQueue.main)
@@ -36,4 +36,4 @@ class AppState: ObservableObject {
             }
             .store(in: &cancellables)
     }
-} 
+}

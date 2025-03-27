@@ -29,4 +29,4 @@ class NotificationManager {
     func handleNotificationRegistration(_ application: UIApplication, didFailToRegisterForRemoteNotificationsWithError error: Error) {
         Logger.error("Failed to register for notifications: \(error)")
     }
-} 
+}

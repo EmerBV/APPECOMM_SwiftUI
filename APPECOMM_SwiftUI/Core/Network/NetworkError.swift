@@ -28,11 +28,11 @@ enum NetworkError: Error, Equatable {
     static func == (lhs: NetworkError, rhs: NetworkError) -> Bool {
         switch (lhs, rhs) {
         case (.invalidURL, .invalidURL),
-             (.invalidResponse, .invalidResponse),
-             (.noData, .noData),
-             (.unauthorized, .unauthorized),
-             (.forbidden, .forbidden),
-             (.notFound, .notFound):
+            (.invalidResponse, .invalidResponse),
+            (.noData, .noData),
+            (.unauthorized, .unauthorized),
+            (.forbidden, .forbidden),
+            (.notFound, .notFound):
             return true
         case (.badRequest(let lhsError), .badRequest(let rhsError)):
             return lhsError?.message == rhsError?.message

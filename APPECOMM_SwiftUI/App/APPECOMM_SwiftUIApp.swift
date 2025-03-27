@@ -19,13 +19,13 @@ struct APPECOMM_SwiftUIApp: App {
         configureDependencies()
         configureAppearance()
         
-        #if DEBUG
+#if DEBUG
         Logger.info("App initialized in debug mode [Version: \(Bundle.main.fullVersion)]")
         Logger.debug("Debug logging enabled")
-        #else
+#else
         Logger.info("App initialized in production mode [Version: \(Bundle.main.fullVersion)]")
         Logger.configure(level: .info) // Restrict logging in production
-        #endif
+#endif
     }
     
     var body: some Scene {
