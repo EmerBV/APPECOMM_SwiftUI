@@ -13,7 +13,7 @@
 "form_errors" = "Por favor, corrija los errores del formulario";
 "auth_error" = "Error de autenticación";
 "invalid_credentials" = "Email o contraseña incorrectos";
-"server_error" = "Error del servidor";
+"server_error" = "Error del servidor. Intente más tarde.";
 "try_again_later" = "Por favor, intente más tarde";
 "login_success" = "Login exitoso";
 "welcome" = "¡Bienvenido!";
@@ -146,12 +146,12 @@
 "invalid_url" = "La URL no es válida";
 "invalid_response" = "Respuesta del servidor inválida";
 "no_data" = "No se recibieron datos";
-"unauthorized" = "No autorizado. Por favor inicie sesión nuevamente";
+"unauthorized" = "Sesión expirada. Inicie sesión nuevamente.";
 "forbidden" = "No tiene permisos para realizar esta acción";
 "not_found" = "El recurso solicitado no existe";
 "invalid_request" = "Solicitud inválida";
-"processing_error" = "Error al procesar la respuesta";
-"unknown_error" = "Error desconocido";
+"processing_error" = "Error al procesar la respuesta. Formato inesperado de datos.";
+"unknown_error" = "Ha ocurrido un error desconocido. Intente nuevamente.";
 
 // Validation
 "name_empty" = "El nombre no puede estar vacío";
@@ -202,4 +202,11 @@
 "view_collection" = "Ver Colección";
 "special_offer" = "Oferta Especial";
 "special_offer_subtitle" = "Envío gratis en pedidos superiores a $50";
-"learn_more" = "Saber Más"; 
+"learn_more" = "Saber Más";
+
+// Error Messages
+"error" = "Error";
+
+// Success Messages
+"success" = "Éxito";
+"products_updated" = "Se han cargado %d productos"; 

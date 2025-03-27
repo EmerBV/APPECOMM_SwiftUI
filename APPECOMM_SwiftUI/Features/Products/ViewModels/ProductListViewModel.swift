@@ -109,16 +109,16 @@ class ProductListViewModel: ObservableObject {
                     if let networkError = error as? NetworkError {
                         switch networkError {
                         case .decodingError:
-                            self?.errorMessage = "Error al procesar la respuesta. Formato inesperado de datos."
+                            self?.errorMessage = "processing_error".localized
                         case .serverError:
-                            self?.errorMessage = "Error del servidor. Intente más tarde."
+                            self?.errorMessage = "server_error".localized
                         case .unauthorized:
-                            self?.errorMessage = "Sesión expirada. Inicie sesión nuevamente."
+                            self?.errorMessage = "unauthorized".localized
                         default:
-                            self?.errorMessage = networkError.localizedDescription
+                            self?.errorMessage = "unknown_error".localized
                         }
                     } else {
-                        self?.errorMessage = "Error al cargar productos. Intente nuevamente."
+                        self?.errorMessage = "processing_error".localized
                     }
                 } else {
                     Logger.info("Productos cargados correctamente")
@@ -153,16 +153,16 @@ class ProductListViewModel: ObservableObject {
                     if let networkError = error as? NetworkError {
                         switch networkError {
                         case .decodingError:
-                            self?.errorMessage = "Error al procesar la respuesta. Formato inesperado de datos."
+                            self?.errorMessage = "processing_error".localized
                         case .serverError:
-                            self?.errorMessage = "Error del servidor. Intente más tarde."
+                            self?.errorMessage = "server_error".localized
                         case .unauthorized:
-                            self?.errorMessage = "Sesión expirada. Inicie sesión nuevamente."
+                            self?.errorMessage = "unauthorized".localized
                         default:
-                            self?.errorMessage = networkError.localizedDescription
+                            self?.errorMessage = "unknown_error".localized
                         }
                     } else {
-                        self?.errorMessage = "Error al cargar productos. Intente nuevamente."
+                        self?.errorMessage = "processing_error".localized
                     }
                 }
             } receiveValue: { [weak self] products in
@@ -190,17 +190,17 @@ class ProductListViewModel: ObservableObject {
                     if let networkError = error as? NetworkError {
                         switch networkError {
                         case .unauthorized:
-                            self?.errorMessage = "Debe iniciar sesión para añadir productos al carrito."
+                            self?.errorMessage = "unauthorized".localized
                         default:
-                            self?.errorMessage = "No se pudo añadir el producto al carrito. Intente nuevamente."
+                            self?.errorMessage = "processing_error".localized
                         }
                     } else {
-                        self?.errorMessage = "Error al añadir producto al carrito. Intente nuevamente."
+                        self?.errorMessage = "processing_error".localized
                     }
                 }
             } receiveValue: { [weak self] _ in
                 Logger.info("Producto añadido al carrito correctamente")
-                self?.cartSuccessMessage = "Producto añadido al carrito"
+                self?.cartSuccessMessage = "added_to_cart".localized
                 
                 // Ocultar mensaje de éxito después de 3 segundos
                 DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
@@ -263,19 +263,19 @@ extension ProductListViewModel {
                         switch networkError {
                         case .unauthorized:
                             NotificationService.shared.showError(
-                                title: "Sesión expirada",
-                                message: "Debe iniciar sesión para añadir productos al carrito."
+                                title: "unauthorized".localized,
+                                message: "unauthorized".localized
                             )
                         default:
                             NotificationService.shared.showError(
-                                title: "Error",
-                                message: "No se pudo añadir el producto al carrito. Intente nuevamente."
+                                title: "error".localized,
+                                message: "processing_error".localized
                             )
                         }
                     } else {
                         NotificationService.shared.showError(
-                            title: "Error",
-                            message: "Error al añadir producto al carrito. Intente nuevamente."
+                            title: "error".localized,
+                            message: "processing_error".localized
                         )
                     }
                 }
@@ -284,12 +284,12 @@ extension ProductListViewModel {
                 
                 // Mostrar notificación usando el servicio
                 NotificationService.shared.showSuccess(
-                    title: "¡Añadido!",
-                    message: "Producto añadido al carrito correctamente"
+                    title: "success".localized,
+                    message: "added_to_cart".localized
                 )
                 
                 // Mantener compatibilidad con versión antigua
-                self?.cartSuccessMessage = "Producto añadido al carrito"
+                self?.cartSuccessMessage = "added_to_cart".localized
                 
                 // Ocultar mensaje de éxito después de 3 segundos
                 DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
@@ -329,29 +329,29 @@ extension ProductListViewModel {
                         switch networkError {
                         case .decodingError:
                             NotificationService.shared.showError(
-                                title: "Error de formato",
-                                message: "Error al procesar la respuesta. Formato inesperado de datos."
+                                title: "error".localized,
+                                message: "processing_error".localized
                             )
                         case .serverError:
                             NotificationService.shared.showError(
-                                title: "Error del servidor",
-                                message: "Error del servidor. Intente más tarde."
+                                title: "error".localized,
+                                message: "server_error".localized
                             )
                         case .unauthorized:
                             NotificationService.shared.showError(
-                                title: "Sesión expirada",
-                                message: "Sesión expirada. Inicie sesión nuevamente."
+                                title: "unauthorized".localized,
+                                message: "unauthorized".localized
                             )
                         default:
                             NotificationService.shared.showError(
-                                title: "Error de red",
-                                message: networkError.localizedDescription
+                                title: "error".localized,
+                                message: "unknown_error".localized
                             )
                         }
                     } else {
                         NotificationService.shared.showError(
-                            title: "Error",
-                            message: "Error al cargar productos. Intente nuevamente."
+                            title: "error".localized,
+                            message: "processing_error".localized
                         )
                     }
                     
@@ -373,8 +373,8 @@ extension ProductListViewModel {
                 // Mostrar confirmación solo si fue un refresh forzado
                 if forceRefresh {
                     NotificationService.shared.showSuccess(
-                        title: "Productos actualizados",
-                        message: "Se han cargado \(products.count) productos"
+                        title: "success".localized,
+                        message: String(format: "products_updated".localized, products.count)
                     )
                 }
             }

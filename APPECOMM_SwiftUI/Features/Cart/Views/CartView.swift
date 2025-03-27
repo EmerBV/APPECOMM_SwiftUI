@@ -19,19 +19,6 @@ struct CartView: View {
         NavigationStack {
             ZStack {
                 contentView
-                /*
-                if let errorMessage = viewModel.errorMessage {
-                    ErrorToastView(message: errorMessage) {
-                        viewModel.errorMessage = nil
-                    }
-                }
-                
-                if let successMessage = viewModel.successMessage {
-                    SuccessToastView(message: successMessage) {
-                        viewModel.successMessage = nil
-                    }
-                }
-                 */
             }
             .navigationTitle("cart".localized)
             .toolbar {

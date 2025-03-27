@@ -203,4 +203,16 @@
 "view_collection" = "View Collection";
 "special_offer" = "Special Offer";
 "special_offer_subtitle" = "Free shipping on orders over $50";
-"learn_more" = "Learn More"; 
+"learn_more" = "Learn More";
+
+// Error Messages
+"processing_error" = "Error processing response. Unexpected data format.";
+"server_error" = "Server error. Please try again later.";
+"unauthorized" = "Session expired. Please login again.";
+"unknown_error" = "An unknown error occurred. Please try again.";
+"error" = "Error";
+
+// Success Messages
+"success" = "Success";
+"added_to_cart" = "Product added to cart";
+"products_updated" = "%d products have been loaded"; 

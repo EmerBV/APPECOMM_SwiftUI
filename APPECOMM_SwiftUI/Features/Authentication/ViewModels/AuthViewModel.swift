@@ -141,23 +141,23 @@ class AuthViewModel: ObservableObject {
                     if let networkError = error as? NetworkError {
                         switch networkError {
                         case .unauthorized:
-                            self?.showAlert(
+                            NotificationService.shared.showError(
                                 title: "auth_error".localized,
                                 message: "invalid_credentials".localized
                             )
                         case .serverError:
-                            self?.showAlert(
+                            NotificationService.shared.showError(
                                 title: "server_error".localized,
                                 message: "try_again_later".localized
                             )
                         default:
-                            self?.showAlert(
+                            NotificationService.shared.showError(
                                 title: "Error",
                                 message: networkError.localizedDescription
                             )
                         }
                     } else {
-                        self?.showAlert(
+                        NotificationService.shared.showError(
                             title: "Error",
                             message: error.localizedDescription
                         )
