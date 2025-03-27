@@ -192,7 +192,7 @@ private struct DiscountedPrice: View {
     
     var body: some View {
         HStack {
-            Text(viewModel.formattedPrice(product.price))
+            Text(product.price.toCurrentLocalePrice)
                 .strikethrough()
                 .foregroundColor(.secondary)
             
@@ -208,7 +208,7 @@ private struct RegularPrice: View {
     let viewModel: HomeViewModel
     
     var body: some View {
-        Text(viewModel.formattedPrice(product.price))
+        Text(product.price.toCurrentLocalePrice)
             .fontWeight(.bold)
     }
 } 

@@ -13,7 +13,7 @@ class CartViewModel: ObservableObject {
     @Published var cart: Cart?
     @Published var isLoading = false
     @Published var errorMessage: String?
-    @Published var successMessage: String?
+    //@Published var successMessage: String?
     
     // Cart state
     @Published var isUpdatingCart = false
@@ -61,7 +61,7 @@ class CartViewModel: ObservableObject {
                 
                 if case .failure(let error) = completion {
                     Logger.error("Error loading cart: \(error.localizedDescription)")
-                    self?.errorMessage = "Unable to load cart: \(error.localizedDescription)"
+                    self?.errorMessage = String(format: "unable_to_load_cart".localized, error.localizedDescription)
                 }
             } receiveValue: { [weak self] cart in
                 Logger.info("Cart loaded successfully with \(cart.items.count) items")
@@ -92,11 +92,11 @@ class CartViewModel: ObservableObject {
                 
                 if case .failure(let error) = completion {
                     Logger.error("Error updating cart item: \(error.localizedDescription)")
-                    self?.errorMessage = "Unable to update item: \(error.localizedDescription)"
+                    self?.errorMessage = String(format: "unable_to_update_item".localized, error.localizedDescription)
                 }
             } receiveValue: { [weak self] _ in
                 Logger.info("Cart item updated successfully")
-                self?.successMessage = "Item quantity updated"
+                //self?.successMessage = "item_quantity_updated".localized
                 
                 // Reload cart
                 if let userId = self?.getCurrentUserId() {
@@ -128,11 +128,11 @@ class CartViewModel: ObservableObject {
                 
                 if case .failure(let error) = completion {
                     Logger.error("Error removing cart item: \(error.localizedDescription)")
-                    self?.errorMessage = "Unable to remove item: \(error.localizedDescription)"
+                    self?.errorMessage = String(format: "unable_to_remove_item".localized, error.localizedDescription)
                 }
             } receiveValue: { [weak self] _ in
                 Logger.info("Cart item removed successfully")
-                self?.successMessage = "Item removed from cart"
+                //self?.successMessage = "item_removed".localized
                 
                 // Reload cart
                 if let userId = self?.getCurrentUserId() {
@@ -155,11 +155,11 @@ class CartViewModel: ObservableObject {
                 
                 if case .failure(let error) = completion {
                     Logger.error("Error clearing cart: \(error.localizedDescription)")
-                    self?.errorMessage = "Unable to clear cart: \(error.localizedDescription)"
+                    self?.errorMessage = String(format: "unable_to_clear_cart".localized, error.localizedDescription)
                 }
             } receiveValue: { [weak self] _ in
                 Logger.info("Cart cleared successfully")
-                self?.successMessage = "Cart cleared"
+                //self?.successMessage = "cart_cleared".localized
                 
                 // Reload cart
                 if let userId = self?.getCurrentUserId() {
@@ -179,7 +179,7 @@ class CartViewModel: ObservableObject {
         // For now, we'll simulate a successful checkout
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { [weak self] in
             self?.isProcessingCheckout = false
-            self?.successMessage = "Redirecting to checkout..."
+            //self?.successMessage = "Redirecting to checkout..."
             
             // Show a success notification
             NotificationService.shared.showSuccess(
@@ -203,11 +203,4 @@ class CartViewModel: ObservableObject {
         return nil
     }
     
-    // Format price for display
-    func formattedPrice(_ price: Decimal) -> String {
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .currency
-        formatter.currencySymbol = "$"
-        return formatter.string(from: price as NSDecimalNumber) ?? "$\(price)"
-    }
 }

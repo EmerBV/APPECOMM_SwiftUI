@@ -117,7 +117,10 @@ class AuthViewModel: ObservableObject {
         
         guard isFormValid else {
             Logger.warning("Formulario de login no válido")
-            showAlert(title: "validation_error".localized, message: "form_errors".localized)
+            showAlert(
+                title: "validation_error".localized,
+                message: "form_errors".localized
+            )
             return
         }
         
@@ -138,14 +141,26 @@ class AuthViewModel: ObservableObject {
                     if let networkError = error as? NetworkError {
                         switch networkError {
                         case .unauthorized:
-                            self?.showAlert(title: "auth_error".localized, message: "invalid_credentials".localized)
+                            self?.showAlert(
+                                title: "auth_error".localized,
+                                message: "invalid_credentials".localized
+                            )
                         case .serverError:
-                            self?.showAlert(title: "server_error".localized, message: "try_again_later".localized)
+                            self?.showAlert(
+                                title: "server_error".localized,
+                                message: "try_again_later".localized
+                            )
                         default:
-                            self?.showAlert(title: "Error", message: networkError.localizedDescription)
+                            self?.showAlert(
+                                title: "Error",
+                                message: networkError.localizedDescription
+                            )
                         }
                     } else {
-                        self?.showAlert(title: "Error", message: error.localizedDescription)
+                        self?.showAlert(
+                            title: "Error",
+                            message: error.localizedDescription
+                        )
                     }
                 }
             } receiveValue: { [weak self] user in
@@ -168,7 +183,10 @@ class AuthViewModel: ObservableObject {
                 // Mostrar notificación de bienvenida
                 NotificationService.shared.showSuccess(
                     title: "welcome".localized,
-                    message: String(format: "login_success_message".localized, user.firstName)
+                    message: String(
+                        format: "login_success_message".localized,
+                        user.firstName
+                    )
                 )
             }
             .store(in: &cancellables)
@@ -177,7 +195,10 @@ class AuthViewModel: ObservableObject {
     func loginWithBiometrics() {
         guard let credentials = retrieveCredentials() else {
             Logger.warning("No hay credenciales guardadas para login biométrico")
-            showAlert(title: "Error", message: "no_biometric_credentials".localized)
+            showAlert(
+                title: "Error",
+                message: "no_biometric_credentials".localized
+            )
             return
         }
         
@@ -185,41 +206,59 @@ class AuthViewModel: ObservableObject {
         errorMessage = nil
         
         // Usar las credenciales guardadas para iniciar sesión
-        authRepository.login(email: credentials.email, password: credentials.password)
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] completion in
-                self?.isLoginInProgress = false
+        authRepository.login(
+            email: credentials.email,
+            password: credentials.password
+        )
+        .receive(on: DispatchQueue.main)
+        .sink { [weak self] completion in
+            self?.isLoginInProgress = false
+            
+            if case .failure(let error) = completion {
+                Logger.error("Login biométrico fallido: \(error.localizedDescription)")
                 
-                if case .failure(let error) = completion {
-                    Logger.error("Login biométrico fallido: \(error.localizedDescription)")
-                    
-                    if let networkError = error as? NetworkError {
-                        switch networkError {
-                        case .unauthorized:
-                            self?.showAlert(title: "auth_error".localized, message: "expired_credentials".localized)
-                        case .serverError:
-                            self?.showAlert(title: "server_error".localized, message: "try_again_later".localized)
-                        default:
-                            self?.showAlert(title: "Error", message: networkError.localizedDescription)
-                        }
-                    } else {
-                        self?.showAlert(title: "Error", message: error.localizedDescription)
+                if let networkError = error as? NetworkError {
+                    switch networkError {
+                    case .unauthorized:
+                        self?.showAlert(
+                            title: "auth_error".localized,
+                            message: "expired_credentials".localized
+                        )
+                    case .serverError:
+                        self?.showAlert(
+                            title: "server_error".localized,
+                            message: "try_again_later".localized
+                        )
+                    default:
+                        self?.showAlert(
+                            title: "Error",
+                            message: networkError.localizedDescription
+                        )
                     }
+                } else {
+                    self?.showAlert(
+                        title: "Error",
+                        message: error.localizedDescription
+                    )
                 }
-            } receiveValue: { [weak self] user in
-                Logger.info("Login biométrico exitoso para usuario: \(user.id)")
-                self?.successMessage = "login_success".localized
-                
-                // Notificar explícitamente el login exitoso
-                NotificationCenter.default.post(name: Notification.Name("UserLoggedIn"), object: user)
-                
-                // Mostrar notificación de bienvenida
-                NotificationService.shared.showSuccess(
-                    title: "welcome".localized,
-                    message: String(format: "biometric_login_success".localized, user.firstName)
-                )
             }
-            .store(in: &cancellables)
+        } receiveValue: { [weak self] user in
+            Logger.info("Login biométrico exitoso para usuario: \(user.id)")
+            self?.successMessage = "login_success".localized
+            
+            // Notificar explícitamente el login exitoso
+            NotificationCenter.default.post(name: Notification.Name("UserLoggedIn"), object: user)
+            
+            // Mostrar notificación de bienvenida
+            NotificationService.shared.showSuccess(
+                title: "welcome".localized,
+                message: String(
+                    format: "biometric_login_success".localized,
+                    user.firstName
+                )
+            )
+        }
+        .store(in: &cancellables)
     }
     
     private func resetForm() {
@@ -269,8 +308,14 @@ class AuthViewModel: ObservableObject {
     // Credenciales guardadas
     private func saveCredentials() {
         do {
-            let credentials = SavedCredentials(email: email, password: password)
-            try secureStorage.saveObject(credentials, forKey: credentialsKey)
+            let credentials = SavedCredentials(
+                email: email,
+                password: password
+            )
+            try secureStorage.saveObject(
+                credentials,
+                forKey: credentialsKey
+            )
             Logger.info("Credenciales guardadas exitosamente")
         } catch {
             Logger.error("Error al guardar credenciales: \(error.localizedDescription)")

@@ -21,6 +21,19 @@
 "no_biometric_credentials" = "No hay credenciales guardadas para inicio de sesión biométrico";
 "expired_credentials" = "Las credenciales guardadas han expirado. Por favor, inicie sesión nuevamente.";
 "biometric_login_success" = "Hola %@, has iniciado sesión correctamente con autenticación biométrica";
+"ok" = "Aceptar";
+"welcome_title" = "Bienvenido a Kaioland";
+"sign_in_subtitle" = "Inicia sesión en tu cuenta";
+"password_placeholder" = "Tu contraseña";
+"remember_me" = "Recordarme";
+"or" = "o";
+"sign_in_with" = "Iniciar sesión con %@";
+"create_account" = "Crear una cuenta";
+"password_recovery" = "Recuperar Contraseña";
+"feature_coming_soon" = "Esta función estará disponible pronto.";
+"authenticate_with" = "Autenticar con %@";
+"cancel" = "Cancelar";
+"auth_failed" = "Autenticación fallida";
 
 // Profile
 "profile" = "Perfil";
@@ -28,7 +41,6 @@
 "logout" = "Cerrar Sesión";
 "logout_confirmation" = "¿Estás seguro de que quieres cerrar sesión?";
 "edit" = "Editar";
-"cancel" = "Cancelar";
 "personal_information" = "Información Personal";
 "first_name" = "Nombre";
 "last_name" = "Apellido";
@@ -74,6 +86,13 @@
 "remove_item_confirmation" = "¿Estás seguro de que deseas eliminar este artículo de tu carrito?";
 "variant_label" = "Variante:";
 "quantity_label" = "Cantidad:";
+"unable_to_load_cart" = "No se pudo cargar el carrito: %@";
+"unable_to_update_item" = "No se pudo actualizar el artículo: %@";
+"item_quantity_updated" = "Cantidad del artículo actualizada";
+"unable_to_remove_item" = "No se pudo eliminar el artículo: %@";
+"item_removed" = "Artículo eliminado del carrito";
+"unable_to_clear_cart" = "No se pudo vaciar el carrito: %@";
+"cart_cleared" = "Carrito vaciado";
 
 // Orders
 "orders" = "Pedidos";

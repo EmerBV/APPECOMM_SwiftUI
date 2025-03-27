@@ -24,10 +24,7 @@ struct ProductDetailView: View {
     
     private var formattedEffectivePrice: String {
         if let variant = selectedVariant {
-            let formatter = NumberFormatter()
-            formatter.numberStyle = .currency
-            formatter.currencySymbol = "$"
-            return formatter.string(from: variant.price as NSDecimalNumber) ?? "$\(variant.price)"
+            return variant.price.toCurrentLocalePrice
         } else if let discounted = viewModel.formattedDiscountedPrice(for: product) {
             return discounted
         } else {
@@ -387,19 +384,6 @@ struct VariantsSelectionView: View {
     @Binding var selectedVariant: Variant?
     @Binding var quantity: Int
     
-    // Creamos el formatter como una propiedad privada
-    private let currencyFormatter: NumberFormatter = {
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .currency
-        formatter.currencySymbol = "$"
-        return formatter
-    }()
-    
-    // Función para obtener el precio formateado
-    private func formattedPrice(_ price: Decimal) -> String {
-        return currencyFormatter.string(from: price as NSDecimalNumber) ?? "$\(price)"
-    }
-    
     var body: some View {
         if let variants = product.variants, !variants.isEmpty {
             VStack(alignment: .leading, spacing: 8) {
@@ -424,7 +408,7 @@ struct VariantsSelectionView: View {
                                         .fontWeight(selectedVariant?.id == variant.id ? .bold : .regular)
                                     
                                     HStack {
-                                        Text(formattedPrice(variant.price))
+                                        Text(variant.price.toCurrentLocalePrice)
                                             .font(.caption)
                                             .fontWeight(.semibold)
                                         

@@ -22,14 +22,6 @@ class ProductListViewModel: ObservableObject {
     @Published var isAddingToCart = false
     @Published var cartSuccessMessage: String?
     
-    // Formatters - reutilizados para mejor rendimiento
-    private let currencyFormatter: NumberFormatter = {
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .currency
-        formatter.currencySymbol = "$"
-        return formatter
-    }()
-    
     // Computed properties
     var hasActiveFilters: Bool {
         !searchText.isEmpty || selectedCategory != nil
@@ -220,10 +212,7 @@ class ProductListViewModel: ObservableObject {
     
     // Formateo de precios
     func formattedPrice(for product: Product) -> String {
-        if let formattedPrice = currencyFormatter.string(from: product.price as NSDecimalNumber) {
-            return formattedPrice
-        }
-        return "$\(product.price)"
+        return product.price.toCurrentLocalePrice
     }
     
     func discountedPrice(for product: Product) -> Decimal? {
@@ -236,20 +225,7 @@ class ProductListViewModel: ObservableObject {
     func formattedDiscountedPrice(for product: Product) -> String? {
         guard let discountedPrice = discountedPrice(for: product) else { return nil }
         
-        if let formattedPrice = currencyFormatter.string(from: discountedPrice as NSDecimalNumber) {
-            return formattedPrice
-        }
-        return "$\(discountedPrice)"
-    }
-}
-
-// Extensión para redondear Decimal
-extension Decimal {
-    func rounded(_ scale: Int = 0, mode: NSDecimalNumber.RoundingMode = .plain) -> Decimal {
-        var result = Decimal()
-        var localCopy = self
-        NSDecimalRound(&result, &localCopy, scale, mode)
-        return result
+        return discountedPrice.toCurrentLocalePrice
     }
 }
 

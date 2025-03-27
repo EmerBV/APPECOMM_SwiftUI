@@ -19,7 +19,7 @@ struct CartView: View {
         NavigationStack {
             ZStack {
                 contentView
-                
+                /*
                 if let errorMessage = viewModel.errorMessage {
                     ErrorToastView(message: errorMessage) {
                         viewModel.errorMessage = nil
@@ -31,6 +31,7 @@ struct CartView: View {
                         viewModel.successMessage = nil
                     }
                 }
+                 */
             }
             .navigationTitle("cart".localized)
             .toolbar {
@@ -114,7 +115,7 @@ private struct CartContentView: View {
             ForEach(cart.items) { item in
                 CartItemRow(
                     item: item,
-                    formattedPrice: viewModel.formattedPrice(item.totalPrice),
+                    formattedPrice: item.totalPrice.toCurrentLocalePrice,
                     onUpdateQuantity: { newQuantity in
                         Task {
                             await viewModel.updateItemQuantity(
@@ -191,7 +192,7 @@ private struct OrderSummaryView: View {
             }
             .padding(.horizontal)
             
-            summaryRow(title: "subtotal".localized, value: viewModel.formattedPrice(cart.totalAmount))
+            summaryRow(title: "subtotal".localized, value: cart.totalAmount.toCurrentLocalePrice)
             summaryRow(title: "shipping".localized, value: "shipping_calculated".localized, isSecondary: true)
             
             Divider()
@@ -199,7 +200,7 @@ private struct OrderSummaryView: View {
             
             summaryRow(
                 title: "total".localized,
-                value: viewModel.formattedPrice(cart.totalAmount),
+                value: cart.totalAmount.toCurrentLocalePrice,
                 isBold: true
             )
             

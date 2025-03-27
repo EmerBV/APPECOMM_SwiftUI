@@ -24,14 +24,6 @@ class HomeViewModel: ObservableObject {
     // Product List ViewModel
     let productListViewModel: ProductListViewModel
     
-    // Formatters - reused for better performance
-    private let currencyFormatter: NumberFormatter = {
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .currency
-        formatter.currencySymbol = "$"
-        return formatter
-    }()
-    
     init(productRepository: ProductRepositoryProtocol) {
         self.productRepository = productRepository
         self.productListViewModel = DependencyInjector.shared.resolve(ProductListViewModel.self)
@@ -104,8 +96,7 @@ class HomeViewModel: ObservableObject {
     
     // Helper function to compare creation dates
     private func compareCreationDates(_ date1: String, _ date2: String) -> Bool {
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSSSS"
+        let dateFormatter = APPFormatters.dateFormatter
         
         guard let date1 = dateFormatter.date(from: date1),
               let date2 = dateFormatter.date(from: date2) else {
@@ -115,11 +106,6 @@ class HomeViewModel: ObservableObject {
         return date1 > date2 // Sort newest first
     }
     
-    // Formatting helpers for prices
-    func formattedPrice(_ price: Decimal) -> String {
-        return currencyFormatter.string(from: price as NSDecimalNumber) ?? "$\(price)"
-    }
-    
     func discountedPrice(for product: Product) -> Decimal {
         let discount = product.price * Decimal(product.discountPercentage) / 100
         return (product.price - discount).rounded(2)
@@ -127,6 +113,6 @@ class HomeViewModel: ObservableObject {
     
     func formattedDiscountedPrice(for product: Product) -> String {
         let discountedPrice = discountedPrice(for: product)
-        return currencyFormatter.string(from: discountedPrice as NSDecimalNumber) ?? "$\(discountedPrice)"
+        return discountedPrice.toCurrentLocalePrice
     }
 }

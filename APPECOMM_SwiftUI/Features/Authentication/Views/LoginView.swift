@@ -49,7 +49,7 @@ struct LoginView: View {
                     Alert(
                         title: Text(viewModel.authAlertTitle),
                         message: Text(viewModel.authAlertMessage),
-                        dismissButton: .default(Text("OK"))
+                        dismissButton: .default(Text("ok".localized))
                     )
                 }
                 .sheet(isPresented: $showBiometricPrompt) {
@@ -84,7 +84,7 @@ struct LoginView: View {
         showBiometricPrompt = false
         if let error = error {
             NotificationService.shared.showError(
-                title: "Authentication Error",
+                title: "auth_error".localized,
                 message: error.localizedDescription
             )
         }
@@ -100,14 +100,14 @@ private struct LogoHeaderView: View {
                 .frame(width: 100, height: 100)
                 .accessibilityLabel("App Logo")
             
-            Text("Welcome to Kaioland")
+            Text("welcome_title".localized)
                 .font(.title)
                 .fontWeight(.bold)
                 .multilineTextAlignment(.center)
                 .foregroundColor(.primary)
                 .accessibilityAddTraits(.isHeader)
             
-            Text("Sign in to your account")
+            Text("sign_in_subtitle".localized)
                 .font(.subheadline)
                 .foregroundColor(.secondary)
         }
@@ -143,7 +143,7 @@ private struct LoginFormView: View {
     
     private var emailField: some View {
         CustomTextField(
-            title: "Email",
+            title: "email".localized,
             placeholder: "example@email.com",
             type: .regular,
             state: viewModel.emailState,
@@ -161,8 +161,8 @@ private struct LoginFormView: View {
     
     private var passwordField: some View {
         CustomTextField(
-            title: "Password",
-            placeholder: "Your password",
+            title: "password".localized,
+            placeholder: "password_placeholder".localized,
             type: .secure,
             state: viewModel.passwordState,
             text: $viewModel.password,
@@ -179,7 +179,7 @@ private struct LoginFormView: View {
         HStack {
             Spacer()
             Button(action: handleForgotPassword) {
-                Text("Forgot your password?")
+                Text("forgot_password".localized)
                     .font(.footnote)
                     .foregroundColor(.blue)
             }
@@ -189,7 +189,7 @@ private struct LoginFormView: View {
     
     private var rememberMeToggle: some View {
         Toggle(isOn: $viewModel.rememberMe) {
-            Text("Remember me")
+            Text("remember_me".localized)
                 .font(.subheadline)
                 .foregroundColor(.secondary)
         }
@@ -213,7 +213,7 @@ private struct LoginFormView: View {
     private var divider: some View {
         HStack {
             VStack { Divider() }
-            Text("or")
+            Text("or".localized)
                 .font(.footnote)
                 .foregroundColor(.secondary)
             VStack { Divider() }
@@ -228,7 +228,7 @@ private struct LoginFormView: View {
                 HStack {
                     Image(systemName: viewModel.biometricType == .face ? "faceid" : "touchid")
                         .font(.headline)
-                    Text("Sign in with \(viewModel.biometricType == .face ? "Face ID" : "Touch ID")")
+                    Text(String(format: "sign_in_with".localized, viewModel.biometricType == .face ? "Face ID" : "Touch ID"))
                         .font(.headline)
                 }
                 .frame(maxWidth: .infinity)
@@ -243,7 +243,7 @@ private struct LoginFormView: View {
     
     private var registerButton: some View {
         NavigationLink(destination: RegistrationView()) {
-            Text("Create an account")
+            Text("create_account".localized)
                 .fontWeight(.semibold)
                 .frame(maxWidth: .infinity)
                 .padding()
@@ -255,8 +255,8 @@ private struct LoginFormView: View {
     
     private func handleForgotPassword() {
         NotificationService.shared.showInfo(
-            title: "Password Recovery",
-            message: "This feature will be available soon."
+            title: "password_recovery".localized,
+            message: "feature_coming_soon".localized
         )
     }
     
@@ -288,7 +288,7 @@ struct BiometricAuthView: View {
                 .font(.system(size: 64))
                 .foregroundColor(.blue)
             
-            Text("Authenticate with \(biometricType == .face ? "Face ID" : "Touch ID")")
+            Text(String(format: "authenticate_with".localized, biometricType == .face ? "Face ID" : "Touch ID"))
                 .font(.title2)
                 .fontWeight(.bold)
             
@@ -309,7 +309,7 @@ struct BiometricAuthView: View {
                 presentationMode.wrappedValue.dismiss()
                 onFailure(nil)
             }) {
-                Text("Cancel")
+                Text("cancel".localized)
                     .frame(maxWidth: .infinity)
                     .padding()
                     .background(Color(.systemGray5))
@@ -333,7 +333,7 @@ struct BiometricAuthView: View {
                 if success {
                     onSuccess()
                 } else {
-                    error = NSError(domain: "BiometricAuth", code: 0, userInfo: [NSLocalizedDescriptionKey: "Authentication failed"])
+                    error = NSError(domain: "BiometricAuth", code: 0, userInfo: [NSLocalizedDescriptionKey: "auth_failed".localized])
                 }
             }
         }
@@ -351,6 +351,6 @@ enum UIBiometricType {
 struct RegistrationView: View {
     var body: some View {
         Text("Registration Screen")
-            .navigationTitle("Create Account")
+            .navigationTitle("create_account".localized)
     }
 }
