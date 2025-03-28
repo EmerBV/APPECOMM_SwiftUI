@@ -43,20 +43,139 @@ enum PaymentMethod: String, CaseIterable, Identifiable {
     }
 }
 
+/// Credit card details model with validation
 struct CreditCardDetails {
-    var cardNumber = ""
-    var cardholderName = ""
-    var expiryDate = ""
-    var cvv = ""
+    var cardNumber: String = ""
+    var cardholderName: String = ""
+    var expiryDate: String = ""
+    var cvv: String = ""
     
     // Validation states
-    var isCardNumberValid = false
-    var isCardholderNameValid = false
-    var isExpiryDateValid = false
-    var isCvvValid = false
+    var isCardNumberValid: Bool = false
+    var isCardholderNameValid: Bool = false
+    var isExpiryDateValid: Bool = false
+    var isCvvValid: Bool = false
     
+    // Validation error messages
+    var cardNumberError: String?
+    var cardholderNameError: String?
+    var expiryDateError: String?
+    var cvvError: String?
+    
+    /// Check if all fields are valid
     var isValid: Bool {
         return isCardNumberValid && isCardholderNameValid && isExpiryDateValid && isCvvValid
+    }
+    
+    /// Initialize with default empty values
+    init() {
+        // Default initializer with empty values
+    }
+    
+    /// Initialize with values and validate
+    init(cardNumber: String, cardholderName: String, expiryDate: String, cvv: String) {
+        self.cardNumber = cardNumber
+        self.cardholderName = cardholderName
+        self.expiryDate = expiryDate
+        self.cvv = cvv
+        
+        self.validateAll()
+    }
+    
+    /// Validate all fields using a validator
+    mutating func validateAll(validator: InputValidatorProtocol = InputValidator()) {
+        // For methods that return ValidationResult
+        let nameResult = validator.validateName(cardholderName)
+        switch nameResult {
+        case .valid:
+            isCardholderNameValid = true
+            cardholderNameError = nil
+        case .invalid(let message):
+            isCardholderNameValid = false
+            cardholderNameError = message
+        }
+        
+        // For methods that return Bool
+        isCardNumberValid = validator.validateCreditCardNumber(cardNumber)
+        isExpiryDateValid = validator.validateExpiryDate(expiryDate)
+        isCvvValid = validator.validateCVV(cvv)
+    }
+    
+    /// Reset all fields to empty and invalidate them
+    mutating func reset() {
+        cardNumber = ""
+        cardholderName = ""
+        expiryDate = ""
+        cvv = ""
+        
+        isCardNumberValid = false
+        isCardholderNameValid = false
+        isExpiryDateValid = false
+        isCvvValid = false
+        
+        cardNumberError = nil
+        cardholderNameError = nil
+        expiryDateError = nil
+        cvvError = nil
+    }
+    
+    /// Format card number for display (groups of 4 digits)
+    func formattedCardNumber() -> String {
+        let cleaned = cardNumber.replacingOccurrences(of: " ", with: "")
+        var formatted = ""
+        
+        for (index, char) in cleaned.enumerated() {
+            if index > 0 && index % 4 == 0 {
+                formatted.append(" ")
+            }
+            formatted.append(char)
+        }
+        
+        return formatted
+    }
+    
+    /// Format expiry date for display (MM/YY)
+    func formattedExpiryDate() -> String {
+        let cleaned = expiryDate.replacingOccurrences(of: "/", with: "")
+        
+        if cleaned.count > 2 {
+            let month = cleaned.prefix(2)
+            let year = cleaned.dropFirst(2)
+            return "\(month)/\(year)"
+        }
+        
+        return cleaned
+    }
+    
+    /// Get card brand from first digit
+    func cardBrand() -> String {
+        guard !cardNumber.isEmpty else {
+            return "Unknown"
+        }
+        
+        let firstChar = cardNumber.first!
+        
+        switch firstChar {
+        case "4":
+            return "Visa"
+        case "5":
+            return "Mastercard"
+        case "3":
+            return "American Express"
+        case "6":
+            return "Discover"
+        default:
+            return "Unknown"
+        }
+    }
+    
+    /// Get last 4 digits of card number
+    func lastFourDigits() -> String {
+        let cleaned = cardNumber.replacingOccurrences(of: " ", with: "")
+        if cleaned.count >= 4 {
+            return String(cleaned.suffix(4))
+        }
+        return ""
     }
 }
 
@@ -66,14 +185,67 @@ struct OrderSummaryCheckout {
     var tax: Decimal = 0
     var total: Decimal = 0
     
+    /// Formatted subtotal currency string
     var formattedSubtotal: String { subtotal.toCurrentLocalePrice }
-    var formattedShipping: String { shippingCost > 0 ? shippingCost.toCurrentLocalePrice : "Gratis" }
+    
+    /// Formatted shipping cost currency string or "Free" if 0
+    var formattedShipping: String {
+        shippingCost > 0 ? shippingCost.toCurrentLocalePrice : "Free"
+    }
+    
+    /// Formatted tax currency string
     var formattedTax: String { tax.toCurrentLocalePrice }
+    
+    /// Formatted total currency string
     var formattedTotal: String { total.toCurrentLocalePrice }
+    
+    /// Initialize with default values
+    init() {}
+    
+    /// Initialize with values
+    init(subtotal: Decimal, shippingCost: Decimal, tax: Decimal) {
+        self.subtotal = subtotal
+        self.shippingCost = shippingCost
+        self.tax = tax
+        self.total = calculateTotal()
+    }
+    
+    /// Initialize from cart
+    init(cart: Cart) {
+        self.subtotal = cart.totalAmount
+        self.shippingCost = calculateShipping(subtotal)
+        self.tax = calculateTax(subtotal)
+        self.total = calculateTotal()
+    }
+    
+    /// Calculate total by summing subtotal, shipping and tax
+    private func calculateTotal() -> Decimal {
+        return subtotal + shippingCost + tax
+    }
+    
+    /// Calculate shipping cost based on order total
+    private func calculateShipping(_ amount: Decimal) -> Decimal {
+        // Free shipping for orders over $50, otherwise $5.99
+        return amount > 50 ? 0 : Decimal(5.99)
+    }
+    
+    /// Calculate tax based on subtotal
+    private func calculateTax(_ amount: Decimal) -> Decimal {
+        // Default tax rate: 8%
+        return (amount * Decimal(0.08)).rounded(2)
+    }
+    
+    /// Update values and recalculate total
+    mutating func update(subtotal: Decimal) {
+        self.subtotal = subtotal
+        self.shippingCost = calculateShipping(subtotal)
+        self.tax = calculateTax(subtotal)
+        self.total = calculateTotal()
+    }
 }
 
 class CheckoutViewModel: ObservableObject {
-    // Published properties for UI state
+    // MARK: - Published properties
     @Published var currentStep: CheckoutStep = .shippingInfo
     @Published var selectedPaymentMethod: PaymentMethod = .creditCard
     @Published var shippingDetailsForm = ShippingDetailsForm()
@@ -81,10 +253,11 @@ class CheckoutViewModel: ObservableObject {
     @Published var isLoading = false
     @Published var errorMessage: String?
     @Published var successMessage: String?
-    @Published var paymentIntentId: String?
-    @Published var clientSecret: String?
     @Published var cart: Cart?
     @Published var orderSummary = OrderSummaryCheckout()
+    @Published var order: Order?
+    @Published var paymentIntentId: String?
+    @Published var clientSecret: String?
     
     // Shipping details related properties
     @Published var existingShippingDetails: ShippingDetailsResponse?
@@ -92,20 +265,25 @@ class CheckoutViewModel: ObservableObject {
     @Published var isEditingShippingDetails = false
     
     // Dependencies
+    private let checkoutService: CheckoutServiceProtocol
     private let paymentService: PaymentServiceProtocol
     private let authRepository: AuthRepositoryProtocol
     private let validator: InputValidatorProtocol
     private let shippingService: ShippingServiceProtocol
     private var cancellables = Set<AnyCancellable>()
     
+    // MARK: - Initialization
+    
     init(
         cart: Cart?,
+        checkoutService: CheckoutServiceProtocol,
         paymentService: PaymentServiceProtocol,
         authRepository: AuthRepositoryProtocol,
         validator: InputValidatorProtocol,
-        shippingService: ShippingServiceProtocol = DependencyInjector.shared.resolve(ShippingServiceProtocol.self)
+        shippingService: ShippingServiceProtocol
     ) {
         self.cart = cart
+        self.checkoutService = checkoutService
         self.paymentService = paymentService
         self.authRepository = authRepository
         self.validator = validator
@@ -147,8 +325,7 @@ class CheckoutViewModel: ObservableObject {
     
     // MARK: - Shipping Details Management
     
-    /// Load existing shipping details for the user
-    private func loadExistingShippingDetails() {
+    func loadExistingShippingDetails() {
         guard let userId = getCurrentUserId() else { return }
         
         isLoading = true
@@ -161,7 +338,7 @@ class CheckoutViewModel: ObservableObject {
                 
                 if case .failure(let error) = completion {
                     Logger.error("Error loading shipping details: \(error)")
-                    // No mostrar el error al usuario, simplemente usar un formulario en blanco
+                    // Don't show error to user, just use blank form
                     self?.hasExistingShippingDetails = false
                     self?.isEditingShippingDetails = true
                 }
@@ -169,17 +346,17 @@ class CheckoutViewModel: ObservableObject {
                 guard let self = self else { return }
                 
                 if let details = details {
-                    // Guardar los detalles existentes
+                    // Save existing details
                     self.existingShippingDetails = details
                     self.hasExistingShippingDetails = true
                     self.isEditingShippingDetails = false
                     
-                    // Poblar el formulario con los detalles existentes
+                    // Populate form with existing details
                     self.populateFormWithExistingDetails(details)
                     
                     Logger.info("Loaded existing shipping details for user")
                 } else {
-                    // No hay detalles de envío, mostrar formulario en blanco
+                    // No shipping details, show blank form
                     self.hasExistingShippingDetails = false
                     self.isEditingShippingDetails = true
                     Logger.info("No existing shipping details found, showing empty form")
@@ -188,7 +365,6 @@ class CheckoutViewModel: ObservableObject {
             .store(in: &cancellables)
     }
     
-    /// Populate the form with existing shipping details
     private func populateFormWithExistingDetails(_ details: ShippingDetailsResponse) {
         shippingDetailsForm.fullName = details.fullName ?? ""
         shippingDetailsForm.address = details.address
@@ -198,22 +374,39 @@ class CheckoutViewModel: ObservableObject {
         shippingDetailsForm.country = details.country
         shippingDetailsForm.phoneNumber = details.phoneNumber ?? ""
         
-        // Validar el formulario
-        validateShippingForm()
+        // Validate the form
+        //validateShippingForm()
     }
     
-    /// Validate all fields in the shipping form
-    private func validateShippingForm() {
-        shippingDetailsForm.isFullNameValid = !shippingDetailsForm.fullName.isEmpty
-        shippingDetailsForm.isAddressValid = !shippingDetailsForm.address.isEmpty
-        shippingDetailsForm.isCityValid = !shippingDetailsForm.city.isEmpty
-        shippingDetailsForm.isStateValid = !shippingDetailsForm.state.isEmpty
-        shippingDetailsForm.isPostalCodeValid = !shippingDetailsForm.postalCode.isEmpty
-        shippingDetailsForm.isCountryValid = !shippingDetailsForm.country.isEmpty
-        shippingDetailsForm.isPhoneNumberValid = !shippingDetailsForm.phoneNumber.isEmpty
+    /// Validate all shipping form fields
+    /*
+    func validateShippingForm() {
+        let (isFullNameValid, fullNameError) = validateFullName(shippingDetailsForm.fullName)
+        let (isAddressValid, addressError) = validateAddress(shippingDetailsForm.address)
+        let (isCityValid, cityError) = validateCity(shippingDetailsForm.city)
+        let (isStateValid, stateError) = validateState(shippingDetailsForm.state)
+        let (isPostalCodeValid, postalCodeError) = validatePostalCode(shippingDetailsForm.postalCode)
+        let (isCountryValid, countryError) = validateCountry(shippingDetailsForm.country)
+        let (isPhoneNumberValid, phoneNumberError) = validatePhoneNumber(shippingDetailsForm.phoneNumber)
+        
+        shippingDetailsForm.isFullNameValid = isFullNameValid
+        shippingDetailsForm.isAddressValid = isAddressValid
+        shippingDetailsForm.isCityValid = isCityValid
+        shippingDetailsForm.isStateValid = isStateValid
+        shippingDetailsForm.isPostalCodeValid = isPostalCodeValid
+        shippingDetailsForm.isCountryValid = isCountryValid
+        shippingDetailsForm.isPhoneNumberValid = isPhoneNumberValid
+        
+        shippingDetailsForm.fullNameError = fullNameError
+        shippingDetailsForm.addressError = addressError
+        shippingDetailsForm.cityError = cityError
+        shippingDetailsForm.stateError = stateError
+        shippingDetailsForm.postalCodeError = postalCodeError
+        shippingDetailsForm.countryError = countryError
+        shippingDetailsForm.phoneNumberError = phoneNumberError
     }
+     */
     
-    /// Save or update shipping details
     func saveShippingDetails() {
         guard let userId = getCurrentUserId() else {
             self.errorMessage = "No authenticated user"
@@ -249,59 +442,128 @@ class CheckoutViewModel: ObservableObject {
                 
                 Logger.info("Shipping details saved successfully")
                 
-                // Actualizar los detalles existentes
+                // Update existing details
                 self.existingShippingDetails = details
                 self.hasExistingShippingDetails = true
                 self.isEditingShippingDetails = false
                 
-                // Continuar con el flujo de checkout
+                // Continue with checkout flow
                 self.currentStep = .paymentMethod
             }
             .store(in: &cancellables)
     }
     
-    // MARK: - Credit Card Validation
+    // MARK: - Order Creation
     
-    func validateCardNumber(_ number: String) -> Bool {
-        // Basic validation: 16 digits, starting with common prefixes
-        let cleaned = number.replacingOccurrences(of: " ", with: "")
-        guard cleaned.count == 16, cleaned.allSatisfy({ $0.isNumber }) else {
-            return false
+    func createOrder() {
+        guard let userId = getCurrentUserId() else {
+            self.errorMessage = "No authenticated user"
+            return
         }
         
-        // Check common prefixes (Visa, MC, Amex, Discover)
-        let validPrefixes = ["4", "5", "3", "6"]
-        return validPrefixes.contains(String(cleaned.prefix(1)))
+        self.isLoading = true
+        self.errorMessage = nil
+        
+        checkoutService.createOrder(userId: userId)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] completion in
+                self?.isLoading = false
+                
+                if case .failure(let error) = completion {
+                    self?.errorMessage = "Failed to create order: \(error.localizedDescription)"
+                    Logger.error("Error creating order: \(error)")
+                    self?.currentStep = .error
+                }
+            } receiveValue: { [weak self] order in
+                guard let self = self else { return }
+                
+                Logger.info("Order created successfully: \(order.id)")
+                
+                // Store the created order
+                self.order = order
+                
+                // Proceed with payment processing
+                self.processPayment(orderId: order.id)
+            }
+            .store(in: &cancellables)
     }
     
-    func validateExpiryDate(_ date: String) -> Bool {
-        // Format must be MM/YY
-        let components = date.split(separator: "/")
-        guard components.count == 2,
-              let month = Int(components[0]),
-              let year = Int(components[1]),
-              month >= 1, month <= 12 else {
-            return false
+    // MARK: - Payment Processing
+    
+    func processPayment(orderId: Int) {
+        guard let userId = getCurrentUserId() else {
+            self.errorMessage = "No authenticated user"
+            return
         }
         
-        // Verify date is in the future
-        let calendar = Calendar.current
-        let currentYear = calendar.component(.year, from: Date()) % 100
-        let currentMonth = calendar.component(.month, from: Date())
+        self.isLoading = true
+        self.errorMessage = nil
+        self.currentStep = .processing
         
-        return (year > currentYear) || (year == currentYear && month >= currentMonth)
+        // Create payment request based on selected payment method
+        let paymentMethodId = selectedPaymentMethod == .creditCard ?
+        generatePaymentMethodId(from: creditCardDetails) : nil
+        
+        let paymentRequest = PaymentRequest(
+            orderId: orderId,
+            paymentMethodId: paymentMethodId,
+            currency: "usd",
+            receiptEmail: nil,
+            description: nil
+        )
+        
+        paymentService.createPaymentIntent(orderId: orderId, request: paymentRequest)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] completion in
+                self?.isLoading = false
+                
+                if case .failure(let error) = completion {
+                    self?.errorMessage = "Payment processing failed: \(error.localizedDescription)"
+                    Logger.error("Error processing payment: \(error)")
+                    self?.currentStep = .error
+                }
+            } receiveValue: { [weak self] response in
+                guard let self = self else { return }
+                
+                Logger.info("Payment intent created: \(response.paymentIntentId)")
+                
+                // Store payment intent details
+                self.paymentIntentId = response.paymentIntentId
+                self.clientSecret = response.clientSecret
+                
+                // Simulate payment confirmation
+                self.confirmPayment(paymentIntentId: response.paymentIntentId)
+            }
+            .store(in: &cancellables)
     }
     
-    func validateCVV(_ cvv: String) -> Bool {
-        // Usually 3 or 4 digits
-        let cleaned = cvv.replacingOccurrences(of: " ", with: "")
-        return cleaned.count >= 3 && cleaned.count <= 4 && cleaned.allSatisfy({ $0.isNumber })
+    private func generatePaymentMethodId(from cardDetails: CreditCardDetails) -> String {
+        // In a real implementation, this would tokenize the card using Stripe SDK
+        // For this example, we just create a dummy payment method ID
+        return "pm_card_visa_\(Date().timeIntervalSince1970)"
     }
     
-    func validateCardholderName(_ name: String) -> Bool {
-        // At least two names, only letters and spaces
-        let names = name.split(separator: " ")
-        return names.count >= 2 && name.allSatisfy({ $0.isLetter || $0.isWhitespace })
+    func confirmPayment(paymentIntentId: String) {
+        self.isLoading = true
+        
+        // In a real app, this would use Stripe SDK to handle 3D Secure, etc.
+        // For this example, we'll simulate confirmation directly
+        
+        // Simulate processing time
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) { [weak self] in
+            self?.isLoading = false
+            
+            // For demo purposes, simulate success most of the time
+            let success = Int.random(in: 1...10) <= 9
+            
+            if success {
+                self?.successMessage = "Payment processed successfully"
+                self?.currentStep = .confirmation
+            } else {
+                self?.errorMessage = "Payment processing failed. Please try again."
+                self?.currentStep = .error
+            }
+        }
     }
     
     // MARK: - Navigation
@@ -310,10 +572,10 @@ class CheckoutViewModel: ObservableObject {
         switch currentStep {
         case .shippingInfo:
             if hasExistingShippingDetails && !isEditingShippingDetails {
-                // Si tiene detalles existentes y no está editando, puede continuar directamente
+                // If has existing details and not editing, can continue directly
                 currentStep = .paymentMethod
             } else if shippingDetailsForm.isValid {
-                // Guarda los detalles de envío y continúa
+                // Save shipping details and continue
                 saveShippingDetails()
             } else {
                 errorMessage = "Please complete all shipping information"
@@ -324,7 +586,7 @@ class CheckoutViewModel: ObservableObject {
             case .creditCard:
                 currentStep = .cardDetails
             case .applePay:
-                // En un caso real, aquí lanzaríamos Apple Pay
+                // In a real app, this would launch Apple Pay
                 currentStep = .review
             }
             
@@ -336,15 +598,15 @@ class CheckoutViewModel: ObservableObject {
             }
             
         case .review:
-            // Iniciar procesamiento de pago
-            createPaymentIntent()
+            // Start order creation and payment processing
+            createOrder()
             
         case .processing:
-            // Esperar a que finalice el procesamiento
+            // Wait for processing to complete
             break
             
         case .confirmation, .error:
-            // Volver a la pantalla principal o al carrito
+            // Return to main screen or cart
             break
         }
     }
@@ -362,60 +624,33 @@ class CheckoutViewModel: ObservableObject {
                 currentStep = .paymentMethod
             }
         default:
-            // Para otras etapas, permanecer en la etapa actual
+            // For other stages, stay on current stage
             break
         }
     }
     
-    // MARK: - Payment Processing
-    
-    func createPaymentIntent() {
-        guard let cart = cart else {
-            self.errorMessage = "No cart available"
-            return
-        }
-        
-        guard let userId = getCurrentUserId() else {
-            self.errorMessage = "No authenticated user"
-            return
-        }
-        
-        self.isLoading = true
-        self.errorMessage = nil
-        
-        // En un caso real, primero crearíamos una orden en el servidor
-        // y luego generaríamos el PaymentIntent para esa orden
-        
-        // Para esta implementación, simularemos el proceso
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
-            self?.isLoading = false
-            
-            // Simular éxito en la creación del PaymentIntent
-            self?.paymentIntentId = "pi_simulated_\(UUID().uuidString)"
-            self?.clientSecret = "seti_simulated_\(UUID().uuidString)"
-            
-            // Proceder con el procesamiento del pago
-            self?.simulatePaymentProcessing()
-        }
+    // MARK: - Credit Card Validation
+    /*
+    func validateCardNumber(_ number: String) -> Bool {
+        return validator.validateCreditCardNumber(number)
     }
     
-    private func simulatePaymentProcessing() {
-        self.currentStep = .processing
-        
-        // Simular tiempo de procesamiento
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) { [weak self] in
-            // Para demostración, simulamos un 90% de éxito
-            let success = Int.random(in: 1...10) <= 9
-            
-            if success {
-                self?.successMessage = "Payment processed successfully"
-                self?.currentStep = .confirmation
-            } else {
-                self?.errorMessage = "Payment processing failed. Please try again."
-                self?.currentStep = .error
-            }
-            
-            self?.isLoading = false
+    func validateExpiryDate(_ date: String) -> Bool {
+        return validator.validateExpiryDate(date)
+    }
+    
+    func validateCVV(_ cvv: String) -> Bool {
+        return validator.validateCVV(cvv)
+    }
+     */
+    
+    func validateCardholderName(_ name: String) -> Bool {
+        let result = validator.validateName(name)
+        switch result {
+        case .valid:
+            return true
+        case .invalid:
+            return false
         }
     }
     
@@ -456,27 +691,79 @@ class CheckoutViewModel: ObservableObject {
     }
 }
 
-// Form model for shipping details with validation
-struct ShippingDetailsForm {
-    var fullName: String = ""
-    var address: String = ""
-    var city: String = ""
-    var state: String = ""
-    var postalCode: String = ""
-    var country: String = ""
-    var phoneNumber: String = ""
-    
-    // Validation states
-    var isFullNameValid: Bool = false
-    var isAddressValid: Bool = false
-    var isCityValid: Bool = false
-    var isStateValid: Bool = false
-    var isPostalCodeValid: Bool = false
-    var isCountryValid: Bool = false
-    var isPhoneNumberValid: Bool = false
-    
-    var isValid: Bool {
-        return isFullNameValid && isAddressValid && isCityValid &&
-        isStateValid && isPostalCodeValid && isCountryValid && isPhoneNumberValid
-    }
-}
+// This is a snippet showing how to update the validation methods in the CheckoutViewModel
+// to handle the ValidationResult enum pattern
+
+/*
+ extension CheckoutViewModel {
+ /// Validate fullName field and store the error message
+ func validateFullName(_ name: String) -> (Bool, String?) {
+ let result = validator.validateName(name)
+ switch result {
+ case .valid:
+ return (true, nil)
+ case .invalid(let message):
+ return (false, message)
+ }
+ }
+ 
+ /// Validate address field (simple non-empty check)
+ func validateAddress(_ address: String) -> (Bool, String?) {
+ let trimmed = address.trimmingCharacters(in: .whitespacesAndNewlines)
+ return (!trimmed.isEmpty, trimmed.isEmpty ? "Address is required" : nil)
+ }
+ 
+ /// Validate city field (simple non-empty check)
+ func validateCity(_ city: String) -> (Bool, String?) {
+ let trimmed = city.trimmingCharacters(in: .whitespacesAndNewlines)
+ return (!trimmed.isEmpty, trimmed.isEmpty ? "City is required" : nil)
+ }
+ 
+ /// Validate state field (simple non-empty check)
+ func validateState(_ state: String) -> (Bool, String?) {
+ let trimmed = state.trimmingCharacters(in: .whitespacesAndNewlines)
+ return (!trimmed.isEmpty, trimmed.isEmpty ? "State is required" : nil)
+ }
+ 
+ /// Validate postal code field
+ func validatePostalCode(_ postalCode: String) -> (Bool, String?) {
+ let isValid = validator.validatePostalCode(postalCode)
+ return (isValid, isValid ? nil : "Please enter a valid postal code")
+ }
+ 
+ /// Validate country field (simple non-empty check)
+ func validateCountry(_ country: String) -> (Bool, String?) {
+ let trimmed = country.trimmingCharacters(in: .whitespacesAndNewlines)
+ return (!trimmed.isEmpty, trimmed.isEmpty ? "Country is required" : nil)
+ }
+ 
+ /// Validate phone number field
+ func validatePhoneNumber(_ phone: String) -> (Bool, String?) {
+ let isValid = validator.validatePhoneNumber(phone)
+ return (isValid, isValid ? nil : "Please enter a valid phone number")
+ }
+ 
+ /// Validate all credit card fields
+ func validateCreditCardForm() {
+ // Card number validation
+ creditCardDetails.isCardNumberValid = validateCardNumber(creditCardDetails.cardNumber)
+ 
+ // Cardholder name validation
+ let nameResult = validator.validateName(creditCardDetails.cardholderName)
+ switch nameResult {
+ case .valid:
+ creditCardDetails.isCardholderNameValid = true
+ creditCardDetails.cardholderNameError = nil
+ case .invalid(let message):
+ creditCardDetails.isCardholderNameValid = false
+ creditCardDetails.cardholderNameError = message
+ }
+ 
+ // Expiry date validation
+ creditCardDetails.isExpiryDateValid = validateExpiryDate(creditCardDetails.expiryDate)
+ 
+ // CVV validation
+ creditCardDetails.isCvvValid = validateCVV(creditCardDetails.cvv)
+ }
+ }
+ */

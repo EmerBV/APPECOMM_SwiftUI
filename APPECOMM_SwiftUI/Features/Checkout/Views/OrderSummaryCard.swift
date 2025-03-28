@@ -7,7 +7,6 @@
 
 import SwiftUI
 
-// MARK: - Order Summary Card
 struct OrderSummaryCard: View {
     @ObservedObject var viewModel: CheckoutViewModel
     
@@ -19,18 +18,44 @@ struct OrderSummaryCard: View {
             
             Divider()
             
+            // Items summary (optional, can be expanded)
+            if let cart = viewModel.cart, !cart.items.isEmpty {
+                ForEach(cart.items.prefix(3)) { item in
+                    HStack {
+                        Text("\(item.quantity)× \(item.product.name)")
+                            .font(.subheadline)
+                            .lineLimit(1)
+                        Spacer()
+                        Text(item.totalPrice.toCurrentLocalePrice)
+                            .font(.subheadline)
+                    }
+                }
+                
+                if cart.items.count > 3 {
+                    Text("And \(cart.items.count - 3) more items...")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
+                
+                Divider()
+            }
+            
+            // Subtotal
             HStack {
                 Text("Subtotal")
                 Spacer()
                 Text(viewModel.orderSummary.formattedSubtotal)
             }
             
+            // Tax
             HStack {
                 Text("Tax")
                 Spacer()
                 Text(viewModel.orderSummary.formattedTax)
             }
             
+            // Shipping
             HStack {
                 Text("Shipping")
                 Spacer()
@@ -39,6 +64,7 @@ struct OrderSummaryCard: View {
             
             Divider()
             
+            // Total
             HStack {
                 Text("Total")
                     .fontWeight(.semibold)

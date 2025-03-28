@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import SwiftUI
 
 enum ValidationResult {
     case valid
@@ -16,9 +17,35 @@ protocol InputValidatorProtocol {
     func validateEmail(_ email: String) -> ValidationResult
     func validatePassword(_ password: String) -> ValidationResult
     func validateName(_ name: String) -> ValidationResult
+    func validateFullName(_ name: String) -> ValidationResult
+    func validateCreditCardNumber(_ cardNumber: String) -> ValidationResult
+    func validateExpiryDate(_ date: String) -> ValidationResult
+    func validateCVV(_ cvv: String) -> ValidationResult
+    func validatePostalCode(_ postalCode: String) -> ValidationResult
+    func validatePhoneNumber(_ phoneNumber: String) -> ValidationResult
 }
 
 final class InputValidator: InputValidatorProtocol {
+    func validatePostalCode(_ postalCode: String) -> ValidationResult {
+        return .valid
+    }
+    
+    func validatePhoneNumber(_ phoneNumber: String) -> ValidationResult {
+        return .valid
+    }
+    
+    func validateCreditCardNumber(_ cardNumber: String) -> ValidationResult {
+        return .valid
+    }
+    
+    func validateExpiryDate(_ date: String) -> ValidationResult {
+        return .valid
+    }
+    
+    func validateCVV(_ cvv: String) -> ValidationResult {
+        return .valid
+    }
+    
     
     func validateEmail(_ email: String) -> ValidationResult {
         let trimmedEmail = email.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -62,4 +89,19 @@ final class InputValidator: InputValidatorProtocol {
         
         return .valid
     }
+    
+    func validateFullName(_ name: String) -> ValidationResult {
+        let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        
+        guard !trimmedName.isEmpty else {
+            return .invalid("name_empty".localized)
+        }
+        
+        guard trimmedName.count >= 2 else {
+            return .invalid("name_too_short".localized)
+        }
+        
+        return .valid
+    }
 }
+

@@ -8,7 +8,7 @@
 import Foundation
 import Swinject
 
-/// Gestor central de inyección de dependencias
+/// Central dependency injection manager
 final class DependencyInjector {
     static let shared = DependencyInjector()
     
@@ -18,14 +18,15 @@ final class DependencyInjector {
     private init() {
         container = Container()
         
-        // Registrar todos los ensambladores
+        // Register all assemblies
         assembler = Assembler(
             [
                 NetworkAssembly(),
                 StorageAssembly(),
                 ServiceAssembly(),
                 RepositoryAssembly(),
-                ViewModelAssembly()
+                ViewModelAssembly(),
+                CheckoutAssembly() // Add our new CheckoutAssembly
             ],
             container: container
         )
@@ -33,7 +34,7 @@ final class DependencyInjector {
     
     func resolve<T>(_ type: T.Type) -> T {
         guard let resolvedType = container.resolve(T.self) else {
-            fatalError("No se pudo resolver el tipo \(String(describing: T.self))")
+            fatalError("Could not resolve type \(String(describing: T.self))")
         }
         return resolvedType
     }

@@ -24,20 +24,20 @@ final class ShippingService: ShippingServiceProtocol {
         let endpoint = ShippingEndpoints.getShippingDetails(userId: userId)
         Logger.info("Fetching shipping details for user \(userId)")
         
-        return networkDispatcher.dispatch(ApiShippingResponse.self, endpoint)
+        return networkDispatcher.dispatch(ApiResponse<ShippingDetailsResponse>.self, endpoint)
             .map { response -> ShippingDetailsResponse in
-                Logger.info("Successfully received shipping details: \(response.message)")
+                Logger.info("Successfully received shipping details")
                 return response.data
             }
             .catch { error -> AnyPublisher<ShippingDetailsResponse?, NetworkError> in
-                // Si el error es 404 (no encontrado), devuelve nil (no hay detalles de envío aún)
+                // If 404 (not found), return nil (no shipping details yet)
                 if case .notFound = error {
                     Logger.info("No shipping details found for user \(userId)")
                     return Just(nil)
                         .setFailureType(to: NetworkError.self)
                         .eraseToAnyPublisher()
                 }
-                // Para otros errores, propaga el error
+                // For other errors, propagate the error
                 Logger.error("Error fetching shipping details: \(error)")
                 return Fail(error: error).eraseToAnyPublisher()
             }
@@ -47,11 +47,10 @@ final class ShippingService: ShippingServiceProtocol {
     func updateShippingDetails(userId: Int, details: ShippingDetailsRequest) -> AnyPublisher<ShippingDetailsResponse, NetworkError> {
         let endpoint = ShippingEndpoints.updateShippingDetails(details: details, userId: userId)
         Logger.info("Updating shipping details for user \(userId)")
-        Logger.debug("Shipping details: \(details)")
         
-        return networkDispatcher.dispatch(ApiShippingResponse.self, endpoint)
+        return networkDispatcher.dispatch(ApiResponse<ShippingDetailsResponse>.self, endpoint)
             .map { response -> ShippingDetailsResponse in
-                Logger.info("Successfully updated shipping details: \(response.message)")
+                Logger.info("Successfully updated shipping details")
                 return response.data
             }
             .handleEvents(receiveCompletion: { completion in
