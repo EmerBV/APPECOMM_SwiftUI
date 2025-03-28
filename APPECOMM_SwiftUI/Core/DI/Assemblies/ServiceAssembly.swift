@@ -33,5 +33,11 @@ final class ServiceAssembly: Assembly {
             let networkDispatcher = r.resolve(NetworkDispatcherProtocol.self)!
             return CartService(networkDispatcher: networkDispatcher)
         }.inObjectScope(.container)
+        
+        // Payment Service - Añadido para la funcionalidad de checkout
+        container.register(PaymentServiceProtocol.self) { r in
+            let networkDispatcher = r.resolve(NetworkDispatcherProtocol.self)!
+            return PaymentService(networkDispatcher: networkDispatcher)
+        }.inObjectScope(.container)
     }
 }
