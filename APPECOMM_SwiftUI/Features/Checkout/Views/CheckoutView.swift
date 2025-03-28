@@ -155,7 +155,7 @@ struct ShippingInfoView: View {
                     PrimaryButton(
                         title: "Continue to Payment",
                         isLoading: false,
-                        isEnabled: viewModel.shippingDetails.isValid
+                        isEnabled: viewModel.shippingDetailsForm.isValid
                     ) {
                         viewModel.proceedToNextStep()
                     }
@@ -184,12 +184,12 @@ struct AddressFormFields: View {
                 title: "Full Name",
                 placeholder: "John Doe",
                 type: .regular,
-                state: viewModel.shippingDetails.isFullNameValid ? .valid : .normal,
+                state: viewModel.shippingDetailsForm.isFullNameValid ? .valid : .normal,
                 text: Binding(
-                    get: { viewModel.shippingDetails.fullName },
+                    get: { viewModel.shippingDetailsForm.fullName },
                     set: {
-                        viewModel.shippingDetails.fullName = $0
-                        viewModel.shippingDetails.isFullNameValid = !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                        viewModel.shippingDetailsForm.fullName = $0
+                        viewModel.shippingDetailsForm.isFullNameValid = !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
                     }
                 )
             )
@@ -198,12 +198,12 @@ struct AddressFormFields: View {
                 title: "Address",
                 placeholder: "123 Main St",
                 type: .regular,
-                state: viewModel.shippingDetails.isAddressValid ? .valid : .normal,
+                state: viewModel.shippingDetailsForm.isAddressValid ? .valid : .normal,
                 text: Binding(
-                    get: { viewModel.shippingDetails.address },
+                    get: { viewModel.shippingDetailsForm.address },
                     set: {
-                        viewModel.shippingDetails.address = $0
-                        viewModel.shippingDetails.isAddressValid = !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                        viewModel.shippingDetailsForm.address = $0
+                        viewModel.shippingDetailsForm.isAddressValid = !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
                     }
                 )
             )
@@ -213,12 +213,12 @@ struct AddressFormFields: View {
                     title: "City",
                     placeholder: "New York",
                     type: .regular,
-                    state: viewModel.shippingDetails.isCityValid ? .valid : .normal,
+                    state: viewModel.shippingDetailsForm.isCityValid ? .valid : .normal,
                     text: Binding(
-                        get: { viewModel.shippingDetails.city },
+                        get: { viewModel.shippingDetailsForm.city },
                         set: {
-                            viewModel.shippingDetails.city = $0
-                            viewModel.shippingDetails.isCityValid = !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                            viewModel.shippingDetailsForm.city = $0
+                            viewModel.shippingDetailsForm.isCityValid = !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
                         }
                     )
                 )
@@ -227,12 +227,12 @@ struct AddressFormFields: View {
                     title: "State",
                     placeholder: "NY",
                     type: .regular,
-                    state: viewModel.shippingDetails.isStateValid ? .valid : .normal,
+                    state: viewModel.shippingDetailsForm.isStateValid ? .valid : .normal,
                     text: Binding(
-                        get: { viewModel.shippingDetails.state },
+                        get: { viewModel.shippingDetailsForm.state },
                         set: {
-                            viewModel.shippingDetails.state = $0
-                            viewModel.shippingDetails.isStateValid = !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                            viewModel.shippingDetailsForm.state = $0
+                            viewModel.shippingDetailsForm.isStateValid = !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
                         }
                     )
                 )
@@ -243,12 +243,12 @@ struct AddressFormFields: View {
                     title: "Postal Code",
                     placeholder: "10001",
                     type: .regular,
-                    state: viewModel.shippingDetails.isPostalCodeValid ? .valid : .normal,
+                    state: viewModel.shippingDetailsForm.isPostalCodeValid ? .valid : .normal,
                     text: Binding(
-                        get: { viewModel.shippingDetails.postalCode },
+                        get: { viewModel.shippingDetailsForm.postalCode },
                         set: {
-                            viewModel.shippingDetails.postalCode = $0
-                            viewModel.shippingDetails.isPostalCodeValid = !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                            viewModel.shippingDetailsForm.postalCode = $0
+                            viewModel.shippingDetailsForm.isPostalCodeValid = !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
                         }
                     )
                 )
@@ -258,12 +258,12 @@ struct AddressFormFields: View {
                     title: "Country",
                     placeholder: "United States",
                     type: .regular,
-                    state: viewModel.shippingDetails.isCountryValid ? .valid : .normal,
+                    state: viewModel.shippingDetailsForm.isCountryValid ? .valid : .normal,
                     text: Binding(
-                        get: { viewModel.shippingDetails.country },
+                        get: { viewModel.shippingDetailsForm.country },
                         set: {
-                            viewModel.shippingDetails.country = $0
-                            viewModel.shippingDetails.isCountryValid = !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                            viewModel.shippingDetailsForm.country = $0
+                            viewModel.shippingDetailsForm.isCountryValid = !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
                         }
                     )
                 )
@@ -273,12 +273,12 @@ struct AddressFormFields: View {
                 title: "Phone Number",
                 placeholder: "+1 (555) 123-4567",
                 type: .regular,
-                state: viewModel.shippingDetails.isPhoneNumberValid ? .valid : .normal,
+                state: viewModel.shippingDetailsForm.isPhoneNumberValid ? .valid : .normal,
                 text: Binding(
-                    get: { viewModel.shippingDetails.phoneNumber },
+                    get: { viewModel.shippingDetailsForm.phoneNumber },
                     set: {
-                        viewModel.shippingDetails.phoneNumber = $0
-                        viewModel.shippingDetails.isPhoneNumberValid = !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                        viewModel.shippingDetailsForm.phoneNumber = $0
+                        viewModel.shippingDetailsForm.isPhoneNumberValid = !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
                     }
                 )
             )
@@ -499,7 +499,7 @@ struct OrderReviewView: View {
                     Text("Shipping Information")
                         .font(.headline)
                     
-                    ShippingSummaryView(details: viewModel.shippingDetails)
+                    ShippingSummaryView(details: viewModel.shippingDetailsForm)
                 }
                 .padding()
                 .background(
@@ -530,45 +530,43 @@ struct OrderReviewView: View {
                 )
                 
                 // Total summary
-                if let orderSummary = viewModel.orderSummary {
-                    VStack(spacing: 16) {
-                        HStack {
-                            Text("Subtotal")
-                                .fontWeight(.medium)
-                            Spacer()
-                            Text(orderSummary.formattedSubtotal)
-                        }
-                        
-                        HStack {
-                            Text("Tax")
-                                .fontWeight(.medium)
-                            Spacer()
-                            Text(orderSummary.formattedTax)
-                        }
-                        
-                        HStack {
-                            Text("Shipping")
-                                .fontWeight(.medium)
-                            Spacer()
-                            Text(orderSummary.formattedShipping)
-                        }
-                        
-                        Divider()
-                        
-                        HStack {
-                            Text("Total")
-                                .font(.headline)
-                            Spacer()
-                            Text(orderSummary.formattedTotal)
-                                .font(.headline)
-                        }
+                VStack(spacing: 16) {
+                    HStack {
+                        Text("Subtotal")
+                            .fontWeight(.medium)
+                        Spacer()
+                        Text(viewModel.orderSummary.formattedSubtotal)
                     }
-                    .padding()
-                    .background(
-                        RoundedRectangle(cornerRadius: 10)
-                            .stroke(Color.gray.opacity(0.3), lineWidth: 1)
-                    )
+                    
+                    HStack {
+                        Text("Tax")
+                            .fontWeight(.medium)
+                        Spacer()
+                        Text(viewModel.orderSummary.formattedTax)
+                    }
+                    
+                    HStack {
+                        Text("Shipping")
+                            .fontWeight(.medium)
+                        Spacer()
+                        Text(viewModel.orderSummary.formattedShipping)
+                    }
+                    
+                    Divider()
+                    
+                    HStack {
+                        Text("Total")
+                            .font(.headline)
+                        Spacer()
+                        Text(viewModel.orderSummary.formattedTotal)
+                            .font(.headline)
+                    }
                 }
+                .padding()
+                .background(
+                    RoundedRectangle(cornerRadius: 10)
+                        .stroke(Color.gray.opacity(0.3), lineWidth: 1)
+                )
                 
                 PrimaryButton(
                     title: "Place Order",
@@ -623,7 +621,7 @@ struct OrderReviewItemRow: View {
 
 /// Summary view for shipping information
 struct ShippingSummaryView: View {
-    let details: ShippingDetails
+    let details: ShippingDetailsForm
     
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
@@ -760,32 +758,30 @@ struct PaymentConfirmationView: View {
                     .padding(.horizontal)
                 
                 // Order Summary
-                if let orderSummary = viewModel.orderSummary {
-                    VStack(alignment: .leading, spacing: 16) {
-                        Text("Order Summary")
-                            .font(.headline)
-                            .padding(.bottom, 8)
-                        
-                        HStack {
-                            Text("Order Total")
-                                .fontWeight(.semibold)
-                            Spacer()
-                            Text(orderSummary.formattedTotal)
-                                .fontWeight(.semibold)
-                        }
-                        
-                        Divider()
-                        
-                        Text("A confirmation email has been sent to your email address.")
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
+                VStack(alignment: .leading, spacing: 16) {
+                    Text("Order Summary")
+                        .font(.headline)
+                        .padding(.bottom, 8)
+                    
+                    HStack {
+                        Text("Order Total")
+                            .fontWeight(.semibold)
+                        Spacer()
+                        Text(viewModel.orderSummary.formattedTotal)
+                            .fontWeight(.semibold)
                     }
-                    .padding()
-                    .background(
-                        RoundedRectangle(cornerRadius: 10)
-                            .stroke(Color.gray.opacity(0.3), lineWidth: 1)
-                    )
+                    
+                    Divider()
+                    
+                    Text("A confirmation email has been sent to your email address.")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
                 }
+                .padding()
+                .background(
+                    RoundedRectangle(cornerRadius: 10)
+                        .stroke(Color.gray.opacity(0.3), lineWidth: 1)
+                )
                 
                 // Continue Shopping button
                 Button(action: {
@@ -882,46 +878,44 @@ struct OrderSummaryCard: View {
     @ObservedObject var viewModel: CheckoutViewModel
     
     var body: some View {
-        if let orderSummary = viewModel.orderSummary {
-            VStack(spacing: 12) {
-                Text("Order Summary")
-                    .font(.headline)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                
-                Divider()
-                
-                HStack {
-                    Text("Subtotal")
-                    Spacer()
-                    Text(orderSummary.formattedSubtotal)
-                }
-                
-                HStack {
-                    Text("Tax")
-                    Spacer()
-                    Text(orderSummary.formattedTax)
-                }
-                
-                HStack {
-                    Text("Shipping")
-                    Spacer()
-                    Text(orderSummary.formattedShipping)
-                }
-                
-                Divider()
-                
-                HStack {
-                    Text("Total")
-                        .fontWeight(.semibold)
-                    Spacer()
-                    Text(orderSummary.formattedTotal)
-                        .fontWeight(.semibold)
-                }
+        VStack(spacing: 12) {
+            Text("Order Summary")
+                .font(.headline)
+                .frame(maxWidth: .infinity, alignment: .leading)
+            
+            Divider()
+            
+            HStack {
+                Text("Subtotal")
+                Spacer()
+                Text(viewModel.orderSummary.formattedSubtotal)
             }
-            .padding()
-            .background(Color(.systemGray6))
-            .cornerRadius(10)
+            
+            HStack {
+                Text("Tax")
+                Spacer()
+                Text(viewModel.orderSummary.formattedTax)
+            }
+            
+            HStack {
+                Text("Shipping")
+                Spacer()
+                Text(viewModel.orderSummary.formattedShipping)
+            }
+            
+            Divider()
+            
+            HStack {
+                Text("Total")
+                    .fontWeight(.semibold)
+                Spacer()
+                Text(viewModel.orderSummary.formattedTotal)
+                    .fontWeight(.semibold)
+            }
         }
+        .padding()
+        .background(Color(.systemGray6))
+        .cornerRadius(10)
     }
 }
 

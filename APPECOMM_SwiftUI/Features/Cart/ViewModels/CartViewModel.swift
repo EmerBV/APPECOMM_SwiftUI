@@ -22,6 +22,7 @@ final class CartViewModel: ObservableObject {
     // MARK: - Dependencies
     private let cartRepository: CartRepositoryProtocol
     private let authRepository: AuthRepositoryProtocol
+    private let navigationCoordinator: NavigationCoordinatorProtocol
     private var cancellables = Set<AnyCancellable>()
     
     // MARK: - Computed Properties
@@ -51,9 +52,14 @@ final class CartViewModel: ObservableObject {
     
     // MARK: - Initialization
     
-    init(cartRepository: CartRepositoryProtocol, authRepository: AuthRepositoryProtocol) {
+    init(
+        cartRepository: CartRepositoryProtocol,
+        authRepository: AuthRepositoryProtocol,
+        navigationCoordinator: NavigationCoordinatorProtocol = NavigationCoordinator.shared
+    ) {
         self.cartRepository = cartRepository
         self.authRepository = authRepository
+        self.navigationCoordinator = navigationCoordinator
         
         setupSubscriptions()
     }
@@ -276,27 +282,20 @@ final class CartViewModel: ObservableObject {
             return
         }
         
+        // Check if user is logged in first
+        guard isUserLoggedIn else {
+            showErrorNotification(title: "Login Required", message: "Please log in to proceed with checkout")
+            navigationCoordinator.navigateToLogin()
+            return
+        }
+        
         isProcessingCheckout = true
         errorMessage = nil
         
-        // In a real implementation, navigate to checkout flow
-        // For now, we'll simulate a successful checkout
-        
         Logger.info("Proceeding to checkout with \(cart.items.count) items")
         
-        // Simulate network delay
-        try? await Task.sleep(nanoseconds: 1_500_000_000)
-        
-        // Navigate to checkout screen
-        if let navigationCoordinator = DependencyInjector.shared.resolve(NavigationCoordinator.self) {
-            navigationCoordinator.navigateToCheckout(with: cart)
-        } else {
-            // Show notification if navigation coordinator isn't available
-            showSuccessNotification(
-                title: "Checkout",
-                message: "Proceeding to payment options"
-            )
-        }
+        // Navigate to checkout screen using the coordinator
+        navigationCoordinator.navigateToCheckout(with: cart)
         
         isProcessingCheckout = false
     }
@@ -319,9 +318,4 @@ final class CartViewModel: ObservableObject {
     func dismissError() {
         errorMessage = nil
     }
-}
-
-// MARK: - Navigation Coordinator Protocol
-protocol NavigationCoordinator {
-    func navigateToCheckout(with cart: Cart)
 }

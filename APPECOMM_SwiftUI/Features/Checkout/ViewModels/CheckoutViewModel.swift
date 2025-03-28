@@ -60,11 +60,23 @@ struct CreditCardDetails {
     }
 }
 
+struct OrderSummaryCheckout {
+    var subtotal: Decimal = 0
+    var shippingCost: Decimal = 0
+    var tax: Decimal = 0
+    var total: Decimal = 0
+    
+    var formattedSubtotal: String { subtotal.toCurrentLocalePrice }
+    var formattedShipping: String { shippingCost > 0 ? shippingCost.toCurrentLocalePrice : "Gratis" }
+    var formattedTax: String { tax.toCurrentLocalePrice }
+    var formattedTotal: String { total.toCurrentLocalePrice }
+}
+
 class CheckoutViewModel: ObservableObject {
     // Published properties for UI state
     @Published var currentStep: CheckoutStep = .shippingInfo
     @Published var selectedPaymentMethod: PaymentMethod = .creditCard
-    @Published var shippingDetails = ShippingDetails()
+    @Published var shippingDetailsForm = ShippingDetailsForm()
     @Published var creditCardDetails = CreditCardDetails()
     @Published var isLoading = false
     @Published var errorMessage: String?
@@ -72,17 +84,11 @@ class CheckoutViewModel: ObservableObject {
     @Published var paymentIntentId: String?
     @Published var clientSecret: String?
     @Published var cart: Cart?
-    
-    // Propiedades calculadas para el resumen de la orden
-    @Published var subtotal: Decimal = 0
-    @Published var shippingCost: Decimal = 0
-    @Published var tax: Decimal = 0
-    @Published var total: Decimal = 0
+    @Published var orderSummary = OrderSummaryCheckout()
     
     // Dependencies
     private let paymentService: PaymentServiceProtocol
     private let authRepository: AuthRepositoryProtocol
-    private let cartRepository: CartRepositoryProtocol
     private let validator: InputValidatorProtocol
     private var cancellables = Set<AnyCancellable>()
     
@@ -90,83 +96,68 @@ class CheckoutViewModel: ObservableObject {
         cart: Cart?,
         paymentService: PaymentServiceProtocol,
         authRepository: AuthRepositoryProtocol,
-        cartRepository: CartRepositoryProtocol,
         validator: InputValidatorProtocol
     ) {
         self.cart = cart
         self.paymentService = paymentService
         self.authRepository = authRepository
-        self.cartRepository = cartRepository
         self.validator = validator
         
-        // Calcular los totales basados en el carrito
+        // Calculate order summary based on cart
         if let cart = cart {
             calculateOrderSummary(from: cart)
         }
         
-        // Cargar los detalles de envío del usuario si están disponibles
+        // Load user shipping details if available
         loadUserShippingDetails()
     }
     
     private func loadUserShippingDetails() {
-        // Si el usuario está autenticado, carga sus detalles de envío
-        if case let .loggedIn(user) = authRepository.authState.value {
-            if let userShippingDetails = user.shippingDetails {
-                self.shippingDetails.address = userShippingDetails.address ?? ""
-                self.shippingDetails.city = userShippingDetails.city ?? ""
-                self.shippingDetails.postalCode = userShippingDetails.postalCode ?? ""
-                self.shippingDetails.country = userShippingDetails.country ?? ""
-                self.shippingDetails.phoneNumber = userShippingDetails.phoneNumber ?? ""
-                
-                // Marcar como válidos si hay datos
-                self.shippingDetails.isAddressValid = !self.shippingDetails.address.isEmpty
-                self.shippingDetails.isCityValid = !self.shippingDetails.city.isEmpty
-                self.shippingDetails.isPostalCodeValid = !self.shippingDetails.postalCode.isEmpty
-                self.shippingDetails.isCountryValid = !self.shippingDetails.country.isEmpty
-                self.shippingDetails.isPhoneNumberValid = !self.shippingDetails.phoneNumber.isEmpty
-            }
+        // If user is authenticated, load their shipping details
+        if case let .loggedIn(user) = authRepository.authState.value, let userShipping = user.shippingDetails {
+            self.shippingDetailsForm.update(from: userShipping)
         }
     }
     
     private func calculateOrderSummary(from cart: Cart) {
-        self.subtotal = cart.totalAmount
+        self.orderSummary.subtotal = cart.totalAmount
         
-        // Calcular impuestos (ejemplo: 8% del subtotal)
-        self.tax = calculateTax(subtotal)
+        // Calculate tax (example: 8% of subtotal)
+        self.orderSummary.tax = calculateTax(orderSummary.subtotal)
         
-        // Determinar costo de envío (gratis para más de $50)
-        self.shippingCost = calculateShipping(subtotal)
+        // Determine shipping cost (free for orders over $50)
+        self.orderSummary.shippingCost = calculateShipping(orderSummary.subtotal)
         
-        // Calcular total
-        self.total = subtotal + tax + shippingCost
+        // Calculate total
+        self.orderSummary.total = orderSummary.subtotal + orderSummary.tax + orderSummary.shippingCost
     }
     
     private func calculateTax(_ amount: Decimal) -> Decimal {
-        // Ejemplo: 8% de impuestos
+        // Example: 8% tax
         return (amount * Decimal(0.08)).rounded(2)
     }
     
     private func calculateShipping(_ amount: Decimal) -> Decimal {
-        // Envío gratis para compras mayores a $50, de lo contrario $5.99
+        // Free shipping for purchases over $50, otherwise $5.99
         return amount > 50 ? 0 : Decimal(5.99)
     }
     
-    // MARK: - Validación de datos
+    // MARK: - Card Validation
     
     func validateCardNumber(_ number: String) -> Bool {
-        // Validación básica: 16 dígitos, empezando con prefijos comunes
+        // Basic validation: 16 digits, starting with common prefixes
         let cleaned = number.replacingOccurrences(of: " ", with: "")
         guard cleaned.count == 16, cleaned.allSatisfy({ $0.isNumber }) else {
             return false
         }
         
-        // Verificar prefijos comunes (Visa, MC, Amex, Discover)
+        // Check common prefixes (Visa, MC, Amex, Discover)
         let validPrefixes = ["4", "5", "3", "6"]
         return validPrefixes.contains(String(cleaned.prefix(1)))
     }
     
     func validateExpiryDate(_ date: String) -> Bool {
-        // Formato debe ser MM/YY
+        // Format must be MM/YY
         let components = date.split(separator: "/")
         guard components.count == 2,
               let month = Int(components[0]),
@@ -175,7 +166,7 @@ class CheckoutViewModel: ObservableObject {
             return false
         }
         
-        // Verificar que la fecha sea en el futuro
+        // Verify date is in the future
         let calendar = Calendar.current
         let currentYear = calendar.component(.year, from: Date()) % 100
         let currentMonth = calendar.component(.month, from: Date())
@@ -184,45 +175,45 @@ class CheckoutViewModel: ObservableObject {
     }
     
     func validateCVV(_ cvv: String) -> Bool {
-        // Generalmente 3 o 4 dígitos
+        // Usually 3 or 4 digits
         let cleaned = cvv.replacingOccurrences(of: " ", with: "")
         return cleaned.count >= 3 && cleaned.count <= 4 && cleaned.allSatisfy({ $0.isNumber })
     }
     
     func validateCardholderName(_ name: String) -> Bool {
-        // Al menos dos nombres, solo letras y espacios
+        // At least two names, only letters and spaces
         let names = name.split(separator: " ")
         return names.count >= 2 && name.allSatisfy({ $0.isLetter || $0.isWhitespace })
     }
     
-    // MARK: - Procesamiento de Pagos
+    // MARK: - Payment Processing
     
     func createPaymentIntent() {
         guard let cart = cart else {
-            self.errorMessage = "No hay un carrito disponible"
+            self.errorMessage = "No cart available"
             return
         }
         
         guard let userId = getCurrentUserId() else {
-            self.errorMessage = "No hay un usuario autenticado"
+            self.errorMessage = "No authenticated user"
             return
         }
         
         self.isLoading = true
         self.errorMessage = nil
         
-        // En un caso real, primero crearíamos una orden en el servidor
-        // y luego generaríamos el PaymentIntent para esa orden
+        // In a real case, we would first create an order on the server
+        // and then generate the PaymentIntent for that order
         
-        // Para esta implementación, simularemos el proceso
+        // For this implementation, we'll simulate the process
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
             self?.isLoading = false
             
-            // Simular éxito en la creación del PaymentIntent
+            // Simulate success in creating the PaymentIntent
             self?.paymentIntentId = "pi_simulated_\(UUID().uuidString)"
             self?.clientSecret = "seti_simulated_\(UUID().uuidString)"
             
-            // Avanzar al procesamiento del pago
+            // Proceed to payment processing
             self?.simulatePaymentProcessing()
         }
     }
@@ -230,16 +221,16 @@ class CheckoutViewModel: ObservableObject {
     private func simulatePaymentProcessing() {
         self.currentStep = .processing
         
-        // Simular tiempo de procesamiento
+        // Simulate processing time
         DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) { [weak self] in
-            // Para demostración, simulamos 90% de éxito
+            // For demonstration, we simulate 90% success
             let success = Int.random(in: 1...10) <= 9
             
             if success {
-                self?.successMessage = "Pago procesado exitosamente"
+                self?.successMessage = "Payment processed successfully"
                 self?.currentStep = .confirmation
             } else {
-                self?.errorMessage = "El procesamiento del pago falló. Por favor, intente de nuevo."
+                self?.errorMessage = "Payment processing failed. Please try again."
                 self?.currentStep = .error
             }
             
@@ -247,15 +238,15 @@ class CheckoutViewModel: ObservableObject {
         }
     }
     
-    // MARK: - Navegación
+    // MARK: - Navigation
     
     func proceedToNextStep() {
         switch currentStep {
         case .shippingInfo:
-            if validateShippingDetails() {
+            if shippingDetailsForm.isValid {
                 currentStep = .paymentMethod
             } else {
-                errorMessage = "Por favor complete toda la información de envío"
+                errorMessage = "Please complete all shipping information"
             }
             
         case .paymentMethod:
@@ -263,7 +254,7 @@ class CheckoutViewModel: ObservableObject {
             case .creditCard:
                 currentStep = .cardDetails
             case .applePay:
-                // En un caso real, aquí lanzaríamos Apple Pay
+                // In a real case, we would launch Apple Pay here
                 currentStep = .review
             }
             
@@ -271,19 +262,19 @@ class CheckoutViewModel: ObservableObject {
             if creditCardDetails.isValid {
                 currentStep = .review
             } else {
-                errorMessage = "Por favor complete correctamente todos los datos de la tarjeta"
+                errorMessage = "Please correctly complete all card details"
             }
             
         case .review:
-            // Iniciar procesamiento del pago
+            // Start payment processing
             createPaymentIntent()
             
         case .processing:
-            // Esperar a que termine el procesamiento
+            // Wait for processing to finish
             break
             
         case .confirmation, .error:
-            // Volver al carrito o a la pantalla principal
+            // Return to cart or main screen
             break
         }
     }
@@ -301,17 +292,9 @@ class CheckoutViewModel: ObservableObject {
                 currentStep = .paymentMethod
             }
         default:
-            // Para otros pasos, permanecer en el paso actual
+            // For other steps, stay on the current step
             break
         }
-    }
-    
-    private func validateShippingDetails() -> Bool {
-        return shippingDetails.isAddressValid &&
-               shippingDetails.isCityValid &&
-               shippingDetails.isPostalCodeValid &&
-               shippingDetails.isCountryValid &&
-               shippingDetails.isPhoneNumberValid
     }
     
     // MARK: - Helper Methods
@@ -323,7 +306,7 @@ class CheckoutViewModel: ObservableObject {
         return nil
     }
     
-    // Formateo de tarjetas
+    // Card formatting
     func formatCardNumber(_ number: String) -> String {
         let cleaned = number.replacingOccurrences(of: " ", with: "")
         var formatted = ""
@@ -350,33 +333,68 @@ class CheckoutViewModel: ObservableObject {
         return cleaned
     }
     
-    // Formateo de precios
-    var formattedSubtotal: String {
-        return subtotal.toCurrentLocalePrice
-    }
-    
-    var formattedTax: String {
-        return tax.toCurrentLocalePrice
-    }
-    
-    var formattedShipping: String {
-        return shippingCost > 0 ? shippingCost.toCurrentLocalePrice : "Gratis"
-    }
-    
-    var formattedTotal: String {
-        return total.toCurrentLocalePrice
+    // Convert ShippingDetailsForm to ShippingDetails model
+    func createShippingDetails() -> ShippingDetails {
+        return ShippingDetails(
+            id: nil,
+            address: shippingDetailsForm.address,
+            city: shippingDetailsForm.city,
+            postalCode: shippingDetailsForm.postalCode,
+            country: shippingDetailsForm.country,
+            phoneNumber: shippingDetailsForm.phoneNumber
+        )
     }
 }
 
-// Extensión de ShippingDetails para manejar la validación
-extension ShippingDetails {
+// Form model for collecting shipping details with validation
+struct ShippingDetailsForm {
+    var fullName: String = ""
+    var address: String = ""
+    var city: String = ""
+    var state: String = ""
+    var postalCode: String = ""
+    var country: String = ""
+    var phoneNumber: String = ""
+    
+    // Validation states
+    var isFullNameValid: Bool = false
     var isAddressValid: Bool = false
     var isCityValid: Bool = false
+    var isStateValid: Bool = false
     var isPostalCodeValid: Bool = false
     var isCountryValid: Bool = false
     var isPhoneNumberValid: Bool = false
     
     var isValid: Bool {
-        return isAddressValid && isCityValid && isPostalCodeValid && isCountryValid && isPhoneNumberValid
+        return isFullNameValid && isAddressValid && isCityValid &&
+        isStateValid && isPostalCodeValid && isCountryValid && isPhoneNumberValid
+    }
+    
+    // Update from existing ShippingDetails
+    mutating func update(from details: ShippingDetails) {
+        if let address = details.address {
+            self.address = address
+            self.isAddressValid = !address.isEmpty
+        }
+        
+        if let city = details.city {
+            self.city = city
+            self.isCityValid = !city.isEmpty
+        }
+        
+        if let postalCode = details.postalCode {
+            self.postalCode = postalCode
+            self.isPostalCodeValid = !postalCode.isEmpty
+        }
+        
+        if let country = details.country {
+            self.country = country
+            self.isCountryValid = !country.isEmpty
+        }
+        
+        if let phoneNumber = details.phoneNumber {
+            self.phoneNumber = phoneNumber
+            self.isPhoneNumberValid = !phoneNumber.isEmpty
+        }
     }
 }

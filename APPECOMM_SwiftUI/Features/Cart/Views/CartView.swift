@@ -10,6 +10,8 @@ import SwiftUI
 struct CartView: View {
     @StateObject private var viewModel: CartViewModel
     @State private var shouldShowClearCartAlert = false
+    @State private var isShowingCheckout = false
+    @ObservedObject private var navigationCoordinator = NavigationCoordinator.shared
     
     init(viewModel: CartViewModel) {
         _viewModel = StateObject(wrappedValue: viewModel)
@@ -37,6 +39,18 @@ struct CartView: View {
                 Button("cancel".localized, role: .cancel) {}
             } message: {
                 Text("clear_cart_confirmation".localized)
+            }
+            .sheet(isPresented: $isShowingCheckout) {
+                CheckoutView(cart: viewModel.cart)
+            }
+            .onChange(of: navigationCoordinator.showingCheckout) { showCheckout in
+                if showCheckout {
+                    isShowingCheckout = true
+                    // Reset the coordinator's flag after we've handled it
+                    DispatchQueue.main.async {
+                        navigationCoordinator.showingCheckout = false
+                    }
+                }
             }
         }
         .task {
@@ -273,8 +287,8 @@ struct CartItemRow: View {
         HStack(alignment: .top, spacing: 16) {
             ProductImageView(
                 size: 80,
-                imageUrl: "",
-                baseURL: ""
+                imageUrl: item.product.imageUrl,
+                baseURL: AppConfig.shared.imageBaseUrl
             )
             
             VStack(alignment: .leading, spacing: 8) {
@@ -343,5 +357,14 @@ struct CartItemRow: View {
                 onValueChanged: onUpdateQuantity
             )
         }
+    }
+}
+
+// MARK: - Helper Extension for Image URL
+extension CartProductDto {
+    var imageUrl: String? {
+        // In a real app, this would return the actual image URL from the API
+        // For now, let's just return nil since we're using placeholder images
+        return nil
     }
 }
