@@ -32,11 +32,15 @@ struct CreditCardDetailsView: View {
                         .padding(.bottom, 12)
                     
                     // Card Number Field
+                    let cardNumberState: FieldState = viewModel.creditCardDetails.isCardNumberValid
+                    ? .valid
+                    : (viewModel.creditCardDetails.cardNumber.isEmpty ? .normal : .error("Invalid card number"))
+                    
                     CustomTextField(
                         title: "Card Number",
                         placeholder: "4242 4242 4242 4242",
                         type: .numeric,
-                        state: viewModel.creditCardDetails.isCardNumberValid ? .valid : .normal,
+                        state: cardNumberState,
                         text: Binding(
                             get: { viewModel.creditCardDetails.cardNumber },
                             set: {
@@ -53,11 +57,15 @@ struct CreditCardDetailsView: View {
                     }
                     
                     // Cardholder Name Field
+                    let cardholderNameState: FieldState = viewModel.creditCardDetails.isCardholderNameValid
+                    ? .valid
+                    : (viewModel.creditCardDetails.cardholderName.isEmpty ? .normal : .error("Invalid cardholder name"))
+                    
                     CustomTextField(
                         title: "Cardholder Name",
                         placeholder: "John Doe",
                         type: .regular,
-                        state: viewModel.creditCardDetails.isCardholderNameValid ? .valid : .normal,
+                        state: cardholderNameState,
                         text: Binding(
                             get: { viewModel.creditCardDetails.cardholderName },
                             set: {
@@ -74,11 +82,15 @@ struct CreditCardDetailsView: View {
                     
                     // Expiry Date and CVV
                     HStack(spacing: 12) {
+                        let expiryDateState: FieldState = viewModel.creditCardDetails.isExpiryDateValid
+                        ? .valid
+                        : (viewModel.creditCardDetails.expiryDate.isEmpty ? .normal : .error("Invalid expiry date"))
+                        
                         CustomTextField(
                             title: "Expiry Date",
                             placeholder: "MM/YY",
                             type: .numeric,
-                            state: viewModel.creditCardDetails.isExpiryDateValid ? .valid : .normal,
+                            state: expiryDateState,
                             text: Binding(
                                 get: { viewModel.creditCardDetails.expiryDate },
                                 set: {
@@ -94,11 +106,15 @@ struct CreditCardDetailsView: View {
                             focusedField = .cvv
                         }
                         
+                        let cvvState: FieldState = viewModel.creditCardDetails.isCvvValid
+                        ? .valid
+                        : (viewModel.creditCardDetails.cvv.isEmpty ? .normal : .error("Invalid CVV"))
+                        
                         CustomTextField(
                             title: "CVV",
                             placeholder: "123",
                             type: .numeric,
-                            state: viewModel.creditCardDetails.isCvvValid ? .valid : .normal,
+                            state: cvvState,
                             text: Binding(
                                 get: { viewModel.creditCardDetails.cvv },
                                 set: {
@@ -125,7 +141,12 @@ struct CreditCardDetailsView: View {
                     isEnabled: viewModel.creditCardDetails.isValid
                 ) {
                     focusedField = nil
-                    viewModel.proceedToNextStep()
+                    viewModel.validateCreditCardForm() // Validar todos los campos antes de continuar
+                    if viewModel.creditCardDetails.isValid {
+                        viewModel.proceedToNextStep()
+                    } else {
+                        viewModel.errorMessage = "Please fill in all card details correctly"
+                    }
                 }
                 .padding([.top, .horizontal])
             }

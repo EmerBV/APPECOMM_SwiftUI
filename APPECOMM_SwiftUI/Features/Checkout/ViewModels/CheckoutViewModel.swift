@@ -375,11 +375,10 @@ class CheckoutViewModel: ObservableObject {
         shippingDetailsForm.phoneNumber = details.phoneNumber ?? ""
         
         // Validate the form
-        //validateShippingForm()
+        validateShippingForm()
     }
     
     /// Validate all shipping form fields
-    /*
     func validateShippingForm() {
         let (isFullNameValid, fullNameError) = validateFullName(shippingDetailsForm.fullName)
         let (isAddressValid, addressError) = validateAddress(shippingDetailsForm.address)
@@ -405,7 +404,6 @@ class CheckoutViewModel: ObservableObject {
         shippingDetailsForm.countryError = countryError
         shippingDetailsForm.phoneNumberError = phoneNumberError
     }
-     */
     
     func saveShippingDetails() {
         guard let userId = getCurrentUserId() else {
@@ -631,17 +629,17 @@ class CheckoutViewModel: ObservableObject {
     
     // MARK: - Credit Card Validation
     /*
-    func validateCardNumber(_ number: String) -> Bool {
-        return validator.validateCreditCardNumber(number)
-    }
-    
-    func validateExpiryDate(_ date: String) -> Bool {
-        return validator.validateExpiryDate(date)
-    }
-    
-    func validateCVV(_ cvv: String) -> Bool {
-        return validator.validateCVV(cvv)
-    }
+     func validateCardNumber(_ number: String) -> Bool {
+     return validator.validateCreditCardNumber(number)
+     }
+     
+     func validateExpiryDate(_ date: String) -> Bool {
+     return validator.validateExpiryDate(date)
+     }
+     
+     func validateCVV(_ cvv: String) -> Bool {
+     return validator.validateCVV(cvv)
+     }
      */
     
     func validateCardholderName(_ name: String) -> Bool {
@@ -691,79 +689,173 @@ class CheckoutViewModel: ObservableObject {
     }
 }
 
-// This is a snippet showing how to update the validation methods in the CheckoutViewModel
-// to handle the ValidationResult enum pattern
-
-/*
- extension CheckoutViewModel {
- /// Validate fullName field and store the error message
- func validateFullName(_ name: String) -> (Bool, String?) {
- let result = validator.validateName(name)
- switch result {
- case .valid:
- return (true, nil)
- case .invalid(let message):
- return (false, message)
- }
- }
- 
- /// Validate address field (simple non-empty check)
- func validateAddress(_ address: String) -> (Bool, String?) {
- let trimmed = address.trimmingCharacters(in: .whitespacesAndNewlines)
- return (!trimmed.isEmpty, trimmed.isEmpty ? "Address is required" : nil)
- }
- 
- /// Validate city field (simple non-empty check)
- func validateCity(_ city: String) -> (Bool, String?) {
- let trimmed = city.trimmingCharacters(in: .whitespacesAndNewlines)
- return (!trimmed.isEmpty, trimmed.isEmpty ? "City is required" : nil)
- }
- 
- /// Validate state field (simple non-empty check)
- func validateState(_ state: String) -> (Bool, String?) {
- let trimmed = state.trimmingCharacters(in: .whitespacesAndNewlines)
- return (!trimmed.isEmpty, trimmed.isEmpty ? "State is required" : nil)
- }
- 
- /// Validate postal code field
- func validatePostalCode(_ postalCode: String) -> (Bool, String?) {
- let isValid = validator.validatePostalCode(postalCode)
- return (isValid, isValid ? nil : "Please enter a valid postal code")
- }
- 
- /// Validate country field (simple non-empty check)
- func validateCountry(_ country: String) -> (Bool, String?) {
- let trimmed = country.trimmingCharacters(in: .whitespacesAndNewlines)
- return (!trimmed.isEmpty, trimmed.isEmpty ? "Country is required" : nil)
- }
- 
- /// Validate phone number field
- func validatePhoneNumber(_ phone: String) -> (Bool, String?) {
- let isValid = validator.validatePhoneNumber(phone)
- return (isValid, isValid ? nil : "Please enter a valid phone number")
- }
- 
- /// Validate all credit card fields
- func validateCreditCardForm() {
- // Card number validation
- creditCardDetails.isCardNumberValid = validateCardNumber(creditCardDetails.cardNumber)
- 
- // Cardholder name validation
- let nameResult = validator.validateName(creditCardDetails.cardholderName)
- switch nameResult {
- case .valid:
- creditCardDetails.isCardholderNameValid = true
- creditCardDetails.cardholderNameError = nil
- case .invalid(let message):
- creditCardDetails.isCardholderNameValid = false
- creditCardDetails.cardholderNameError = message
- }
- 
- // Expiry date validation
- creditCardDetails.isExpiryDateValid = validateExpiryDate(creditCardDetails.expiryDate)
- 
- // CVV validation
- creditCardDetails.isCvvValid = validateCVV(creditCardDetails.cvv)
- }
- }
- */
+extension CheckoutViewModel {
+    // MARK: - Credit Card Validation
+    
+    func validateCardNumber(_ number: String) -> (Bool, String?) {
+        let result = validator.validateCreditCardNumber(number)
+        switch result {
+        case .valid:
+            return (true, nil)
+        case .invalid(let message):
+            return (false, message)
+        }
+    }
+    
+    func validateExpiryDate(_ date: String) -> (Bool, String?) {
+        let result = validator.validateExpiryDate(date)
+        switch result {
+        case .valid:
+            return (true, nil)
+        case .invalid(let message):
+            return (false, message)
+        }
+    }
+    
+    func validateCVV(_ cvv: String) -> (Bool, String?) {
+        let result = validator.validateCVV(cvv)
+        switch result {
+        case .valid:
+            return (true, nil)
+        case .invalid(let message):
+            return (false, message)
+        }
+    }
+    
+    func validateCardholderName(_ name: String) -> (Bool, String?) {
+        let result = validator.validateName(name)
+        switch result {
+        case .valid:
+            return (true, nil)
+        case .invalid(let message):
+            return (false, message)
+        }
+    }
+    
+    // MARK: - Shipping Details Validation
+    
+    func validateShippingForm() {
+        // Validar nombre completo
+        let fullNameResult = validator.validateFullName(shippingDetailsForm.fullName)
+        switch fullNameResult {
+        case .valid:
+            shippingDetailsForm.isFullNameValid = true
+            shippingDetailsForm.fullNameError = nil
+        case .invalid(let message):
+            shippingDetailsForm.isFullNameValid = false
+            shippingDetailsForm.fullNameError = message
+        }
+        
+        // Validar dirección
+        let addressResult = validator.validateName(shippingDetailsForm.address) // Usamos validateName por simplicidad
+        switch addressResult {
+        case .valid:
+            shippingDetailsForm.isAddressValid = true
+            shippingDetailsForm.addressError = nil
+        case .invalid(let message):
+            shippingDetailsForm.isAddressValid = false
+            shippingDetailsForm.addressError = message
+        }
+        
+        // Validar ciudad
+        let cityResult = validator.validateName(shippingDetailsForm.city)
+        switch cityResult {
+        case .valid:
+            shippingDetailsForm.isCityValid = true
+            shippingDetailsForm.cityError = nil
+        case .invalid(let message):
+            shippingDetailsForm.isCityValid = false
+            shippingDetailsForm.cityError = message
+        }
+        
+        // Validar estado/provincia
+        let stateResult = validator.validateName(shippingDetailsForm.state)
+        switch stateResult {
+        case .valid:
+            shippingDetailsForm.isStateValid = true
+            shippingDetailsForm.stateError = nil
+        case .invalid(let message):
+            shippingDetailsForm.isStateValid = false
+            shippingDetailsForm.stateError = message
+        }
+        
+        // Validar código postal
+        let postalCodeResult = validator.validatePostalCode(shippingDetailsForm.postalCode)
+        switch postalCodeResult {
+        case .valid:
+            shippingDetailsForm.isPostalCodeValid = true
+            shippingDetailsForm.postalCodeError = nil
+        case .invalid(let message):
+            shippingDetailsForm.isPostalCodeValid = false
+            shippingDetailsForm.postalCodeError = message
+        }
+        
+        // Validar país
+        let countryResult = validator.validateName(shippingDetailsForm.country)
+        switch countryResult {
+        case .valid:
+            shippingDetailsForm.isCountryValid = true
+            shippingDetailsForm.countryError = nil
+        case .invalid(let message):
+            shippingDetailsForm.isCountryValid = false
+            shippingDetailsForm.countryError = message
+        }
+        
+        // Validar teléfono
+        let phoneResult = validator.validatePhoneNumber(shippingDetailsForm.phoneNumber)
+        switch phoneResult {
+        case .valid:
+            shippingDetailsForm.isPhoneNumberValid = true
+            shippingDetailsForm.phoneNumberError = nil
+        case .invalid(let message):
+            shippingDetailsForm.isPhoneNumberValid = false
+            shippingDetailsForm.phoneNumberError = message
+        }
+    }
+    
+    func validateCreditCardForm() {
+        // Validar número de tarjeta
+        let cardNumberResult = validator.validateCreditCardNumber(creditCardDetails.cardNumber)
+        switch cardNumberResult {
+        case .valid:
+            creditCardDetails.isCardNumberValid = true
+            creditCardDetails.cardNumberError = nil
+        case .invalid(let message):
+            creditCardDetails.isCardNumberValid = false
+            creditCardDetails.cardNumberError = message
+        }
+        
+        // Validar nombre del titular
+        let cardholderNameResult = validator.validateName(creditCardDetails.cardholderName)
+        switch cardholderNameResult {
+        case .valid:
+            creditCardDetails.isCardholderNameValid = true
+            creditCardDetails.cardholderNameError = nil
+        case .invalid(let message):
+            creditCardDetails.isCardholderNameValid = false
+            creditCardDetails.cardholderNameError = message
+        }
+        
+        // Validar fecha de expiración
+        let expiryDateResult = validator.validateExpiryDate(creditCardDetails.expiryDate)
+        switch expiryDateResult {
+        case .valid:
+            creditCardDetails.isExpiryDateValid = true
+            creditCardDetails.expiryDateError = nil
+        case .invalid(let message):
+            creditCardDetails.isExpiryDateValid = false
+            creditCardDetails.expiryDateError = message
+        }
+        
+        // Validar CVV
+        let cvvResult = validator.validateCVV(creditCardDetails.cvv)
+        switch cvvResult {
+        case .valid:
+            creditCardDetails.isCvvValid = true
+            creditCardDetails.cvvError = nil
+        case .invalid(let message):
+            creditCardDetails.isCvvValid = false
+            creditCardDetails.cvvError = message
+        }
+    }
+}
