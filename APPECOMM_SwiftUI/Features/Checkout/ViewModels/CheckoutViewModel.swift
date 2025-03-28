@@ -86,38 +86,41 @@ class CheckoutViewModel: ObservableObject {
     @Published var cart: Cart?
     @Published var orderSummary = OrderSummaryCheckout()
     
+    // Shipping details related properties
+    @Published var existingShippingDetails: ShippingDetailsResponse?
+    @Published var hasExistingShippingDetails = false
+    @Published var isEditingShippingDetails = false
+    
     // Dependencies
     private let paymentService: PaymentServiceProtocol
     private let authRepository: AuthRepositoryProtocol
     private let validator: InputValidatorProtocol
+    private let shippingService: ShippingServiceProtocol
     private var cancellables = Set<AnyCancellable>()
     
     init(
         cart: Cart?,
         paymentService: PaymentServiceProtocol,
         authRepository: AuthRepositoryProtocol,
-        validator: InputValidatorProtocol
+        validator: InputValidatorProtocol,
+        shippingService: ShippingServiceProtocol = DependencyInjector.shared.resolve(ShippingServiceProtocol.self)
     ) {
         self.cart = cart
         self.paymentService = paymentService
         self.authRepository = authRepository
         self.validator = validator
+        self.shippingService = shippingService
         
         // Calculate order summary based on cart
         if let cart = cart {
             calculateOrderSummary(from: cart)
         }
         
-        // Load user shipping details if available
-        loadUserShippingDetails()
+        // Load existing shipping details if available
+        loadExistingShippingDetails()
     }
     
-    private func loadUserShippingDetails() {
-        // If user is authenticated, load their shipping details
-        if case let .loggedIn(user) = authRepository.authState.value, let userShipping = user.shippingDetails {
-            self.shippingDetailsForm.update(from: userShipping)
-        }
-    }
+    // MARK: - Order Summary Calculation
     
     private func calculateOrderSummary(from cart: Cart) {
         self.orderSummary.subtotal = cart.totalAmount
@@ -142,7 +145,122 @@ class CheckoutViewModel: ObservableObject {
         return amount > 50 ? 0 : Decimal(5.99)
     }
     
-    // MARK: - Card Validation
+    // MARK: - Shipping Details Management
+    
+    /// Load existing shipping details for the user
+    private func loadExistingShippingDetails() {
+        guard let userId = getCurrentUserId() else { return }
+        
+        isLoading = true
+        errorMessage = nil
+        
+        shippingService.getShippingDetails(userId: userId)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] completion in
+                self?.isLoading = false
+                
+                if case .failure(let error) = completion {
+                    Logger.error("Error loading shipping details: \(error)")
+                    // No mostrar el error al usuario, simplemente usar un formulario en blanco
+                    self?.hasExistingShippingDetails = false
+                    self?.isEditingShippingDetails = true
+                }
+            } receiveValue: { [weak self] details in
+                guard let self = self else { return }
+                
+                if let details = details {
+                    // Guardar los detalles existentes
+                    self.existingShippingDetails = details
+                    self.hasExistingShippingDetails = true
+                    self.isEditingShippingDetails = false
+                    
+                    // Poblar el formulario con los detalles existentes
+                    self.populateFormWithExistingDetails(details)
+                    
+                    Logger.info("Loaded existing shipping details for user")
+                } else {
+                    // No hay detalles de envío, mostrar formulario en blanco
+                    self.hasExistingShippingDetails = false
+                    self.isEditingShippingDetails = true
+                    Logger.info("No existing shipping details found, showing empty form")
+                }
+            }
+            .store(in: &cancellables)
+    }
+    
+    /// Populate the form with existing shipping details
+    private func populateFormWithExistingDetails(_ details: ShippingDetailsResponse) {
+        shippingDetailsForm.fullName = details.fullName ?? ""
+        shippingDetailsForm.address = details.address
+        shippingDetailsForm.city = details.city
+        shippingDetailsForm.state = details.state ?? ""
+        shippingDetailsForm.postalCode = details.postalCode
+        shippingDetailsForm.country = details.country
+        shippingDetailsForm.phoneNumber = details.phoneNumber ?? ""
+        
+        // Validar el formulario
+        validateShippingForm()
+    }
+    
+    /// Validate all fields in the shipping form
+    private func validateShippingForm() {
+        shippingDetailsForm.isFullNameValid = !shippingDetailsForm.fullName.isEmpty
+        shippingDetailsForm.isAddressValid = !shippingDetailsForm.address.isEmpty
+        shippingDetailsForm.isCityValid = !shippingDetailsForm.city.isEmpty
+        shippingDetailsForm.isStateValid = !shippingDetailsForm.state.isEmpty
+        shippingDetailsForm.isPostalCodeValid = !shippingDetailsForm.postalCode.isEmpty
+        shippingDetailsForm.isCountryValid = !shippingDetailsForm.country.isEmpty
+        shippingDetailsForm.isPhoneNumberValid = !shippingDetailsForm.phoneNumber.isEmpty
+    }
+    
+    /// Save or update shipping details
+    func saveShippingDetails() {
+        guard let userId = getCurrentUserId() else {
+            self.errorMessage = "No authenticated user"
+            return
+        }
+        
+        self.isLoading = true
+        self.errorMessage = nil
+        
+        // Create shipping details request object from form
+        let shippingDetailsRequest = ShippingDetailsRequest(
+            address: shippingDetailsForm.address,
+            city: shippingDetailsForm.city,
+            state: shippingDetailsForm.state,
+            postalCode: shippingDetailsForm.postalCode,
+            country: shippingDetailsForm.country,
+            phoneNumber: shippingDetailsForm.phoneNumber,
+            fullName: shippingDetailsForm.fullName
+        )
+        
+        // Call API to save shipping details
+        shippingService.updateShippingDetails(userId: userId, details: shippingDetailsRequest)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] completion in
+                self?.isLoading = false
+                
+                if case .failure(let error) = completion {
+                    self?.errorMessage = "Failed to save shipping details: \(error.localizedDescription)"
+                    Logger.error("Error saving shipping details: \(error)")
+                }
+            } receiveValue: { [weak self] details in
+                guard let self = self else { return }
+                
+                Logger.info("Shipping details saved successfully")
+                
+                // Actualizar los detalles existentes
+                self.existingShippingDetails = details
+                self.hasExistingShippingDetails = true
+                self.isEditingShippingDetails = false
+                
+                // Continuar con el flujo de checkout
+                self.currentStep = .paymentMethod
+            }
+            .store(in: &cancellables)
+    }
+    
+    // MARK: - Credit Card Validation
     
     func validateCardNumber(_ number: String) -> Bool {
         // Basic validation: 16 digits, starting with common prefixes
@@ -186,65 +304,17 @@ class CheckoutViewModel: ObservableObject {
         return names.count >= 2 && name.allSatisfy({ $0.isLetter || $0.isWhitespace })
     }
     
-    // MARK: - Payment Processing
-    
-    func createPaymentIntent() {
-        guard let cart = cart else {
-            self.errorMessage = "No cart available"
-            return
-        }
-        
-        guard let userId = getCurrentUserId() else {
-            self.errorMessage = "No authenticated user"
-            return
-        }
-        
-        self.isLoading = true
-        self.errorMessage = nil
-        
-        // In a real case, we would first create an order on the server
-        // and then generate the PaymentIntent for that order
-        
-        // For this implementation, we'll simulate the process
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
-            self?.isLoading = false
-            
-            // Simulate success in creating the PaymentIntent
-            self?.paymentIntentId = "pi_simulated_\(UUID().uuidString)"
-            self?.clientSecret = "seti_simulated_\(UUID().uuidString)"
-            
-            // Proceed to payment processing
-            self?.simulatePaymentProcessing()
-        }
-    }
-    
-    private func simulatePaymentProcessing() {
-        self.currentStep = .processing
-        
-        // Simulate processing time
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) { [weak self] in
-            // For demonstration, we simulate 90% success
-            let success = Int.random(in: 1...10) <= 9
-            
-            if success {
-                self?.successMessage = "Payment processed successfully"
-                self?.currentStep = .confirmation
-            } else {
-                self?.errorMessage = "Payment processing failed. Please try again."
-                self?.currentStep = .error
-            }
-            
-            self?.isLoading = false
-        }
-    }
-    
     // MARK: - Navigation
     
     func proceedToNextStep() {
         switch currentStep {
         case .shippingInfo:
-            if shippingDetailsForm.isValid {
+            if hasExistingShippingDetails && !isEditingShippingDetails {
+                // Si tiene detalles existentes y no está editando, puede continuar directamente
                 currentStep = .paymentMethod
+            } else if shippingDetailsForm.isValid {
+                // Guarda los detalles de envío y continúa
+                saveShippingDetails()
             } else {
                 errorMessage = "Please complete all shipping information"
             }
@@ -254,7 +324,7 @@ class CheckoutViewModel: ObservableObject {
             case .creditCard:
                 currentStep = .cardDetails
             case .applePay:
-                // In a real case, we would launch Apple Pay here
+                // En un caso real, aquí lanzaríamos Apple Pay
                 currentStep = .review
             }
             
@@ -266,15 +336,15 @@ class CheckoutViewModel: ObservableObject {
             }
             
         case .review:
-            // Start payment processing
+            // Iniciar procesamiento de pago
             createPaymentIntent()
             
         case .processing:
-            // Wait for processing to finish
+            // Esperar a que finalice el procesamiento
             break
             
         case .confirmation, .error:
-            // Return to cart or main screen
+            // Volver a la pantalla principal o al carrito
             break
         }
     }
@@ -292,14 +362,66 @@ class CheckoutViewModel: ObservableObject {
                 currentStep = .paymentMethod
             }
         default:
-            // For other steps, stay on the current step
+            // Para otras etapas, permanecer en la etapa actual
             break
+        }
+    }
+    
+    // MARK: - Payment Processing
+    
+    func createPaymentIntent() {
+        guard let cart = cart else {
+            self.errorMessage = "No cart available"
+            return
+        }
+        
+        guard let userId = getCurrentUserId() else {
+            self.errorMessage = "No authenticated user"
+            return
+        }
+        
+        self.isLoading = true
+        self.errorMessage = nil
+        
+        // En un caso real, primero crearíamos una orden en el servidor
+        // y luego generaríamos el PaymentIntent para esa orden
+        
+        // Para esta implementación, simularemos el proceso
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
+            self?.isLoading = false
+            
+            // Simular éxito en la creación del PaymentIntent
+            self?.paymentIntentId = "pi_simulated_\(UUID().uuidString)"
+            self?.clientSecret = "seti_simulated_\(UUID().uuidString)"
+            
+            // Proceder con el procesamiento del pago
+            self?.simulatePaymentProcessing()
+        }
+    }
+    
+    private func simulatePaymentProcessing() {
+        self.currentStep = .processing
+        
+        // Simular tiempo de procesamiento
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) { [weak self] in
+            // Para demostración, simulamos un 90% de éxito
+            let success = Int.random(in: 1...10) <= 9
+            
+            if success {
+                self?.successMessage = "Payment processed successfully"
+                self?.currentStep = .confirmation
+            } else {
+                self?.errorMessage = "Payment processing failed. Please try again."
+                self?.currentStep = .error
+            }
+            
+            self?.isLoading = false
         }
     }
     
     // MARK: - Helper Methods
     
-    private func getCurrentUserId() -> Int? {
+    func getCurrentUserId() -> Int? {
         if case let .loggedIn(user) = authRepository.authState.value {
             return user.id
         }
@@ -332,21 +454,9 @@ class CheckoutViewModel: ObservableObject {
         
         return cleaned
     }
-    
-    // Convert ShippingDetailsForm to ShippingDetails model
-    func createShippingDetails() -> ShippingDetails {
-        return ShippingDetails(
-            id: nil,
-            address: shippingDetailsForm.address,
-            city: shippingDetailsForm.city,
-            postalCode: shippingDetailsForm.postalCode,
-            country: shippingDetailsForm.country,
-            phoneNumber: shippingDetailsForm.phoneNumber
-        )
-    }
 }
 
-// Form model for collecting shipping details with validation
+// Form model for shipping details with validation
 struct ShippingDetailsForm {
     var fullName: String = ""
     var address: String = ""
@@ -368,33 +478,5 @@ struct ShippingDetailsForm {
     var isValid: Bool {
         return isFullNameValid && isAddressValid && isCityValid &&
         isStateValid && isPostalCodeValid && isCountryValid && isPhoneNumberValid
-    }
-    
-    // Update from existing ShippingDetails
-    mutating func update(from details: ShippingDetails) {
-        if let address = details.address {
-            self.address = address
-            self.isAddressValid = !address.isEmpty
-        }
-        
-        if let city = details.city {
-            self.city = city
-            self.isCityValid = !city.isEmpty
-        }
-        
-        if let postalCode = details.postalCode {
-            self.postalCode = postalCode
-            self.isPostalCodeValid = !postalCode.isEmpty
-        }
-        
-        if let country = details.country {
-            self.country = country
-            self.isCountryValid = !country.isEmpty
-        }
-        
-        if let phoneNumber = details.phoneNumber {
-            self.phoneNumber = phoneNumber
-            self.isPhoneNumberValid = !phoneNumber.isEmpty
-        }
     }
 }

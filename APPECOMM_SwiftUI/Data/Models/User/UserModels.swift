@@ -1,5 +1,5 @@
 //
-//  User.swift
+//  UserModels.swift
 //  APPECOMM_SwiftUI
 //
 //  Created by Emerson Balahan Varona on 19/3/25.
@@ -55,5 +55,48 @@ struct OrderSummary: Codable, Equatable, Identifiable {
     let orderDate: String
     let status: String
     let totalAmount: Decimal
+}
+
+// DTO para enviar detalles de envío a la API
+struct ShippingDetailsRequest: Codable, Equatable {
+    let address: String
+    let city: String
+    let state: String?
+    let postalCode: String
+    let country: String
+    let phoneNumber: String?
+    let fullName: String?
+    
+    static func == (lhs: ShippingDetailsRequest, rhs: ShippingDetailsRequest) -> Bool {
+        return lhs.address == rhs.address &&
+        lhs.city == rhs.city &&
+        lhs.state == rhs.state &&
+        lhs.postalCode == rhs.postalCode &&
+        lhs.country == rhs.country &&
+        lhs.phoneNumber == rhs.phoneNumber &&
+        lhs.fullName == rhs.fullName
+    }
+}
+
+/// DTO para recibir detalles de envío desde la API
+struct ShippingDetailsResponse: Codable, Equatable {
+    let id: Int
+    let address: String
+    let city: String
+    let state: String?
+    let postalCode: String
+    let country: String
+    let phoneNumber: String?
+    let fullName: String?
+    
+    static func == (lhs: ShippingDetailsResponse, rhs: ShippingDetailsResponse) -> Bool {
+        return lhs.id == rhs.id
+    }
+}
+
+/// Respuesta de la API que contiene los detalles de envío
+struct ApiShippingResponse: Codable {
+    let message: String
+    let data: ShippingDetailsResponse
 }
 
