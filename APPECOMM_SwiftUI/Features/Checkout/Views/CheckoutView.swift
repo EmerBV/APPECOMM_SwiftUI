@@ -14,17 +14,19 @@ struct CheckoutView: View {
     // MARK: - Initialization
     
     init(cart: Cart?) {
-        // Injecting dependencies using DependencyInjector
+        // Inyectando dependencias usando DependencyInjector
         let paymentService = DependencyInjector.shared.resolve(PaymentServiceProtocol.self)
         let authRepository = DependencyInjector.shared.resolve(AuthRepositoryProtocol.self)
         let validator = DependencyInjector.shared.resolve(InputValidatorProtocol.self)
+        let shippingService = DependencyInjector.shared.resolve(ShippingServiceProtocol.self)
         
-        // Create the view model with dependencies
+        // Crear el view model con dependencias
         _viewModel = StateObject(wrappedValue: CheckoutViewModel(
             cart: cart,
             paymentService: paymentService,
             authRepository: authRepository,
-            validator: validator
+            validator: validator,
+            shippingService: shippingService
         ))
     }
     
@@ -126,233 +128,6 @@ struct CheckoutView: View {
             return false
         default:
             return true
-        }
-    }
-}
-
-// MARK: - Shipping Info View
-
-struct ShippingInfoView: View {
-    @ObservedObject var viewModel: CheckoutViewModel
-    
-    var body: some View {
-        ScrollView {
-            VStack(spacing: 20) {
-                // Header
-                Text("Shipping Information")
-                    .font(.headline)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.horizontal)
-                
-                // Contenido: detalles existentes o formulario
-                VStack(alignment: .leading, spacing: 16) {
-                    if viewModel.hasExistingShippingDetails && !viewModel.isEditingShippingDetails {
-                        // Mostrar detalles existentes
-                        existingShippingDetailsView
-                    } else {
-                        // Mostrar formulario
-                        AddressFormFields(viewModel: viewModel)
-                    }
-                    
-                    // Order summary
-                    OrderSummaryCard(viewModel: viewModel)
-                    
-                    // Continue button
-                    PrimaryButton(
-                        title: "Continue to Payment",
-                        isLoading: viewModel.isLoading,
-                        isEnabled: viewModel.hasExistingShippingDetails || viewModel.shippingDetailsForm.isValid
-                    ) {
-                        viewModel.proceedToNextStep()
-                    }
-                    .padding(.top, 16)
-                }
-                .padding(.horizontal)
-            }
-            .padding(.vertical)
-        }
-        .alert(isPresented: Binding<Bool>(
-            get: { viewModel.errorMessage != nil },
-            set: { if !$0 { viewModel.errorMessage = nil } }
-        )) {
-            Alert(
-                title: Text("Error"),
-                message: Text(viewModel.errorMessage ?? "An unknown error occurred"),
-                dismissButton: .default(Text("OK"))
-            )
-        }
-    }
-    
-    // Vista para mostrar detalles de envío existentes
-    private var existingShippingDetailsView: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            // Encabezado con botón de editar
-            HStack {
-                Text("Your Shipping Address")
-                    .font(.headline)
-                
-                Spacer()
-                
-                Button(action: {
-                    viewModel.isEditingShippingDetails = true
-                }) {
-                    HStack(spacing: 4) {
-                        Image(systemName: "pencil")
-                        Text("Edit")
-                    }
-                    .font(.subheadline)
-                    .foregroundColor(.blue)
-                }
-            }
-            
-            // Detalles de la dirección
-            if let details = viewModel.existingShippingDetails {
-                VStack(alignment: .leading, spacing: 6) {
-                    if let fullName = details.fullName {
-                        Text(fullName)
-                            .font(.subheadline)
-                            .fontWeight(.semibold)
-                    }
-                    
-                    Text(details.address)
-                        .font(.subheadline)
-                    
-                    Text("\(details.city), \(details.state ?? "") \(details.postalCode)")
-                        .font(.subheadline)
-                    
-                    Text(details.country)
-                        .font(.subheadline)
-                    
-                    if let phoneNumber = details.phoneNumber {
-                        Text(phoneNumber)
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
-                    }
-                }
-                .padding()
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .background(Color(.systemGray6).opacity(0.5))
-                .cornerRadius(8)
-            }
-        }
-    }
-}
-
-// MARK: - Address Form Fields
-
-/// Reusable form for collecting address information
-struct AddressFormFields: View {
-    @ObservedObject var viewModel: CheckoutViewModel
-    
-    var body: some View {
-        Group {
-            Text("Shipping Address")
-                .font(.headline)
-                .padding(.bottom, 8)
-            
-            CustomTextField(
-                title: "Full Name",
-                placeholder: "John Doe",
-                type: .regular,
-                state: viewModel.shippingDetailsForm.isFullNameValid ? .valid : .normal,
-                text: Binding(
-                    get: { viewModel.shippingDetailsForm.fullName },
-                    set: {
-                        viewModel.shippingDetailsForm.fullName = $0
-                        viewModel.shippingDetailsForm.isFullNameValid = !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-                    }
-                )
-            )
-            
-            CustomTextField(
-                title: "Address",
-                placeholder: "123 Main St",
-                type: .regular,
-                state: viewModel.shippingDetailsForm.isAddressValid ? .valid : .normal,
-                text: Binding(
-                    get: { viewModel.shippingDetailsForm.address },
-                    set: {
-                        viewModel.shippingDetailsForm.address = $0
-                        viewModel.shippingDetailsForm.isAddressValid = !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-                    }
-                )
-            )
-            
-            HStack(spacing: 12) {
-                CustomTextField(
-                    title: "City",
-                    placeholder: "New York",
-                    type: .regular,
-                    state: viewModel.shippingDetailsForm.isCityValid ? .valid : .normal,
-                    text: Binding(
-                        get: { viewModel.shippingDetailsForm.city },
-                        set: {
-                            viewModel.shippingDetailsForm.city = $0
-                            viewModel.shippingDetailsForm.isCityValid = !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-                        }
-                    )
-                )
-                
-                CustomTextField(
-                    title: "State",
-                    placeholder: "NY",
-                    type: .regular,
-                    state: viewModel.shippingDetailsForm.isStateValid ? .valid : .normal,
-                    text: Binding(
-                        get: { viewModel.shippingDetailsForm.state },
-                        set: {
-                            viewModel.shippingDetailsForm.state = $0
-                            viewModel.shippingDetailsForm.isStateValid = !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-                        }
-                    )
-                )
-            }
-            
-            HStack(spacing: 12) {
-                CustomTextField(
-                    title: "Postal Code",
-                    placeholder: "10001",
-                    type: .regular,
-                    state: viewModel.shippingDetailsForm.isPostalCodeValid ? .valid : .normal,
-                    text: Binding(
-                        get: { viewModel.shippingDetailsForm.postalCode },
-                        set: {
-                            viewModel.shippingDetailsForm.postalCode = $0
-                            viewModel.shippingDetailsForm.isPostalCodeValid = !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-                        }
-                    )
-                )
-                .keyboardType(.numberPad)
-                
-                CustomTextField(
-                    title: "Country",
-                    placeholder: "United States",
-                    type: .regular,
-                    state: viewModel.shippingDetailsForm.isCountryValid ? .valid : .normal,
-                    text: Binding(
-                        get: { viewModel.shippingDetailsForm.country },
-                        set: {
-                            viewModel.shippingDetailsForm.country = $0
-                            viewModel.shippingDetailsForm.isCountryValid = !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-                        }
-                    )
-                )
-            }
-            
-            CustomTextField(
-                title: "Phone Number",
-                placeholder: "+1 (555) 123-4567",
-                type: .regular,
-                state: viewModel.shippingDetailsForm.isPhoneNumberValid ? .valid : .normal,
-                text: Binding(
-                    get: { viewModel.shippingDetailsForm.phoneNumber },
-                    set: {
-                        viewModel.shippingDetailsForm.phoneNumber = $0
-                        viewModel.shippingDetailsForm.isPhoneNumberValid = !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-                    }
-                )
-            )
-            .keyboardType(.phonePad)
         }
     }
 }
@@ -569,7 +344,11 @@ struct OrderReviewView: View {
                     Text("Shipping Information")
                         .font(.headline)
                     
-                    ShippingSummaryView(details: viewModel.shippingDetailsForm)
+                    if viewModel.hasExistingShippingDetails, let details = viewModel.existingShippingDetails {
+                        ShippingDetailsSection(details: details)
+                    } else {
+                        ShippingFormSummary(form: viewModel.shippingDetailsForm)
+                    }
                 }
                 .padding()
                 .background(
@@ -652,6 +431,64 @@ struct OrderReviewView: View {
     }
 }
 
+// MARK: - Helper Views for Review
+
+struct ShippingDetailsSection: View {
+    let details: ShippingDetailsResponse
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            if let fullName = details.fullName {
+                Text(fullName)
+                    .font(.subheadline)
+                    .fontWeight(.semibold)
+            }
+            
+            Text(details.address)
+                .font(.subheadline)
+            
+            Text("\(details.city), \(details.state ?? "") \(details.postalCode)")
+                .font(.subheadline)
+            
+            Text(details.country)
+                .font(.subheadline)
+            
+            if let phoneNumber = details.phoneNumber {
+                Text(phoneNumber)
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+            }
+        }
+    }
+}
+
+struct ShippingFormSummary: View {
+    let form: ShippingDetailsForm
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(form.fullName)
+                .font(.subheadline)
+                .fontWeight(.semibold)
+            
+            Text(form.address)
+                .font(.subheadline)
+            
+            Text("\(form.city), \(form.state) \(form.postalCode)")
+                .font(.subheadline)
+            
+            Text(form.country)
+                .font(.subheadline)
+            
+            Text(form.phoneNumber)
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+        }
+    }
+}
+
+// MARK: - Other views remain unchanged
+
 /// Row item for order review
 struct OrderReviewItemRow: View {
     let item: CartItem
@@ -686,32 +523,6 @@ struct OrderReviewItemRow: View {
                 .font(.headline)
         }
         .padding(.vertical, 4)
-    }
-}
-
-/// Summary view for shipping information
-struct ShippingSummaryView: View {
-    let details: ShippingDetailsForm
-    
-    var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text(details.fullName)
-                .font(.subheadline)
-                .fontWeight(.semibold)
-            
-            Text(details.address)
-                .font(.subheadline)
-            
-            Text("\(details.city), \(details.state) \(details.postalCode)")
-                .font(.subheadline)
-            
-            Text(details.country)
-                .font(.subheadline)
-            
-            Text(details.phoneNumber)
-                .font(.subheadline)
-                .foregroundColor(.secondary)
-        }
     }
 }
 
@@ -938,54 +749,6 @@ struct PaymentErrorView: View {
             Spacer()
         }
         .padding()
-    }
-}
-
-// MARK: - Order Summary Card
-
-/// Reusable card to display the order summary
-struct OrderSummaryCard: View {
-    @ObservedObject var viewModel: CheckoutViewModel
-    
-    var body: some View {
-        VStack(spacing: 12) {
-            Text("Order Summary")
-                .font(.headline)
-                .frame(maxWidth: .infinity, alignment: .leading)
-            
-            Divider()
-            
-            HStack {
-                Text("Subtotal")
-                Spacer()
-                Text(viewModel.orderSummary.formattedSubtotal)
-            }
-            
-            HStack {
-                Text("Tax")
-                Spacer()
-                Text(viewModel.orderSummary.formattedTax)
-            }
-            
-            HStack {
-                Text("Shipping")
-                Spacer()
-                Text(viewModel.orderSummary.formattedShipping)
-            }
-            
-            Divider()
-            
-            HStack {
-                Text("Total")
-                    .fontWeight(.semibold)
-                Spacer()
-                Text(viewModel.orderSummary.formattedTotal)
-                    .fontWeight(.semibold)
-            }
-        }
-        .padding()
-        .background(Color(.systemGray6))
-        .cornerRadius(10)
     }
 }
 

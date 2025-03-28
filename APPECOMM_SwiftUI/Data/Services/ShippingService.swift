@@ -45,7 +45,7 @@ final class ShippingService: ShippingServiceProtocol {
     }
     
     func updateShippingDetails(userId: Int, details: ShippingDetailsRequest) -> AnyPublisher<ShippingDetailsResponse, NetworkError> {
-        let endpoint = ShippingEndpoints.updateShippingDetails(userId: userId, details: details)
+        let endpoint = ShippingEndpoints.updateShippingDetails(details: details, userId: userId)
         Logger.info("Updating shipping details for user \(userId)")
         
         return networkDispatcher.dispatch(ApiShippingResponse.self, endpoint)

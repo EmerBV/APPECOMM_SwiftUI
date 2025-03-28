@@ -40,8 +40,15 @@ struct CartView: View {
             } message: {
                 Text("clear_cart_confirmation".localized)
             }
-            .sheet(isPresented: $isShowingCheckout) {
-                CheckoutView(cart: viewModel.cart)
+            .fullScreenCover(isPresented: $isShowingCheckout) {
+                // Navigate back to cart when checkout is dismissed
+                Task {
+                    await viewModel.refreshCart()
+                }
+            } content: {
+                NavigationView {
+                    CheckoutView(cart: viewModel.cart)
+                }
             }
             .onChange(of: navigationCoordinator.showingCheckout) { showCheckout in
                 if showCheckout {
@@ -65,7 +72,7 @@ struct CartView: View {
         if viewModel.isLoading {
             LoadingView()
         } else if let cart = viewModel.cart, !cart.items.isEmpty {
-            CartContentView(cart: cart, viewModel: viewModel)
+            CartContentView(cart: cart, viewModel: viewModel, isShowingCheckout: $isShowingCheckout)
         } else {
             EmptyCartView()
         }
@@ -102,12 +109,13 @@ struct CartView: View {
 private struct CartContentView: View {
     let cart: Cart
     @ObservedObject var viewModel: CartViewModel
+    @Binding var isShowingCheckout: Bool
     
     var body: some View {
         VStack(spacing: 0) {
             cartItemsList
             OrderSummaryView(cart: cart, viewModel: viewModel)
-            CheckoutButton(viewModel: viewModel)
+            CheckoutButton(viewModel: viewModel, isShowingCheckout: $isShowingCheckout)
         }
     }
     
@@ -233,11 +241,19 @@ private struct OrderSummaryView: View {
 // MARK: - Checkout Button
 private struct CheckoutButton: View {
     @ObservedObject var viewModel: CartViewModel
+    @Binding var isShowingCheckout: Bool
     
     var body: some View {
         Button {
-            Task {
-                await viewModel.proceedToCheckout()
+            // Check if user is logged in first
+            if viewModel.isUserLoggedIn {
+                isShowingCheckout = true
+            } else {
+                // If not logged in, proceed through the regular flow that
+                // will show a login prompt
+                Task {
+                    await viewModel.proceedToCheckout()
+                }
             }
         } label: {
             HStack {

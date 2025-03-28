@@ -29,9 +29,11 @@ struct ShippingDetails: Codable, Equatable {
     let id: Int?
     let address: String?
     let city: String?
+    let state: String?
     let postalCode: String?
     let country: String?
     let phoneNumber: String?
+    let fullName: String?
 }
 
 struct CartSummary: Codable, Equatable {

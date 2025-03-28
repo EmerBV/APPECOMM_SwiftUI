@@ -10,7 +10,7 @@ import Foundation
 /// Endpoints para los detalles de envío
 enum ShippingEndpoints: APIEndpoint {
     case getShippingDetails(userId: Int)
-    case updateShippingDetails(userId: Int, details: ShippingDetailsRequest)
+    case updateShippingDetails(details: ShippingDetailsRequest, userId: Int)
     
     var path: String {
         switch self {
@@ -32,7 +32,7 @@ enum ShippingEndpoints: APIEndpoint {
     
     var parameters: [String: Any]? {
         switch self {
-        case .updateShippingDetails(let userId, let details):
+        case .updateShippingDetails(let details, let userId):
             // Convertir details a parámetros
             let encoder = JSONEncoder()
             var parameters: [String: Any] = ["userId": userId]
