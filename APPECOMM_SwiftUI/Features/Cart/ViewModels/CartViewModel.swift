@@ -7,25 +7,26 @@
 
 import Foundation
 import Combine
+import SwiftUI
 
-class CartViewModel: ObservableObject {
-    // Published properties
-    @Published var cart: Cart?
-    @Published var isLoading = false
+final class CartViewModel: ObservableObject {
+    // MARK: - Published Properties
+    @Published private(set) var cart: Cart?
+    @Published private(set) var isLoading = false
+    @Published private(set) var isUpdatingCart = false
+    @Published private(set) var isRemovingItem = false
+    @Published private(set) var isProcessingCheckout = false
     @Published var errorMessage: String?
-    //@Published var successMessage: String?
+    @Published var successMessage: String?
     
-    // Cart state
-    @Published var isUpdatingCart = false
-    @Published var isRemovingItem = false
-    @Published var isProcessingCheckout = false
-    
-    // Dependencies
+    // MARK: - Dependencies
     private let cartRepository: CartRepositoryProtocol
     private let authRepository: AuthRepositoryProtocol
     private var cancellables = Set<AnyCancellable>()
     
-    // Auth state accessor
+    // MARK: - Computed Properties
+    
+    /// Indicates if the user is currently logged in
     var isUserLoggedIn: Bool {
         if case .loggedIn = authRepository.authState.value {
             return true
@@ -33,11 +34,35 @@ class CartViewModel: ObservableObject {
         return false
     }
     
+    /// Returns the formatted total price of the cart
+    var formattedTotalPrice: String? {
+        cart?.totalAmount.toCurrentLocalePrice
+    }
+    
+    /// Returns the number of items in the cart
+    var itemCount: Int {
+        cart?.items.count ?? 0
+    }
+    
+    /// Returns true if the cart is empty
+    var isCartEmpty: Bool {
+        cart?.items.isEmpty ?? true
+    }
+    
+    // MARK: - Initialization
+    
     init(cartRepository: CartRepositoryProtocol, authRepository: AuthRepositoryProtocol) {
         self.cartRepository = cartRepository
         self.authRepository = authRepository
         
-        // Observe auth state changes
+        setupSubscriptions()
+    }
+    
+    // MARK: - Private Methods
+    
+    /// Sets up subscriptions to observe auth state changes
+    private func setupSubscriptions() {
+        // Observe auth state changes to automatically load cart when user logs in
         authRepository.authState
             .receive(on: DispatchQueue.main)
             .sink { [weak self] state in
@@ -50,9 +75,40 @@ class CartViewModel: ObservableObject {
             .store(in: &cancellables)
     }
     
+    /// Returns the current user ID if available
+    private func getCurrentUserId() -> Int? {
+        if case let .loggedIn(user) = authRepository.authState.value {
+            return user.id
+        }
+        return nil
+    }
+    
+    /// Shows a notification toast with error message
+    private func showErrorNotification(title: String = "error".localized, message: String) {
+        NotificationService.shared.showError(title: title, message: message)
+        errorMessage = message
+    }
+    
+    /// Shows a notification toast with success message
+    private func showSuccessNotification(title: String = "success".localized, message: String) {
+        NotificationService.shared.showSuccess(title: title, message: message)
+        successMessage = message
+        
+        // Auto-hide success message after 3 seconds
+        DispatchQueue.main.asyncAfter(deadline: .now() + 3) { [weak self] in
+            self?.successMessage = nil
+        }
+    }
+    
+    // MARK: - Public Methods
+    
+    /// Loads the user's cart
+    /// - Parameter userId: The ID of the user whose cart to load
     func loadCart(userId: Int) {
         isLoading = true
         errorMessage = nil
+        
+        Logger.info("Loading cart for user \(userId)")
         
         cartRepository.getUserCart(userId: userId)
             .receive(on: DispatchQueue.main)
@@ -60,7 +116,7 @@ class CartViewModel: ObservableObject {
                 self?.isLoading = false
                 
                 if case .failure(let error) = completion {
-                    Logger.error("Error loading cart: \(error.localizedDescription)")
+                    Logger.error("Failed to load cart: \(error.localizedDescription)")
                     self?.errorMessage = String(format: "unable_to_load_cart".localized, error.localizedDescription)
                 }
             } receiveValue: { [weak self] cart in
@@ -70,137 +126,202 @@ class CartViewModel: ObservableObject {
             .store(in: &cancellables)
     }
     
-    func updateItemQuantity(itemId: Int, productId: Int, newQuantity: Int) {
-        guard !isUpdatingCart, let userId = getCurrentUserId() else { return }
+    /// Refreshes the cart data asynchronously
+    @MainActor
+    func refreshCart() async {
+        guard let userId = getCurrentUserId() else {
+            errorMessage = "No user logged in"
+            return
+        }
+        
+        isLoading = true
+        errorMessage = nil
+        
+        do {
+            let publisher = cartRepository.getUserCart(userId: userId)
+            
+            for try await cart in publisher.values {
+                self.cart = cart
+                Logger.info("Cart refreshed successfully with \(cart.items.count) items")
+                break
+            }
+        } catch {
+            Logger.error("Error refreshing cart: \(error.localizedDescription)")
+            errorMessage = String(format: "unable_to_load_cart".localized, error.localizedDescription)
+        }
+        
+        isLoading = false
+    }
+    
+    /// Updates the quantity of an item in the cart
+    /// - Parameters:
+    ///   - itemId: The ID of the item
+    ///   - productId: The ID of the product
+    ///   - newQuantity: The new quantity
+    @MainActor
+    func updateItemQuantity(itemId: Int, productId: Int, newQuantity: Int) async {
+        guard !isUpdatingCart, let userId = getCurrentUserId(), let cartId = cart?.cartId else {
+            return
+        }
         
         isUpdatingCart = true
         errorMessage = nil
         
-        // First, we need to get the cart
-        cartRepository.getUserCart(userId: userId)
-            .flatMap { [weak self] cart -> AnyPublisher<Void, Error> in
-                guard let self = self else {
-                    return Fail(error: NSError(domain: "CartViewModel", code: -1, userInfo: nil)).eraseToAnyPublisher()
-                }
+        Logger.info("Updating quantity for item \(itemId) to \(newQuantity)")
+        
+        do {
+            let updatePublisher = cartRepository.updateItemQuantity(
+                cartId: cartId,
+                itemId: productId,
+                quantity: newQuantity
+            )
+            
+            for try await _ in updatePublisher.values {
+                // Update successful, reload cart to get updated state
+                let cartPublisher = cartRepository.getUserCart(userId: userId)
                 
-                // Usamos productId en lugar de itemId para la actualización
-                return self.cartRepository.updateItemQuantity(cartId: cart.cartId, itemId: productId, quantity: newQuantity)
+                for try await updatedCart in cartPublisher.values {
+                    self.cart = updatedCart
+                    showSuccessNotification(message: "item_quantity_updated".localized)
+                    Logger.info("Item quantity updated successfully")
+                    break
+                }
+                break
             }
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] completion in
-                self?.isUpdatingCart = false
-                
-                if case .failure(let error) = completion {
-                    Logger.error("Error updating cart item: \(error.localizedDescription)")
-                    self?.errorMessage = String(format: "unable_to_update_item".localized, error.localizedDescription)
-                }
-            } receiveValue: { [weak self] _ in
-                Logger.info("Cart item updated successfully")
-                //self?.successMessage = "item_quantity_updated".localized
-                
-                // Reload cart
-                if let userId = self?.getCurrentUserId() {
-                    self?.loadCart(userId: userId)
-                }
-            }
-            .store(in: &cancellables)
+        } catch {
+            Logger.error("Failed to update item quantity: \(error.localizedDescription)")
+            showErrorNotification(message: String(format: "unable_to_update_item".localized, error.localizedDescription))
+        }
+        
+        isUpdatingCart = false
     }
     
-    func removeItem(itemId: Int, productId: Int) {
-        guard !isRemovingItem, let userId = getCurrentUserId() else { return }
+    /// Removes an item from the cart
+    /// - Parameters:
+    ///   - itemId: The ID of the item
+    ///   - productId: The ID of the product
+    @MainActor
+    func removeItem(itemId: Int, productId: Int) async {
+        guard !isRemovingItem, let userId = getCurrentUserId(), let cartId = cart?.cartId else {
+            return
+        }
         
         isRemovingItem = true
         errorMessage = nil
         
-        // First, we need to get the cart
-        cartRepository.getUserCart(userId: userId)
-            .flatMap { [weak self] cart -> AnyPublisher<Void, Error> in
-                guard let self = self else {
-                    return Fail(error: NSError(domain: "CartViewModel", code: -1, userInfo: nil)).eraseToAnyPublisher()
-                }
+        Logger.info("Removing item \(itemId) from cart")
+        
+        do {
+            let removePublisher = cartRepository.removeItem(cartId: cartId, itemId: productId)
+            
+            for try await _ in removePublisher.values {
+                // Item removed, reload cart to get updated state
+                let cartPublisher = cartRepository.getUserCart(userId: userId)
                 
-                // Según el backend, parece que necesitamos usar productId, no itemId
-                return self.cartRepository.removeItem(cartId: cart.cartId, itemId: productId)
+                for try await updatedCart in cartPublisher.values {
+                    self.cart = updatedCart
+                    showSuccessNotification(message: "item_removed".localized)
+                    Logger.info("Item removed successfully")
+                    break
+                }
+                break
             }
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] completion in
-                self?.isRemovingItem = false
-                
-                if case .failure(let error) = completion {
-                    Logger.error("Error removing cart item: \(error.localizedDescription)")
-                    self?.errorMessage = String(format: "unable_to_remove_item".localized, error.localizedDescription)
-                }
-            } receiveValue: { [weak self] _ in
-                Logger.info("Cart item removed successfully")
-                //self?.successMessage = "item_removed".localized
-                
-                // Reload cart
-                if let userId = self?.getCurrentUserId() {
-                    self?.loadCart(userId: userId)
-                }
-            }
-            .store(in: &cancellables)
+        } catch {
+            Logger.error("Failed to remove item: \(error.localizedDescription)")
+            showErrorNotification(message: String(format: "unable_to_remove_item".localized, error.localizedDescription))
+        }
+        
+        isRemovingItem = false
     }
     
-    func clearCart() {
-        guard let cart = cart, !isUpdatingCart else { return }
+    /// Clears all items from the cart
+    @MainActor
+    func clearCart() async {
+        guard let userId = getCurrentUserId(), let cartId = cart?.cartId, !isUpdatingCart else {
+            return
+        }
         
         isUpdatingCart = true
         errorMessage = nil
         
-        cartRepository.clearCart(cartId: cart.cartId)
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] completion in
-                self?.isUpdatingCart = false
+        Logger.info("Clearing cart \(cartId)")
+        
+        do {
+            let clearPublisher = cartRepository.clearCart(cartId: cartId)
+            
+            for try await _ in clearPublisher.values {
+                // Cart cleared, reload to get updated state
+                let cartPublisher = cartRepository.getUserCart(userId: userId)
                 
-                if case .failure(let error) = completion {
-                    Logger.error("Error clearing cart: \(error.localizedDescription)")
-                    self?.errorMessage = String(format: "unable_to_clear_cart".localized, error.localizedDescription)
+                for try await updatedCart in cartPublisher.values {
+                    self.cart = updatedCart
+                    showSuccessNotification(message: "cart_cleared".localized)
+                    Logger.info("Cart cleared successfully")
+                    break
                 }
-            } receiveValue: { [weak self] _ in
-                Logger.info("Cart cleared successfully")
-                //self?.successMessage = "cart_cleared".localized
-                
-                // Reload cart
-                if let userId = self?.getCurrentUserId() {
-                    self?.loadCart(userId: userId)
-                }
+                break
             }
-            .store(in: &cancellables)
+        } catch {
+            Logger.error("Failed to clear cart: \(error.localizedDescription)")
+            showErrorNotification(message: String(format: "unable_to_clear_cart".localized, error.localizedDescription))
+        }
+        
+        isUpdatingCart = false
     }
     
-    func proceedToCheckout() {
-        guard let cart = cart, !cart.items.isEmpty, !isProcessingCheckout else { return }
+    /// Handles the checkout process
+    @MainActor
+    func proceedToCheckout() async {
+        guard let cart = cart, !cart.items.isEmpty, !isProcessingCheckout else {
+            return
+        }
         
         isProcessingCheckout = true
         errorMessage = nil
         
-        // In a real implementation, this would navigate to checkout flow
+        // In a real implementation, navigate to checkout flow
         // For now, we'll simulate a successful checkout
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { [weak self] in
-            self?.isProcessingCheckout = false
-            //self?.successMessage = "Redirecting to checkout..."
-            
-            // Show a success notification
-            NotificationService.shared.showSuccess(
+        
+        Logger.info("Proceeding to checkout with \(cart.items.count) items")
+        
+        // Simulate network delay
+        try? await Task.sleep(nanoseconds: 1_500_000_000)
+        
+        // Navigate to checkout screen
+        if let navigationCoordinator = DependencyInjector.shared.resolve(NavigationCoordinator.self) {
+            navigationCoordinator.navigateToCheckout(with: cart)
+        } else {
+            // Show notification if navigation coordinator isn't available
+            showSuccessNotification(
                 title: "Checkout",
                 message: "Proceeding to payment options"
             )
         }
+        
+        isProcessingCheckout = false
     }
     
-    func refreshCart() {
-        if let userId = getCurrentUserId() {
-            loadCart(userId: userId)
-        }
+    /// Returns the formatted price for a cart item
+    /// - Parameter item: The cart item
+    /// - Returns: Formatted price string
+    func formattedPrice(for item: CartItem) -> String {
+        return item.totalPrice.toCurrentLocalePrice
     }
     
-    // Helper method to get current user ID
-    private func getCurrentUserId() -> Int? {
-        if case let .loggedIn(user) = authRepository.authState.value {
-            return user.id
-        }
-        return nil
+    /// Returns the formatted unit price for a cart item
+    /// - Parameter item: The cart item
+    /// - Returns: Formatted unit price string
+    func formattedUnitPrice(for item: CartItem) -> String {
+        return item.unitPrice.toCurrentLocalePrice
     }
     
+    /// Dismisses the current error message
+    func dismissError() {
+        errorMessage = nil
+    }
+}
+
+// MARK: - Navigation Coordinator Protocol
+protocol NavigationCoordinator {
+    func navigateToCheckout(with cart: Cart)
 }

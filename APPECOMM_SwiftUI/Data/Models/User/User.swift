@@ -24,7 +24,7 @@ struct User: Identifiable, Codable, Equatable {
         return lhs.id == rhs.id
     }
 }
-/*
+
 struct ShippingDetails: Codable, Equatable {
     let id: Int?
     let address: String?
@@ -33,7 +33,6 @@ struct ShippingDetails: Codable, Equatable {
     let country: String?
     let phoneNumber: String?
 }
- */
 
 struct CartSummary: Codable, Equatable {
     let id: Int?
@@ -50,11 +49,11 @@ struct CartSummary: Codable, Equatable {
         totalAmount = try container.decodeIfPresent(Decimal.self, forKey: .totalAmount)
     }
 }
-/*
- struct OrderSummary: Codable, Equatable, Identifiable {
- let id: Int
- let orderDate: String
- let status: String
- let totalAmount: Decimal
- }
- */
+
+struct OrderSummary: Codable, Equatable, Identifiable {
+    let id: Int
+    let orderDate: String
+    let status: String
+    let totalAmount: Decimal
+}
+
