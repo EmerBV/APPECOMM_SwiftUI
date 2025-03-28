@@ -46,7 +46,9 @@ struct CreditCardDetailsView: View {
                             set: {
                                 let formatted = viewModel.formatCardNumber($0)
                                 viewModel.creditCardDetails.cardNumber = formatted
-                                viewModel.creditCardDetails.isCardNumberValid = viewModel.validateCardNumber(formatted)
+                                let (isValid, errorMessage) = viewModel.validateCardNumber(formatted)
+                                viewModel.creditCardDetails.isCardNumberValid = isValid
+                                viewModel.creditCardDetails.cardNumberError = errorMessage
                             }
                         )
                     )
@@ -96,7 +98,9 @@ struct CreditCardDetailsView: View {
                                 set: {
                                     let formatted = viewModel.formatExpiryDate($0)
                                     viewModel.creditCardDetails.expiryDate = formatted
-                                    viewModel.creditCardDetails.isExpiryDateValid = viewModel.validateExpiryDate(formatted)
+                                    let (isValid, errorMessage) = viewModel.validateExpiryDate(formatted)
+                                    viewModel.creditCardDetails.isExpiryDateValid = isValid
+                                    viewModel.creditCardDetails.expiryDateError = errorMessage
                                 }
                             )
                         )
@@ -119,7 +123,9 @@ struct CreditCardDetailsView: View {
                                 get: { viewModel.creditCardDetails.cvv },
                                 set: {
                                     viewModel.creditCardDetails.cvv = $0
-                                    viewModel.creditCardDetails.isCvvValid = viewModel.validateCVV($0)
+                                    let (isValid, errorMessage) = viewModel.validateCVV($0)
+                                    viewModel.creditCardDetails.isCvvValid = isValid
+                                    viewModel.creditCardDetails.cvvError = errorMessage
                                 }
                             )
                         )

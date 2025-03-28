@@ -80,8 +80,8 @@ struct ShippingDetailsForm {
     
     /// Validate all fields
     mutating func validateAll(validator: InputValidatorProtocol = InputValidator()) {
-        // For methods that return ValidationResult
-        let nameResult = validator.validateName(fullName)
+        // Para nombre completo
+        let nameResult = validator.validateFullName(fullName)
         switch nameResult {
         case .valid:
             isFullNameValid = true
@@ -91,14 +91,71 @@ struct ShippingDetailsForm {
             fullNameError = message
         }
         
-        // For methods that return Bool
-        isAddressValid = !address.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-        isCityValid = !city.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-        isStateValid = !state.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-        isPostalCodeValid = validator.validatePostalCode(postalCode)
-        isCountryValid = !country.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-        isPhoneNumberValid = validator.validatePhoneNumber(phoneNumber)
-    }
+        // Para dirección
+        let addressResult = validator.validateName(address)
+        switch addressResult {
+        case .valid:
+            isAddressValid = true
+            addressError = nil
+        case .invalid(let message):
+            isAddressValid = false
+            addressError = message
+        }
+        
+        // Para ciudad
+        let cityResult = validator.validateName(city)
+        switch cityResult {
+        case .valid:
+            isCityValid = true
+            cityError = nil
+        case .invalid(let message):
+            isCityValid = false
+            cityError = message
+        }
+        
+        // Para estado
+        let stateResult = validator.validateName(state)
+        switch stateResult {
+        case .valid:
+            isStateValid = true
+            stateError = nil
+        case .invalid(let message):
+            isStateValid = false
+            stateError = message
+        }
+        
+        // Para código postal
+        let postalCodeResult = validator.validatePostalCode(postalCode)
+        switch postalCodeResult {
+        case .valid:
+            isPostalCodeValid = true
+            postalCodeError = nil
+        case .invalid(let message):
+            isPostalCodeValid = false
+            postalCodeError = message
+        }
+        
+        // Para país
+        let countryResult = validator.validateName(country)
+        switch countryResult {
+        case .valid:
+            isCountryValid = true
+            countryError = nil
+        case .invalid(let message):
+            isCountryValid = false
+            countryError = message
+        }
+        
+        // Para número de teléfono
+        let phoneResult = validator.validatePhoneNumber(phoneNumber)
+        switch phoneResult {
+        case .valid:
+            isPhoneNumberValid = true
+            phoneNumberError = nil
+        case .invalid(let message):
+            isPhoneNumberValid = false
+            phoneNumberError = message
+        }    }
     
     /// Reset all fields to empty and invalidate them
     mutating func reset() {

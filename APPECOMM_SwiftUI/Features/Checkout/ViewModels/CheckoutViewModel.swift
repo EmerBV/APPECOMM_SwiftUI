@@ -84,7 +84,18 @@ struct CreditCardDetails {
     
     /// Validate all fields using a validator
     mutating func validateAll(validator: InputValidatorProtocol = InputValidator()) {
-        // For methods that return ValidationResult
+        // Validar número de tarjeta
+        let cardNumberResult = validator.validateCreditCardNumber(cardNumber)
+        switch cardNumberResult {
+        case .valid:
+            isCardNumberValid = true
+            cardNumberError = nil
+        case .invalid(let message):
+            isCardNumberValid = false
+            cardNumberError = message
+        }
+        
+        // Validar nombre del titular
         let nameResult = validator.validateName(cardholderName)
         switch nameResult {
         case .valid:
@@ -95,10 +106,27 @@ struct CreditCardDetails {
             cardholderNameError = message
         }
         
-        // For methods that return Bool
-        isCardNumberValid = validator.validateCreditCardNumber(cardNumber)
-        isExpiryDateValid = validator.validateExpiryDate(expiryDate)
-        isCvvValid = validator.validateCVV(cvv)
+        // Validar fecha de expiración
+        let expiryResult = validator.validateExpiryDate(expiryDate)
+        switch expiryResult {
+        case .valid:
+            isExpiryDateValid = true
+            expiryDateError = nil
+        case .invalid(let message):
+            isExpiryDateValid = false
+            expiryDateError = message
+        }
+        
+        // Validar CVV
+        let cvvResult = validator.validateCVV(cvv)
+        switch cvvResult {
+        case .valid:
+            isCvvValid = true
+            cvvError = nil
+        case .invalid(let message):
+            isCvvValid = false
+            cvvError = message
+        }
     }
     
     /// Reset all fields to empty and invalidate them
@@ -379,31 +407,33 @@ class CheckoutViewModel: ObservableObject {
     }
     
     /// Validate all shipping form fields
-    func validateShippingForm() {
-        let (isFullNameValid, fullNameError) = validateFullName(shippingDetailsForm.fullName)
-        let (isAddressValid, addressError) = validateAddress(shippingDetailsForm.address)
-        let (isCityValid, cityError) = validateCity(shippingDetailsForm.city)
-        let (isStateValid, stateError) = validateState(shippingDetailsForm.state)
-        let (isPostalCodeValid, postalCodeError) = validatePostalCode(shippingDetailsForm.postalCode)
-        let (isCountryValid, countryError) = validateCountry(shippingDetailsForm.country)
-        let (isPhoneNumberValid, phoneNumberError) = validatePhoneNumber(shippingDetailsForm.phoneNumber)
-        
-        shippingDetailsForm.isFullNameValid = isFullNameValid
-        shippingDetailsForm.isAddressValid = isAddressValid
-        shippingDetailsForm.isCityValid = isCityValid
-        shippingDetailsForm.isStateValid = isStateValid
-        shippingDetailsForm.isPostalCodeValid = isPostalCodeValid
-        shippingDetailsForm.isCountryValid = isCountryValid
-        shippingDetailsForm.isPhoneNumberValid = isPhoneNumberValid
-        
-        shippingDetailsForm.fullNameError = fullNameError
-        shippingDetailsForm.addressError = addressError
-        shippingDetailsForm.cityError = cityError
-        shippingDetailsForm.stateError = stateError
-        shippingDetailsForm.postalCodeError = postalCodeError
-        shippingDetailsForm.countryError = countryError
-        shippingDetailsForm.phoneNumberError = phoneNumberError
-    }
+    /*
+     func validateShippingForm() {
+     let (isFullNameValid, fullNameError) = validateFullName(shippingDetailsForm.fullName)
+     let (isAddressValid, addressError) = validateAddress(shippingDetailsForm.address)
+     let (isCityValid, cityError) = validateCity(shippingDetailsForm.city)
+     let (isStateValid, stateError) = validateState(shippingDetailsForm.state)
+     let (isPostalCodeValid, postalCodeError) = validatePostalCode(shippingDetailsForm.postalCode)
+     let (isCountryValid, countryError) = validateCountry(shippingDetailsForm.country)
+     let (isPhoneNumberValid, phoneNumberError) = validatePhoneNumber(shippingDetailsForm.phoneNumber)
+     
+     shippingDetailsForm.isFullNameValid = isFullNameValid
+     shippingDetailsForm.isAddressValid = isAddressValid
+     shippingDetailsForm.isCityValid = isCityValid
+     shippingDetailsForm.isStateValid = isStateValid
+     shippingDetailsForm.isPostalCodeValid = isPostalCodeValid
+     shippingDetailsForm.isCountryValid = isCountryValid
+     shippingDetailsForm.isPhoneNumberValid = isPhoneNumberValid
+     
+     shippingDetailsForm.fullNameError = fullNameError
+     shippingDetailsForm.addressError = addressError
+     shippingDetailsForm.cityError = cityError
+     shippingDetailsForm.stateError = stateError
+     shippingDetailsForm.postalCodeError = postalCodeError
+     shippingDetailsForm.countryError = countryError
+     shippingDetailsForm.phoneNumberError = phoneNumberError
+     }
+     */
     
     func saveShippingDetails() {
         guard let userId = getCurrentUserId() else {
@@ -538,7 +568,7 @@ class CheckoutViewModel: ObservableObject {
     private func generatePaymentMethodId(from cardDetails: CreditCardDetails) -> String {
         // In a real implementation, this would tokenize the card using Stripe SDK
         // For this example, we just create a dummy payment method ID
-        return "pm_card_visa_\(Date().timeIntervalSince1970)"
+        return "pm_card_visa"
     }
     
     func confirmPayment(paymentIntentId: String) {
