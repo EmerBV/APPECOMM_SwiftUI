@@ -47,13 +47,18 @@ final class ShippingService: ShippingServiceProtocol {
     func updateShippingDetails(userId: Int, details: ShippingDetailsRequest) -> AnyPublisher<ShippingDetailsResponse, NetworkError> {
         let endpoint = ShippingEndpoints.updateShippingDetails(details: details, userId: userId)
         Logger.info("Updating shipping details for user \(userId)")
+        Logger.debug("Shipping details: \(details)")
         
         return networkDispatcher.dispatch(ApiShippingResponse.self, endpoint)
             .map { response -> ShippingDetailsResponse in
                 Logger.info("Successfully updated shipping details: \(response.message)")
                 return response.data
             }
+            .handleEvents(receiveCompletion: { completion in
+                if case .failure(let error) = completion {
+                    Logger.error("Failed to update shipping details: \(error)")
+                }
+            })
             .eraseToAnyPublisher()
     }
 }
-

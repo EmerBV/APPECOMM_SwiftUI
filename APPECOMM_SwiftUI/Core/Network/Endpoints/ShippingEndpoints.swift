@@ -33,19 +33,13 @@ enum ShippingEndpoints: APIEndpoint {
     var parameters: [String: Any]? {
         switch self {
         case .updateShippingDetails(let details, let userId):
-            // Convertir details a parámetros
+            // Convertir details a parámetros JSON para el body
             let encoder = JSONEncoder()
-            var parameters: [String: Any] = ["userId": userId]
-            
             if let data = try? encoder.encode(details),
                let dict = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
-                // Combinar los parámetros del body con el userId del query
-                for (key, value) in dict {
-                    parameters[key] = value
-                }
+                return dict
             }
-            
-            return parameters
+            return nil
         case .getShippingDetails:
             return nil
         }
@@ -57,6 +51,15 @@ enum ShippingEndpoints: APIEndpoint {
             return .json
         case .getShippingDetails:
             return .url
+        }
+    }
+    
+    var queryParameters: [String: Any]? {
+        switch self {
+        case .updateShippingDetails(_, let userId):
+            return ["userId": userId]
+        default:
+            return nil
         }
     }
     

@@ -7,6 +7,8 @@
 
 import Foundation
 
+import Foundation
+
 enum HTTPMethod: String {
     case get = "GET"
     case post = "POST"
@@ -25,6 +27,7 @@ protocol APIEndpoint {
     var method: String { get }
     var headers: [String: String]? { get }
     var parameters: [String: Any]? { get }
+    var queryParameters: [String: Any]? { get }
     var encoding: ParameterEncoding { get }
     var requiresAuthentication: Bool { get }
     var isRefreshTokenEndpoint: Bool { get }
@@ -33,6 +36,7 @@ protocol APIEndpoint {
 extension APIEndpoint {
     var headers: [String: String]? { return nil }
     var parameters: [String: Any]? { return nil }
+    var queryParameters: [String: Any]? { return nil }
     var encoding: ParameterEncoding { return .json }
     var requiresAuthentication: Bool { return false }
     var isRefreshTokenEndpoint: Bool { return false }

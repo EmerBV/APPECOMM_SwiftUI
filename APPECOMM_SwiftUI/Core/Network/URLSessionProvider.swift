@@ -33,7 +33,20 @@ final class URLSessionProvider: URLSessionProviderProtocol {
     func createURLRequest(for endpoint: APIEndpoint) -> URLRequest {
         let url = configuration.baseURL.appendingPathComponent(endpoint.path)
         
-        var request = URLRequest(url: url)
+        // Initialize URL components for handling query parameters
+        var components = URLComponents(url: url, resolvingAgainstBaseURL: false)
+        
+        // Handle query parameters if present
+        if let queryParams = endpoint.queryParameters, !queryParams.isEmpty {
+            components?.queryItems = queryParams.map { key, value in
+                URLQueryItem(name: key, value: "\(value)")
+            }
+        }
+        
+        // Use the URL with added query parameters if available, otherwise use the original URL
+        let requestURL = components?.url ?? url
+        
+        var request = URLRequest(url: requestURL)
         request.httpMethod = endpoint.method
         
         // Añadir headers por defecto
@@ -52,15 +65,21 @@ final class URLSessionProvider: URLSessionProviderProtocol {
             case .json:
                 do {
                     request.httpBody = try JSONSerialization.data(withJSONObject: parameters, options: [])
+                    // Ensure we have the correct content-type header for JSON
+                    if request.value(forHTTPHeaderField: "Content-Type") == nil {
+                        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+                    }
                 } catch {
                     logger.logRequest(request)
                     assertionFailure("Error al serializar parámetros: \(error.localizedDescription)")
                 }
             case .url:
-                if var components = URLComponents(url: url, resolvingAgainstBaseURL: false) {
-                    components.queryItems = parameters.map { key, value in
+                if var components = URLComponents(url: requestURL, resolvingAgainstBaseURL: false) {
+                    let existingItems = components.queryItems ?? []
+                    let newItems = parameters.map { key, value in
                         URLQueryItem(name: key, value: "\(value)")
                     }
+                    components.queryItems = existingItems + newItems
                     request.url = components.url
                 }
             }
