@@ -7,7 +7,16 @@
 
 import Foundation
 import Combine
-import SwiftUI
+
+enum CheckoutStep {
+    case shippingInfo
+    case paymentMethod
+    case cardDetails
+    case review
+    case processing
+    case confirmation
+    case error
+}
 
 enum PaymentMethod: String, CaseIterable, Identifiable {
     case creditCard = "credit_card"
@@ -34,23 +43,6 @@ enum PaymentMethod: String, CaseIterable, Identifiable {
     }
 }
 
-enum CheckoutStep {
-    case shippingInfo
-    case paymentMethod
-    case cardDetails
-    case review
-    case processing
-    case confirmation
-    case error
-}
-
-enum CardFieldType {
-    case number
-    case expiry
-    case cvv
-    case name
-}
-
 struct CreditCardDetails {
     var cardNumber = ""
     var cardholderName = ""
@@ -68,49 +60,6 @@ struct CreditCardDetails {
     }
 }
 
-struct ShippingDetails {
-    var fullName = ""
-    var address = ""
-    var city = ""
-    var state = ""
-    var postalCode = ""
-    var country = ""
-    var phoneNumber = ""
-    
-    // Validation states
-    var isFullNameValid = false
-    var isAddressValid = false
-    var isCityValid = false
-    var isStateValid = false
-    var isPostalCodeValid = false
-    var isCountryValid = false
-    var isPhoneNumberValid = false
-    
-    var isValid: Bool {
-        return isFullNameValid && isAddressValid && isCityValid &&
-               isStateValid && isPostalCodeValid && isCountryValid && isPhoneNumberValid
-    }
-    
-    init(fromUser user: User? = nil) {
-        if let shipping = user?.shippingDetails {
-            self.fullName = "\(user?.firstName ?? "") \(user?.lastName ?? "")"
-            self.address = shipping.address ?? ""
-            self.city = shipping.city ?? ""
-            self.postalCode = shipping.postalCode ?? ""
-            self.country = shipping.country ?? ""
-            self.phoneNumber = shipping.phoneNumber ?? ""
-            
-            // Set basic validation based on presence of data
-            self.isFullNameValid = !self.fullName.isEmpty
-            self.isAddressValid = !self.address.isEmpty
-            self.isCityValid = !self.city.isEmpty
-            self.isPostalCodeValid = !self.postalCode.isEmpty
-            self.isCountryValid = !self.country.isEmpty
-            self.isPhoneNumberValid = !self.phoneNumber.isEmpty
-        }
-    }
-}
-
 class CheckoutViewModel: ObservableObject {
     // Published properties for UI state
     @Published var currentStep: CheckoutStep = .shippingInfo
@@ -123,11 +72,17 @@ class CheckoutViewModel: ObservableObject {
     @Published var paymentIntentId: String?
     @Published var clientSecret: String?
     @Published var cart: Cart?
-    @Published var orderSummary: OrderSummary?
+    
+    // Propiedades calculadas para el resumen de la orden
+    @Published var subtotal: Decimal = 0
+    @Published var shippingCost: Decimal = 0
+    @Published var tax: Decimal = 0
+    @Published var total: Decimal = 0
     
     // Dependencies
     private let paymentService: PaymentServiceProtocol
     private let authRepository: AuthRepositoryProtocol
+    private let cartRepository: CartRepositoryProtocol
     private let validator: InputValidatorProtocol
     private var cancellables = Set<AnyCancellable>()
     
@@ -135,60 +90,83 @@ class CheckoutViewModel: ObservableObject {
         cart: Cart?,
         paymentService: PaymentServiceProtocol,
         authRepository: AuthRepositoryProtocol,
+        cartRepository: CartRepositoryProtocol,
         validator: InputValidatorProtocol
     ) {
         self.cart = cart
         self.paymentService = paymentService
         self.authRepository = authRepository
+        self.cartRepository = cartRepository
         self.validator = validator
         
-        // Prepare order summary from cart
+        // Calcular los totales basados en el carrito
         if let cart = cart {
-            self.orderSummary = OrderSummary(
-                subtotal: cart.totalAmount,
-                tax: calculateTax(cart.totalAmount),
-                shipping: calculateShipping(cart.totalAmount),
-                total: cart.totalAmount + calculateTax(cart.totalAmount) + calculateShipping(cart.totalAmount)
-            )
+            calculateOrderSummary(from: cart)
         }
         
-        // Load shipping details from user profile if available
+        // Cargar los detalles de envío del usuario si están disponibles
         loadUserShippingDetails()
     }
     
     private func loadUserShippingDetails() {
-        // Get current user if logged in
+        // Si el usuario está autenticado, carga sus detalles de envío
         if case let .loggedIn(user) = authRepository.authState.value {
-            self.shippingDetails = ShippingDetails(fromUser: user)
+            if let userShippingDetails = user.shippingDetails {
+                self.shippingDetails.address = userShippingDetails.address ?? ""
+                self.shippingDetails.city = userShippingDetails.city ?? ""
+                self.shippingDetails.postalCode = userShippingDetails.postalCode ?? ""
+                self.shippingDetails.country = userShippingDetails.country ?? ""
+                self.shippingDetails.phoneNumber = userShippingDetails.phoneNumber ?? ""
+                
+                // Marcar como válidos si hay datos
+                self.shippingDetails.isAddressValid = !self.shippingDetails.address.isEmpty
+                self.shippingDetails.isCityValid = !self.shippingDetails.city.isEmpty
+                self.shippingDetails.isPostalCodeValid = !self.shippingDetails.postalCode.isEmpty
+                self.shippingDetails.isCountryValid = !self.shippingDetails.country.isEmpty
+                self.shippingDetails.isPhoneNumberValid = !self.shippingDetails.phoneNumber.isEmpty
+            }
         }
     }
     
+    private func calculateOrderSummary(from cart: Cart) {
+        self.subtotal = cart.totalAmount
+        
+        // Calcular impuestos (ejemplo: 8% del subtotal)
+        self.tax = calculateTax(subtotal)
+        
+        // Determinar costo de envío (gratis para más de $50)
+        self.shippingCost = calculateShipping(subtotal)
+        
+        // Calcular total
+        self.total = subtotal + tax + shippingCost
+    }
+    
     private func calculateTax(_ amount: Decimal) -> Decimal {
-        // Calculate tax as 7% of subtotal
-        return (amount * Decimal(0.07)).rounded(2)
+        // Ejemplo: 8% de impuestos
+        return (amount * Decimal(0.08)).rounded(2)
     }
     
     private func calculateShipping(_ amount: Decimal) -> Decimal {
-        // Free shipping for orders over $50, otherwise $5.99
+        // Envío gratis para compras mayores a $50, de lo contrario $5.99
         return amount > 50 ? 0 : Decimal(5.99)
     }
     
-    // Validation methods
+    // MARK: - Validación de datos
+    
     func validateCardNumber(_ number: String) -> Bool {
-        // Basic validation: 16 digits, passing Luhn algorithm
+        // Validación básica: 16 dígitos, empezando con prefijos comunes
         let cleaned = number.replacingOccurrences(of: " ", with: "")
         guard cleaned.count == 16, cleaned.allSatisfy({ $0.isNumber }) else {
             return false
         }
         
-        // TODO: Implement Luhn algorithm for proper validation
-        // For now, we'll just check that it starts with common prefixes
-        let validPrefixes = ["4", "5", "3", "6"] // Visa, MC, Amex, Discover
+        // Verificar prefijos comunes (Visa, MC, Amex, Discover)
+        let validPrefixes = ["4", "5", "3", "6"]
         return validPrefixes.contains(String(cleaned.prefix(1)))
     }
     
     func validateExpiryDate(_ date: String) -> Bool {
-        // Format should be MM/YY
+        // Formato debe ser MM/YY
         let components = date.split(separator: "/")
         guard components.count == 2,
               let month = Int(components[0]),
@@ -197,81 +175,71 @@ class CheckoutViewModel: ObservableObject {
             return false
         }
         
-        // Get current date components
+        // Verificar que la fecha sea en el futuro
         let calendar = Calendar.current
         let currentYear = calendar.component(.year, from: Date()) % 100
         let currentMonth = calendar.component(.month, from: Date())
         
-        // Validate that date is in the future
         return (year > currentYear) || (year == currentYear && month >= currentMonth)
     }
     
     func validateCVV(_ cvv: String) -> Bool {
-        // Usually 3 or 4 digits
+        // Generalmente 3 o 4 dígitos
         let cleaned = cvv.replacingOccurrences(of: " ", with: "")
         return cleaned.count >= 3 && cleaned.count <= 4 && cleaned.allSatisfy({ $0.isNumber })
     }
     
     func validateCardholderName(_ name: String) -> Bool {
-        // At least two names, only letters and spaces
+        // Al menos dos nombres, solo letras y espacios
         let names = name.split(separator: " ")
         return names.count >= 2 && name.allSatisfy({ $0.isLetter || $0.isWhitespace })
     }
     
-    // Payment processing methods
+    // MARK: - Procesamiento de Pagos
+    
     func createPaymentIntent() {
-        guard let cart = cart, let orderSummary = orderSummary else {
-            self.errorMessage = "Missing cart or order information"
+        guard let cart = cart else {
+            self.errorMessage = "No hay un carrito disponible"
+            return
+        }
+        
+        guard let userId = getCurrentUserId() else {
+            self.errorMessage = "No hay un usuario autenticado"
             return
         }
         
         self.isLoading = true
         self.errorMessage = nil
         
-        // This would be replaced with actual payment method ID from Stripe SDK in a real implementation
-        let mockPaymentMethodId = "pm_card_visa"
+        // En un caso real, primero crearíamos una orden en el servidor
+        // y luego generaríamos el PaymentIntent para esa orden
         
-        let request = PaymentRequest(
-            orderId: cart.cartId,
-            paymentMethodId: mockPaymentMethodId,
-            currency: "usd",
-            receiptEmail: nil,
-            description: "Payment for Order #\(cart.cartId)"
-        )
-        
-        paymentService.createPaymentIntent(orderId: cart.cartId, request: request)
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] completion in
-                self?.isLoading = false
-                
-                if case .failure(let error) = completion {
-                    self?.errorMessage = "Payment initialization failed: \(error.localizedDescription)"
-                    self?.currentStep = .error
-                }
-            } receiveValue: { [weak self] response in
-                self?.paymentIntentId = response.paymentIntentId
-                self?.clientSecret = response.clientSecret
-                
-                // In a real implementation, we would use the client secret with the Stripe SDK
-                // For now, we'll simulate a successful payment
-                self?.simulatePaymentProcessing()
-            }
-            .store(in: &cancellables)
+        // Para esta implementación, simularemos el proceso
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
+            self?.isLoading = false
+            
+            // Simular éxito en la creación del PaymentIntent
+            self?.paymentIntentId = "pi_simulated_\(UUID().uuidString)"
+            self?.clientSecret = "seti_simulated_\(UUID().uuidString)"
+            
+            // Avanzar al procesamiento del pago
+            self?.simulatePaymentProcessing()
+        }
     }
     
     private func simulatePaymentProcessing() {
         self.currentStep = .processing
         
-        // Simulate processing time
+        // Simular tiempo de procesamiento
         DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) { [weak self] in
-            // 90% chance of success for demo purposes
+            // Para demostración, simulamos 90% de éxito
             let success = Int.random(in: 1...10) <= 9
             
             if success {
-                self?.successMessage = "Payment processed successfully!"
+                self?.successMessage = "Pago procesado exitosamente"
                 self?.currentStep = .confirmation
             } else {
-                self?.errorMessage = "Payment processing failed. Please try again."
+                self?.errorMessage = "El procesamiento del pago falló. Por favor, intente de nuevo."
                 self?.currentStep = .error
             }
             
@@ -279,14 +247,15 @@ class CheckoutViewModel: ObservableObject {
         }
     }
     
-    // Navigation methods
+    // MARK: - Navegación
+    
     func proceedToNextStep() {
         switch currentStep {
         case .shippingInfo:
-            if shippingDetails.isValid {
+            if validateShippingDetails() {
                 currentStep = .paymentMethod
             } else {
-                errorMessage = "Please complete all shipping information"
+                errorMessage = "Por favor complete toda la información de envío"
             }
             
         case .paymentMethod:
@@ -294,7 +263,7 @@ class CheckoutViewModel: ObservableObject {
             case .creditCard:
                 currentStep = .cardDetails
             case .applePay:
-                // In a real implementation, we would launch Apple Pay here
+                // En un caso real, aquí lanzaríamos Apple Pay
                 currentStep = .review
             }
             
@@ -302,19 +271,19 @@ class CheckoutViewModel: ObservableObject {
             if creditCardDetails.isValid {
                 currentStep = .review
             } else {
-                errorMessage = "Please complete all card details correctly"
+                errorMessage = "Por favor complete correctamente todos los datos de la tarjeta"
             }
             
         case .review:
-            // Start payment processing
+            // Iniciar procesamiento del pago
             createPaymentIntent()
             
         case .processing:
-            // Wait for processing to complete
+            // Esperar a que termine el procesamiento
             break
             
         case .confirmation, .error:
-            // Reset to first step or return to cart
+            // Volver al carrito o a la pantalla principal
             break
         }
     }
@@ -332,12 +301,29 @@ class CheckoutViewModel: ObservableObject {
                 currentStep = .paymentMethod
             }
         default:
-            // For other steps, stay on current step or handle specially
+            // Para otros pasos, permanecer en el paso actual
             break
         }
     }
     
-    // Card field formatting methods
+    private func validateShippingDetails() -> Bool {
+        return shippingDetails.isAddressValid &&
+               shippingDetails.isCityValid &&
+               shippingDetails.isPostalCodeValid &&
+               shippingDetails.isCountryValid &&
+               shippingDetails.isPhoneNumberValid
+    }
+    
+    // MARK: - Helper Methods
+    
+    private func getCurrentUserId() -> Int? {
+        if case let .loggedIn(user) = authRepository.authState.value {
+            return user.id
+        }
+        return nil
+    }
+    
+    // Formateo de tarjetas
     func formatCardNumber(_ number: String) -> String {
         let cleaned = number.replacingOccurrences(of: " ", with: "")
         var formatted = ""
@@ -363,17 +349,34 @@ class CheckoutViewModel: ObservableObject {
         
         return cleaned
     }
+    
+    // Formateo de precios
+    var formattedSubtotal: String {
+        return subtotal.toCurrentLocalePrice
+    }
+    
+    var formattedTax: String {
+        return tax.toCurrentLocalePrice
+    }
+    
+    var formattedShipping: String {
+        return shippingCost > 0 ? shippingCost.toCurrentLocalePrice : "Gratis"
+    }
+    
+    var formattedTotal: String {
+        return total.toCurrentLocalePrice
+    }
 }
 
-// Helper struct for order summary
-struct OrderSummary {
-    let subtotal: Decimal
-    let tax: Decimal
-    let shipping: Decimal
-    let total: Decimal
+// Extensión de ShippingDetails para manejar la validación
+extension ShippingDetails {
+    var isAddressValid: Bool = false
+    var isCityValid: Bool = false
+    var isPostalCodeValid: Bool = false
+    var isCountryValid: Bool = false
+    var isPhoneNumberValid: Bool = false
     
-    var formattedSubtotal: String { subtotal.toCurrentLocalePrice }
-    var formattedTax: String { tax.toCurrentLocalePrice }
-    var formattedShipping: String { shipping > 0 ? shipping.toCurrentLocalePrice : "Free" }
-    var formattedTotal: String { total.toCurrentLocalePrice }
+    var isValid: Bool {
+        return isAddressValid && isCityValid && isPostalCodeValid && isCountryValid && isPhoneNumberValid
+    }
 }
