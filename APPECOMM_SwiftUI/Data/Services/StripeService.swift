@@ -9,6 +9,7 @@ import Foundation
 import Stripe
 import Combine
 import StripePaymentSheet
+import UIKit
 
 /*
  protocol StripeServiceProtocol {
@@ -94,7 +95,7 @@ class StripeService: StripeServiceProtocol {
             // Validar los datos de la tarjeta antes de enviarlos
             if cardDetails.cardNumber.isEmpty || cardDetails.expiryDate.isEmpty || cardDetails.cvv.isEmpty {
                 let error = NSError(domain: "com.emerbv.APPECOMM-SwiftUI", code: 0,
-                                   userInfo: [NSLocalizedDescriptionKey: "Invalid card details"])
+                                    userInfo: [NSLocalizedDescriptionKey: "Invalid card details"])
                 promise(.failure(error))
                 return
             }
@@ -112,7 +113,7 @@ class StripeService: StripeServiceProtocol {
                 cardParams.expYear = NSNumber(value: year)
             } else {
                 let error = NSError(domain: "com.emerbv.APPECOMM-SwiftUI", code: 0,
-                                   userInfo: [NSLocalizedDescriptionKey: "Invalid expiry date format"])
+                                    userInfo: [NSLocalizedDescriptionKey: "Invalid expiry date format"])
                 promise(.failure(error))
                 return
             }
@@ -142,7 +143,7 @@ class StripeService: StripeServiceProtocol {
                 
                 guard let paymentMethod = paymentMethod else {
                     let error = NSError(domain: "com.emerbv.APPECOMM-SwiftUI", code: 0,
-                                       userInfo: [NSLocalizedDescriptionKey: "No payment method created"])
+                                        userInfo: [NSLocalizedDescriptionKey: "No payment method created"])
                     Logger.error("Payment method is nil")
                     promise(.failure(error))
                     return
@@ -154,12 +155,23 @@ class StripeService: StripeServiceProtocol {
         }.eraseToAnyPublisher()
     }
     
+    class SwiftUIAuthenticationContext: NSObject, STPAuthenticationContext {
+        var presentingViewController: UIViewController {
+            // Obtener el UIViewController principal desde la escena SwiftUI
+            return UIApplication.shared.windows.first?.rootViewController ?? UIViewController()
+        }
+        
+        func authenticationPresentingViewController() -> UIViewController {
+            return presentingViewController
+        }
+    }
+    
     func confirmPayment(paymentIntentClientSecret: String, paymentMethodId: String) -> AnyPublisher<Bool, Error> {
         return Future<Bool, Error> { promise in
             // Validar los datos de entrada
             if paymentIntentClientSecret.isEmpty || paymentMethodId.isEmpty {
                 let error = NSError(domain: "com.emerbv.APPECOMM-SwiftUI", code: 0,
-                                   userInfo: [NSLocalizedDescriptionKey: "Empty payment intent or payment method"])
+                                    userInfo: [NSLocalizedDescriptionKey: "Empty payment intent or payment method"])
                 promise(.failure(error))
                 return
             }
@@ -168,15 +180,18 @@ class StripeService: StripeServiceProtocol {
             let paymentIntentParams = STPPaymentIntentParams(clientSecret: paymentIntentClientSecret)
             paymentIntentParams.paymentMethodId = paymentMethodId
             
+            // Usar el contexto de autenticación adaptado para SwiftUI
+            let authContext = SwiftUIAuthenticationContext()
+            
             // Confirmar el pago
-            STPPaymentHandler.shared().confirmPayment(paymentIntentParams, with: nil) { status, _, error in
+            STPPaymentHandler.shared().confirmPayment(paymentIntentParams, with: authContext) { status, _, error in
                 switch status {
                 case .succeeded:
                     Logger.info("Payment confirmation succeeded")
                     promise(.success(true))
                 case .canceled:
                     Logger.info("Payment confirmation canceled")
-                    // En lugar de error, devolvemos false para indicar cancelación
+                    // Devolvemos false para indicar cancelación
                     promise(.success(false))
                 case .failed:
                     if let error = error {
@@ -184,12 +199,12 @@ class StripeService: StripeServiceProtocol {
                         promise(.failure(error))
                     } else {
                         let unknownError = NSError(domain: "com.emerbv.APPECOMM-SwiftUI", code: 0,
-                                                 userInfo: [NSLocalizedDescriptionKey: "Payment failed with unknown error"])
+                                                   userInfo: [NSLocalizedDescriptionKey: "Payment failed with unknown error"])
                         promise(.failure(unknownError))
                     }
                 @unknown default:
                     let unknownError = NSError(domain: "com.emerbv.APPECOMM-SwiftUI", code: 0,
-                                             userInfo: [NSLocalizedDescriptionKey: "Unknown payment status"])
+                                               userInfo: [NSLocalizedDescriptionKey: "Unknown payment status"])
                     promise(.failure(unknownError))
                 }
             }

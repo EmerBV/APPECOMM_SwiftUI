@@ -44,8 +44,12 @@ class StripeAPIClient {
         // Verificar que Stripe esté configurado
         guard stripePublishableKey != nil else {
             Logger.payment("Stripe not configured before creating payment intent", level: .error)
-            return Fail(error: NetworkError.unknown("Stripe not configured"))
-                .eraseToAnyPublisher()
+            return Fail(error: NetworkError.unknown(NSError(
+                domain: "com.emerbv.APPECOMM-SwiftUI.StripeAPIClient",
+                code: 1001,
+                userInfo: [NSLocalizedDescriptionKey: "Stripe not configured"]
+            )))
+            .eraseToAnyPublisher()
         }
         
         let endpoint = PaymentEndpoints.createPaymentIntent(orderId: orderId, request: paymentRequest)
@@ -137,96 +141,81 @@ class StripeAPIClient {
         }.eraseToAnyPublisher()
     }
     
+    class SwiftUIAuthenticationContext: NSObject, STPAuthenticationContext {
+        var presentingViewController: UIViewController {
+            // Obtener el UIViewController principal desde la escena SwiftUI
+            return UIApplication.shared.windows.first?.rootViewController ?? UIViewController()
+        }
+        
+        func authenticationPresentingViewController() -> UIViewController {
+            return presentingViewController
+        }
+    }
+    
     /// Presentar flujo de pago 3D Secure si es necesario
     func handlePaymentAuthentication(paymentIntentClientSecret: String, from viewController: UIViewController, completion: @escaping (Bool, Error?) -> Void) {
         let paymentIntentParams = STPPaymentIntentParams(clientSecret: paymentIntentClientSecret)
         
-        STPPaymentHandler.shared().confirmPayment(paymentIntentParams, with: nil) { status, paymentIntent, error in
+        let authContext = SwiftUIAuthenticationContext()
+        
+        STPPaymentHandler.shared().confirmPayment(paymentIntentParams, with: authContext) { status, paymentIntent, error in
             switch status {
             case .succeeded:
                 Logger.payment("Payment confirmation succeeded", level: .info)
                 completion(true, nil)
             case .canceled:
                 Logger.payment("Payment confirmation canceled by user", level: .info)
-                completion(false, PaymentError.userCancelled)
+                completion(false, NSError(
+                    domain: "com.emerbv.APPECOMM-SwiftUI.PaymentError",
+                    code: PaymentError.userCancelled.rawValue,
+                    userInfo: [NSLocalizedDescriptionKey: PaymentError.userCancelled.errorDescription ?? "User cancelled"]
+                ))
             case .failed:
-                let paymentError = error ?? PaymentError.unknown
+                let paymentError = error ?? NSError(
+                    domain: "com.emerbv.APPECOMM-SwiftUI.PaymentError",
+                    code: PaymentError.unknown.rawValue,
+                    userInfo: [NSLocalizedDescriptionKey: PaymentError.unknown.errorDescription ?? "Unknown error"]
+                )
                 Logger.payment("Payment confirmation failed: \(paymentError.localizedDescription)", level: .error)
                 completion(false, paymentError)
             @unknown default:
                 Logger.payment("Unknown payment confirmation status", level: .error)
-                completion(false, PaymentError.unknown)
+                completion(false, NSError(
+                    domain: "com.emerbv.APPECOMM-SwiftUI.PaymentError",
+                    code: PaymentError.unknown.rawValue,
+                    userInfo: [NSLocalizedDescriptionKey: PaymentError.unknown.errorDescription ?? "Unknown error"]
+                ))
             }
         }
     }
-}
-
-/// Errores específicos de pago
-enum PaymentError: Error, LocalizedError {
-    case notConfigured
-    case invalidCardDetails
-    case invalidExpiryDate
-    case paymentMethodCreationFailed
-    case paymentIntentCreationFailed
-    case paymentConfirmationFailed
-    case paymentAuthenticationRequired
-    case insufficientFunds
-    case cardDeclined
-    case cardExpired
-    case userCancelled
-    case unknown
     
-    var errorDescription: String? {
-        switch self {
-        case .notConfigured:
-            return "Payment system is not properly configured"
-        case .invalidCardDetails:
-            return "Invalid card details"
-        case .invalidExpiryDate:
-            return "Invalid expiry date format"
-        case .paymentMethodCreationFailed:
-            return "Failed to create payment method"
-        case .paymentIntentCreationFailed:
-            return "Failed to create payment intent"
-        case .paymentConfirmationFailed:
-            return "Payment confirmation failed"
-        case .paymentAuthenticationRequired:
-            return "Additional authentication required"
-        case .insufficientFunds:
-            return "Insufficient funds"
-        case .cardDeclined:
-            return "Card declined"
-        case .cardExpired:
-            return "Card expired"
-        case .userCancelled:
-            return "Payment cancelled by user"
-        case .unknown:
-            return "Unknown payment error"
-        }
-    }
-    
-    var recoverySuggestion: String? {
-        switch self {
-        case .notConfigured:
-            return "Please try again later or contact support."
-        case .invalidCardDetails:
-            return "Check your card details and try again."
-        case .invalidExpiryDate:
-            return "Please enter the expiry date in MM/YY format."
-        case .paymentMethodCreationFailed, .paymentIntentCreationFailed, .paymentConfirmationFailed:
-            return "Please try again or use a different payment method."
-        case .paymentAuthenticationRequired:
-            return "Please complete the additional authentication steps required by your bank."
-        case .insufficientFunds:
-            return "Please use a different card or add funds to your account."
-        case .cardDeclined:
-            return "Your card was declined. Please use a different card or contact your bank."
-        case .cardExpired:
-            return "Your card has expired. Please use a different card."
-        case .userCancelled:
-            return "You cancelled the payment process."
-        case .unknown:
-            return "Please try again or contact customer support."
+    /// Errores específicos de pago
+    enum PaymentError: Int, Error, LocalizedError {
+        case notConfigured = 1001
+        case invalidCardDetails = 1002
+        case invalidExpiryDate = 1003
+        case paymentMethodCreationFailed = 1004
+        case paymentIntentCreationFailed = 1005
+        case paymentConfirmationFailed = 1006
+        case paymentAuthenticationRequired = 1007
+        case insufficientFunds = 1008
+        case cardDeclined = 1009
+        case cardExpired = 1010
+        case userCancelled = 1011
+        case unknown = 1000
+        
+        // Resto del código de PaymentError...
+        
+        // Para convertir a NSError directamente
+        func asNSError() -> NSError {
+            return NSError(
+                domain: "com.emerbv.APPECOMM-SwiftUI.PaymentError",
+                code: self.rawValue,
+                userInfo: [
+                    NSLocalizedDescriptionKey: self.errorDescription ?? "Unknown error",
+                    NSLocalizedRecoverySuggestionErrorKey: self.recoverySuggestion ?? ""
+                ]
+            )
         }
     }
 }
