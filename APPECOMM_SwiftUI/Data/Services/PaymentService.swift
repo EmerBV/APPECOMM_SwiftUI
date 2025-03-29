@@ -6,8 +6,6 @@
 //
 
 import Foundation
-
-import Foundation
 import Combine
 
 protocol PaymentServiceProtocol {
@@ -23,6 +21,20 @@ struct PaymentRequest: Codable {
     let currency: String
     let receiptEmail: String?
     let description: String?
+    
+    // Asegurarse de que se codifican correctamente los campos opcionales
+    enum CodingKeys: String, CodingKey {
+        case orderId, paymentMethodId, currency, receiptEmail, description
+    }
+    
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(orderId, forKey: .orderId)
+        try container.encodeIfPresent(paymentMethodId, forKey: .paymentMethodId)
+        try container.encode(currency, forKey: .currency)
+        try container.encodeIfPresent(receiptEmail, forKey: .receiptEmail)
+        try container.encodeIfPresent(description, forKey: .description)
+    }
 }
 
 struct PaymentIntentResponse: Codable {
@@ -63,13 +75,26 @@ final class PaymentService: PaymentServiceProtocol {
     
     func createPaymentIntent(orderId: Int, request: PaymentRequest) -> AnyPublisher<PaymentIntentResponse, NetworkError> {
         let endpoint = PaymentEndpoints.createPaymentIntent(orderId: orderId, request: request)
-        Logger.info("Creating payment intent for order ID: \(orderId)")
+        Logger.info("Creating payment intent for order ID: \(orderId), paymentMethodId: \(request.paymentMethodId ?? "none")")
         
         return networkDispatcher.dispatch(ApiResponse<PaymentIntentResponse>.self, endpoint)
-            .map { response -> PaymentIntentResponse in
+            .handleEvents(receiveSubscription: { _ in
+                Logger.debug("Payment intent subscription started")
+            }, receiveOutput: { response in
                 Logger.info("Payment intent created successfully: \(response.data.paymentIntentId)")
-                return response.data
-            }
+            }, receiveCompletion: { completion in
+                switch completion {
+                case .finished:
+                    Logger.info("Payment intent request completed successfully")
+                case .failure(let error):
+                    Logger.error("Failed to create payment intent: \(error)")
+                }
+            }, receiveCancel: {
+                Logger.debug("Payment intent request cancelled")
+            }, receiveRequest: { _ in
+                Logger.debug("Payment intent request received")
+            })
+            .map { $0.data }
             .eraseToAnyPublisher()
     }
     
