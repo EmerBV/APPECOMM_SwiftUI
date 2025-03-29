@@ -21,6 +21,7 @@ struct CheckoutView: View {
         let authRepository = dependencies.resolve(AuthRepositoryProtocol.self)
         let validator = dependencies.resolve(InputValidatorProtocol.self)
         let shippingService = dependencies.resolve(ShippingServiceProtocol.self)
+        let stripeService = dependencies.resolve(StripeServiceProtocol.self)
         
         // Create view model with dependencies
         _viewModel = StateObject(wrappedValue: CheckoutViewModel(
@@ -29,7 +30,8 @@ struct CheckoutView: View {
             paymentService: paymentService,
             authRepository: authRepository,
             validator: validator,
-            shippingService: shippingService
+            shippingService: shippingService,
+            stripeService: stripeService
         ))
     }
     

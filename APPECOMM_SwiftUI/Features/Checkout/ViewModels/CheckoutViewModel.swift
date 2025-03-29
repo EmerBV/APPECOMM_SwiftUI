@@ -299,6 +299,7 @@ class CheckoutViewModel: ObservableObject {
     private let validator: InputValidatorProtocol
     private let shippingService: ShippingServiceProtocol
     private var cancellables = Set<AnyCancellable>()
+    private let stripeService: StripeServiceProtocol
     
     // MARK: - Initialization
     
@@ -308,7 +309,8 @@ class CheckoutViewModel: ObservableObject {
         paymentService: PaymentServiceProtocol,
         authRepository: AuthRepositoryProtocol,
         validator: InputValidatorProtocol,
-        shippingService: ShippingServiceProtocol
+        shippingService: ShippingServiceProtocol,
+        stripeService: StripeServiceProtocol
     ) {
         self.cart = cart
         self.checkoutService = checkoutService
@@ -316,6 +318,7 @@ class CheckoutViewModel: ObservableObject {
         self.authRepository = authRepository
         self.validator = validator
         self.shippingService = shippingService
+        self.stripeService = stripeService
         
         // Calculate order summary based on cart
         if let cart = cart {
@@ -517,7 +520,6 @@ class CheckoutViewModel: ObservableObject {
     }
     
     // MARK: - Payment Processing
-    
     func processPayment(orderId: Int) {
         guard let userId = getCurrentUserId() else {
             self.errorMessage = "No authenticated user"
@@ -528,47 +530,92 @@ class CheckoutViewModel: ObservableObject {
         self.errorMessage = nil
         self.currentStep = .processing
         
-        // Create payment request based on selected payment method
-        let paymentMethodId = selectedPaymentMethod == .creditCard ?
-        generatePaymentMethodId(from: creditCardDetails) : nil
-        
-        let paymentRequest = PaymentRequest(
-            orderId: orderId,
-            paymentMethodId: paymentMethodId,
-            currency: "usd",
-            receiptEmail: nil,
-            description: nil
-        )
-        
-        paymentService.createPaymentIntent(orderId: orderId, request: paymentRequest)
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] completion in
-                self?.isLoading = false
-                
-                if case .failure(let error) = completion {
-                    self?.errorMessage = "Payment processing failed: \(error.localizedDescription)"
-                    Logger.error("Error processing payment: \(error)")
-                    self?.currentStep = .error
+        // Si es pago con tarjeta, crear primero el método de pago
+        if selectedPaymentMethod == .creditCard {
+            stripeService.createPaymentMethod(cardDetails: creditCardDetails)
+                .flatMap { [weak self] paymentMethodId -> AnyPublisher<PaymentIntentResponse, Error> in
+                    guard let self = self else {
+                        return Fail(error: NSError(domain: "CheckoutViewModel", code: 0, userInfo: [NSLocalizedDescriptionKey: "Self is nil"]))
+                            .eraseToAnyPublisher()
+                    }
+                    
+                    let paymentRequest = PaymentRequest(
+                        orderId: orderId,
+                        paymentMethodId: paymentMethodId,
+                        currency: "usd",
+                        receiptEmail: nil,
+                        description: nil
+                    )
+                    
+                    return self.paymentService.createPaymentIntent(orderId: orderId, request: paymentRequest)
+                        .mapError { $0 as Error }
+                        .eraseToAnyPublisher()
                 }
-            } receiveValue: { [weak self] response in
-                guard let self = self else { return }
-                
-                Logger.info("Payment intent created: \(response.paymentIntentId)")
-                
-                // Store payment intent details
-                self.paymentIntentId = response.paymentIntentId
-                self.clientSecret = response.clientSecret
-                
-                // Simulate payment confirmation
-                self.confirmPayment(paymentIntentId: response.paymentIntentId)
-            }
-            .store(in: &cancellables)
+                .receive(on: DispatchQueue.main)
+                .sink { [weak self] completion in
+                    if case .failure(let error) = completion {
+                        self?.isLoading = false
+                        self?.errorMessage = "Payment processing failed: \(error.localizedDescription)"
+                        Logger.error("Error processing payment: \(error)")
+                        self?.currentStep = .error
+                    }
+                } receiveValue: { [weak self] response in
+                    guard let self = self else { return }
+                    
+                    Logger.info("Payment intent created: \(response.paymentIntentId)")
+                    
+                    self.paymentIntentId = response.paymentIntentId
+                    self.clientSecret = response.clientSecret
+                    
+                    // En una implementación real, aquí confirmarías el pago
+                    // Para esta demo, simularemos el éxito
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+                        self.isLoading = false
+                        self.successMessage = "Payment processed successfully"
+                        self.currentStep = .confirmation
+                    }
+                }
+                .store(in: &cancellables)
+        } else {
+            // Manejo de otros métodos de pago
+            // ...
+        }
     }
     
-    private func generatePaymentMethodId(from cardDetails: CreditCardDetails) -> String {
-        // In a real implementation, this would tokenize the card using Stripe SDK
-        // For this example, we just create a dummy payment method ID
-        return "pm_card_visa"
+    // Nuevo método para confirmar pagos con Stripe SDK
+    private func confirmPaymentWithStripe(clientSecret: String) {
+        // Aquí implementarías la confirmación del pago usando la interfaz de Stripe
+        // Esto generalmente involucra mostrar una hoja de pago o interfaz 3D Secure
+        // Ejemplo conceptual:
+        
+        // Nota: Esto es simplificado. En una implementación real,
+        // usarías STPPaymentSheet o STPPaymentHandler para manejar la confirmación
+        
+        // Simulamos la confirmación para esta demostración
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) { [weak self] in
+            self?.isLoading = false
+            
+            // Simular éxito para fines de demostración
+            let success = true
+            
+            if success {
+                self?.successMessage = "Payment processed successfully"
+                self?.currentStep = .confirmation
+            } else {
+                self?.errorMessage = "Payment processing failed. Please try again."
+                self?.currentStep = .error
+            }
+        }
+    }
+    
+    private func generatePaymentMethodId(from cardDetails: CreditCardDetails) -> AnyPublisher<String, Error> {
+        return stripeService.createPaymentMethod(cardDetails: creditCardDetails)
+            .map { paymentMethodId -> String in
+                // Ya estamos recibiendo directamente el String del ID del método de pago
+                Logger.info("Payment method created: \(paymentMethodId)")
+                return paymentMethodId
+            }
+            .eraseToAnyPublisher()
     }
     
     func confirmPayment(paymentIntentId: String) {

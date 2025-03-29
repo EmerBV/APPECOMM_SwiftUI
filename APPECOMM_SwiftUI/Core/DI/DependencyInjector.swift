@@ -26,7 +26,8 @@ final class DependencyInjector {
                 ServiceAssembly(),
                 RepositoryAssembly(),
                 ViewModelAssembly(),
-                CheckoutAssembly() // Add our new CheckoutAssembly
+                CheckoutAssembly(),
+                StripeAssembly()
             ],
             container: container
         )
@@ -37,5 +38,33 @@ final class DependencyInjector {
             fatalError("Could not resolve type \(String(describing: T.self))")
         }
         return resolvedType
+    }
+}
+
+extension DependencyInjector {
+    func registerServices() {
+        container.register(StripeServiceProtocol.self) { _ in
+            StripeService()
+        }
+        
+        container.register(CheckoutViewModel.self) { resolver in
+            let cart = resolver.resolve(Cart.self)
+            let checkoutService = resolver.resolve(CheckoutServiceProtocol.self)!
+            let paymentService = resolver.resolve(PaymentServiceProtocol.self)!
+            let authRepository = resolver.resolve(AuthRepositoryProtocol.self)!
+            let validator = resolver.resolve(InputValidatorProtocol.self)!
+            let shippingService = resolver.resolve(ShippingServiceProtocol.self)!
+            let stripeService = resolver.resolve(StripeServiceProtocol.self)!
+            
+            return CheckoutViewModel(
+                cart: cart,
+                checkoutService: checkoutService,
+                paymentService: paymentService,
+                authRepository: authRepository,
+                validator: validator,
+                shippingService: shippingService,
+                stripeService: stripeService
+            )
+        }
     }
 }

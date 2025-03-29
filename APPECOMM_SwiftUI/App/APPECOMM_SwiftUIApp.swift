@@ -8,6 +8,7 @@
 import SwiftUI
 import Combine
 import UserNotifications
+import Stripe
 
 @main
 struct APPECOMM_SwiftUIApp: App {
@@ -111,5 +112,12 @@ class AppDelegate: NSObject, UIApplicationDelegate {
             return true
         }
         return false
+    }
+    
+    func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil) -> Bool {
+        // Configura Stripe con tu clave publicable
+        StripeAPI.defaultPublishableKey = "pk_test_51R7MBXQeIvmhXc8UtJmUCUVT6zcjB1Wuvc29fzk1dPww2CbsyrrHRJ8Pqa5aSn9OXPoDMUWMEbZH49baYhN7mijG003fghp0ei" // Usa una clave de prueba de Stripe
+        
+        return true
     }
 }
