@@ -520,6 +520,70 @@ class CheckoutViewModel: ObservableObject {
     }
     
     // MARK: - Payment Processing
+    /*
+     func processPayment(orderId: Int) {
+     guard let userId = getCurrentUserId() else {
+     self.errorMessage = "No authenticated user"
+     return
+     }
+     
+     self.isLoading = true
+     self.errorMessage = nil
+     self.currentStep = .processing
+     
+     // Si es pago con tarjeta, crear primero el método de pago
+     if selectedPaymentMethod == .creditCard {
+     stripeService.createPaymentMethod(cardDetails: creditCardDetails)
+     .flatMap { [weak self] paymentMethodId -> AnyPublisher<PaymentIntentResponse, Error> in
+     guard let self = self else {
+     return Fail(error: NSError(domain: "CheckoutViewModel", code: 0, userInfo: [NSLocalizedDescriptionKey: "Self is nil"]))
+     .eraseToAnyPublisher()
+     }
+     
+     let paymentRequest = PaymentRequest(
+     orderId: orderId,
+     paymentMethodId: paymentMethodId,
+     currency: "usd",
+     receiptEmail: nil,
+     description: nil
+     )
+     
+     return self.paymentService.createPaymentIntent(orderId: orderId, request: paymentRequest)
+     .mapError { $0 as Error }
+     .eraseToAnyPublisher()
+     }
+     .receive(on: DispatchQueue.main)
+     .sink { [weak self] completion in
+     if case .failure(let error) = completion {
+     self?.isLoading = false
+     self?.errorMessage = "Payment processing failed: \(error.localizedDescription)"
+     Logger.error("Error processing payment: \(error)")
+     self?.currentStep = .error
+     }
+     } receiveValue: { [weak self] response in
+     guard let self = self else { return }
+     
+     Logger.info("Payment intent created: \(response.paymentIntentId)")
+     
+     self.paymentIntentId = response.paymentIntentId
+     self.clientSecret = response.clientSecret
+     
+     // En una implementación real, aquí confirmarías el pago
+     // Para esta demo, simularemos el éxito
+     DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+     self.isLoading = false
+     self.successMessage = "Payment processed successfully"
+     self.currentStep = .confirmation
+     }
+     }
+     .store(in: &cancellables)
+     } else {
+     // Manejo de otros métodos de pago
+     // ...
+     }
+     }
+     */
+    
     func processPayment(orderId: Int) {
         guard let userId = getCurrentUserId() else {
             self.errorMessage = "No authenticated user"
@@ -533,18 +597,25 @@ class CheckoutViewModel: ObservableObject {
         // Si es pago con tarjeta, crear primero el método de pago
         if selectedPaymentMethod == .creditCard {
             stripeService.createPaymentMethod(cardDetails: creditCardDetails)
+                .catch { error -> AnyPublisher<String, Error> in
+                    Logger.error("Error creating payment method: \(error)")
+                    return Fail(error: error)
+                        .eraseToAnyPublisher()
+                }
                 .flatMap { [weak self] paymentMethodId -> AnyPublisher<PaymentIntentResponse, Error> in
                     guard let self = self else {
                         return Fail(error: NSError(domain: "CheckoutViewModel", code: 0, userInfo: [NSLocalizedDescriptionKey: "Self is nil"]))
                             .eraseToAnyPublisher()
                     }
                     
+                    Logger.info("Payment method created successfully: \(paymentMethodId)")
+                    
                     let paymentRequest = PaymentRequest(
                         orderId: orderId,
                         paymentMethodId: paymentMethodId,
                         currency: "usd",
                         receiptEmail: nil,
-                        description: nil
+                        description: "Payment for Order #\(orderId)"
                     )
                     
                     return self.paymentService.createPaymentIntent(orderId: orderId, request: paymentRequest)
@@ -553,11 +624,13 @@ class CheckoutViewModel: ObservableObject {
                 }
                 .receive(on: DispatchQueue.main)
                 .sink { [weak self] completion in
+                    guard let self = self else { return }
+                    
                     if case .failure(let error) = completion {
-                        self?.isLoading = false
-                        self?.errorMessage = "Payment processing failed: \(error.localizedDescription)"
+                        self.isLoading = false
+                        self.errorMessage = "Payment processing failed: \(error.localizedDescription)"
                         Logger.error("Error processing payment: \(error)")
-                        self?.currentStep = .error
+                        self.currentStep = .error
                     }
                 } receiveValue: { [weak self] response in
                     guard let self = self else { return }
@@ -567,8 +640,8 @@ class CheckoutViewModel: ObservableObject {
                     self.paymentIntentId = response.paymentIntentId
                     self.clientSecret = response.clientSecret
                     
-                    // En una implementación real, aquí confirmarías el pago
-                    // Para esta demo, simularemos el éxito
+                    // En una implementación real, aquí confirmarías el pago con Stripe SDK
+                    // Para demos sin el SDK, simularemos el éxito después de un tiempo
                     DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
                         self.isLoading = false
                         self.successMessage = "Payment processed successfully"
@@ -576,9 +649,21 @@ class CheckoutViewModel: ObservableObject {
                     }
                 }
                 .store(in: &cancellables)
+        } else if selectedPaymentMethod == .applePay {
+            // Simulación simple para Apple Pay en una demo
+            Logger.info("Processing Apple Pay payment for order \(orderId)")
+            
+            // Simular procesamiento
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+                self.isLoading = false
+                self.successMessage = "Apple Pay payment processed successfully"
+                self.currentStep = .confirmation
+            }
         } else {
-            // Manejo de otros métodos de pago
-            // ...
+            // Método de pago no soportado
+            self.isLoading = false
+            self.errorMessage = "Payment method not supported"
+            self.currentStep = .error
         }
     }
     

@@ -59,7 +59,7 @@ import Foundation
  }
  */
 
-enum PaymentEndpoints: Endpoint {
+enum PaymentEndpoints: APIEndpoint {
     case getStripeConfig
     case createPaymentIntent(orderId: Int, request: PaymentRequest)
     case confirmPayment(paymentIntentId: String)
@@ -78,46 +78,30 @@ enum PaymentEndpoints: Endpoint {
         }
     }
     
-    var method: HTTPMethod {
+    var method: String {
         switch self {
         case .getStripeConfig:
-            return .get
+            return HTTPMethod.get.rawValue
         case .createPaymentIntent, .confirmPayment, .cancelPayment:
-            return .post
+            return HTTPMethod.post.rawValue
         }
     }
     
-    var headers: [String: String]? {
-        // Agregar el token a todos los endpoints que lo requieran
-        guard TokenManager.shared.hasValidToken() else {
-            return ["Content-Type": "application/json"]
-        }
-        
-        return [
-            "Authorization": "Bearer \(TokenManager.shared.getAccessToken() ?? "")",
-            "Content-Type": "application/json"
-        ]
-    }
-    
-    var body: Data? {
+    var parameters: [String: Any]? {
         switch self {
-        case .getStripeConfig:
-            return nil
         case .createPaymentIntent(_, let request):
-            return try? JSONEncoder().encode(request)
-        case .confirmPayment, .cancelPayment:
-            // Si se necesitan parámetros adicionales, se pueden añadir aquí
-            return try? JSONEncoder().encode(EmptyRequest())
-        }
-    }
-    
-    var queryParameters: [String: String]? {
-        switch self {
+            let encoder = JSONEncoder()
+            if let data = try? encoder.encode(request),
+               let dict = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
+                return dict
+            }
+            return nil
         default:
             return nil
         }
     }
     
-    // Struct vacío para peticiones POST sin cuerpo
-    struct EmptyRequest: Encodable {}
+    var requiresAuthentication: Bool {
+        return true
+    }
 }
