@@ -62,4 +62,18 @@ class Logger {
     static func error(_ message: String, file: String = #file, function: String = #function, line: Int = #line) {
         log(.error, message: message, file: file, function: function, line: line)
     }
+    
+    static func payment(_ message: String, level: LogLevel = .info, file: String = #file, function: String = #function, line: Int = #line) {
+        let fileURL = URL(fileURLWithPath: file)
+        let fileName = fileURL.lastPathComponent
+        
+        let logMessage = "[\(fileName):\(line)] \(function) - \(message)"
+        //os_log("%{public}@", log: paymentLogger, type: level.osLogType, logMessage)
+        log(level, message: logMessage, file: file, function: function, line: line)
+        
+        
+#if DEBUG
+        print("[\(level.rawValue)] [Payment] \(logMessage)")
+#endif
+    }
 }
