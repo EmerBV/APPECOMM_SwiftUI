@@ -43,6 +43,7 @@ struct CheckoutContentView: View {
                 .sheet(isPresented: $showingPaymentForm) {
                     if let order = selectedOrder {
                         PaymentFormView(
+                            viewModel: viewModel.paymentViewModel,
                             orderId: order.id,
                             amount: NSDecimalNumber(decimal: order.totalAmount).doubleValue
                         )

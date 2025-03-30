@@ -2,7 +2,8 @@ import SwiftUI
 import Stripe
 
 struct PaymentFormView: View {
-    @StateObject private var viewModel = PaymentViewModel()
+    @ObservedObject var viewModel: PaymentViewModel
+    @Environment(\.dismiss) private var dismiss
     @State private var cardNumber = ""
     @State private var expiryDate = ""
     @State private var cvc = ""
@@ -60,12 +61,19 @@ struct PaymentFormView: View {
                 .padding()
             }
         }
-        .alert(isPresented: .constant(viewModel.paymentStatus == .success)) {
-            Alert(
-                title: Text("¡Pago exitoso!"),
-                message: Text("Tu pago ha sido procesado correctamente."),
-                dismissButton: .default(Text("OK"))
-            )
+        .alert("¡Pago exitoso!", isPresented: .constant(viewModel.paymentStatus == .success)) {
+            Button("OK") {
+                dismiss()
+            }
+        } message: {
+            Text("Tu pago ha sido procesado correctamente.")
+        }
+        .alert("Error de pago", isPresented: .constant(viewModel.paymentStatus == .failed)) {
+            Button("OK") {
+                viewModel.reset()
+            }
+        } message: {
+            Text(viewModel.error ?? "Ha ocurrido un error al procesar el pago.")
         }
     }
     

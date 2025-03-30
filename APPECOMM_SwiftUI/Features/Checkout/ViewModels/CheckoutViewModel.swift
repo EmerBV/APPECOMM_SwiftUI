@@ -291,6 +291,7 @@ class CheckoutViewModel: ObservableObject {
     @Published var cartItems: [CartItem] = []
     @Published var selectedAddress: Address?
     @Published var currentOrder: Order?
+    @Published var paymentViewModel: PaymentViewModel
     
     // Shipping details related properties
     @Published var existingShippingDetails: ShippingDetailsResponse?
@@ -328,6 +329,7 @@ class CheckoutViewModel: ObservableObject {
         self.validator = validator
         self.shippingService = shippingService
         self.stripeService = stripeService
+        self.paymentViewModel = PaymentViewModel(paymentService: paymentService, stripeService: stripeService)
         
         if let cart = cart {
             self.cartItems = cart.items
