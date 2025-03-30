@@ -10,6 +10,8 @@ import SwiftUI
 struct CheckoutView: View {
     @Environment(\.dismiss) private var dismiss
     @StateObject private var viewModel: CheckoutViewModel
+    @State private var showingPaymentForm = false
+    @State private var selectedOrder: Order?
     
     // MARK: - Initialization
     
@@ -58,6 +60,16 @@ struct CheckoutView: View {
                     viewModel.errorMessage = nil
                 }
             }
+        }
+        .sheet(isPresented: $showingPaymentForm) {
+            if let order = selectedOrder {
+                PaymentFormView(orderId: order.id, amount: order.totalAmount)
+            }
+        }
+        .alert("Error", isPresented: $viewModel.showError) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(viewModel.errorMessage ?? "Ha ocurrido un error")
         }
     }
     
@@ -168,6 +180,51 @@ struct ErrorToastView: View {
             )
             .padding(.horizontal)
             .padding(.bottom, 20)
+        }
+    }
+}
+
+struct CartItemRow: View {
+    let item: CartItem
+    
+    var body: some View {
+        HStack {
+            AsyncImage(url: URL(string: item.product.imageUrl)) { image in
+                image
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+            } placeholder: {
+                ProgressView()
+            }
+            .frame(width: 60, height: 60)
+            
+            VStack(alignment: .leading) {
+                Text(item.product.name)
+                    .font(.headline)
+                Text("Cantidad: \(item.quantity)")
+                    .font(.subheadline)
+                Text(String(format: "%.2f €", item.product.price * Double(item.quantity)))
+                    .font(.subheadline)
+                    .foregroundColor(.blue)
+            }
+        }
+        .padding(.vertical, 8)
+    }
+}
+
+struct AddressRow: View {
+    let address: Address
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(address.name)
+                .font(.headline)
+            Text(address.street)
+                .font(.subheadline)
+            Text("\(address.city), \(address.postalCode)")
+                .font(.subheadline)
+            Text(address.country)
+                .font(.subheadline)
         }
     }
 }

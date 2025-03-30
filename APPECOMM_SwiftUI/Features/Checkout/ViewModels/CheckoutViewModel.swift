@@ -7,6 +7,7 @@
 
 import Foundation
 import Combine
+import SwiftUI
 
 enum CheckoutStep {
     case shippingInfo
@@ -27,7 +28,7 @@ enum PaymentMethod: String, CaseIterable, Identifiable {
     var displayName: String {
         switch self {
         case .creditCard:
-            return "Credit Card"
+            return "Tarjeta de crédito"
         case .applePay:
             return "Apple Pay"
         }
@@ -286,6 +287,10 @@ class CheckoutViewModel: ObservableObject {
     @Published var order: Order?
     @Published var paymentIntentId: String?
     @Published var clientSecret: String?
+    @Published var showError = false
+    @Published var cartItems: [CartItem] = []
+    @Published var selectedAddress: Address?
+    @Published var currentOrder: Order?
     
     // Shipping details related properties
     @Published var existingShippingDetails: ShippingDetailsResponse?
@@ -298,8 +303,12 @@ class CheckoutViewModel: ObservableObject {
     private let authRepository: AuthRepositoryProtocol
     private let validator: InputValidatorProtocol
     private let shippingService: ShippingServiceProtocol
-    private var cancellables = Set<AnyCancellable>()
     private let stripeService: StripeServiceProtocol
+    private var cancellables = Set<AnyCancellable>()
+    
+    var totalAmount: Double {
+        cartItems.reduce(0) { $0 + (NSDecimalNumber(decimal: $1.product.price).doubleValue * Double($1.quantity)) }
+    }
     
     // MARK: - Initialization
     
@@ -320,6 +329,10 @@ class CheckoutViewModel: ObservableObject {
         self.shippingService = shippingService
         self.stripeService = stripeService
         
+        if let cart = cart {
+            self.cartItems = cart.items
+        }
+        
         // Calculate order summary based on cart
         if let cart = cart {
             calculateOrderSummary(from: cart)
@@ -327,6 +340,7 @@ class CheckoutViewModel: ObservableObject {
         
         // Load existing shipping details if available
         loadExistingShippingDetails()
+        loadUserAddress()
     }
     
     // MARK: - Order Summary Calculation
@@ -486,103 +500,41 @@ class CheckoutViewModel: ObservableObject {
     
     // MARK: - Order Creation
     
-    func createOrder() {
-        guard let userId = getCurrentUserId() else {
-            self.errorMessage = "No authenticated user"
-            return
+    func createOrder() -> Order? {
+        guard let address = selectedAddress else {
+            errorMessage = "Por favor, selecciona una dirección de envío"
+            showError = true
+            return nil
         }
         
-        self.isLoading = true
-        self.errorMessage = nil
+        let orderItems = cartItems.map { item in
+            OrderItem(
+                id: nil,
+                productId: item.product.id,
+                productName: item.product.name,
+                productBrand: item.product.brand,
+                variantId: nil,
+                variantName: nil,
+                quantity: item.quantity,
+                price: item.unitPrice,
+                totalPrice: item.unitPrice * Decimal(item.quantity)
+            )
+        }
         
-        checkoutService.createOrder(userId: userId)
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] completion in
-                self?.isLoading = false
-                
-                if case .failure(let error) = completion {
-                    self?.errorMessage = "Failed to create order: \(error.localizedDescription)"
-                    Logger.error("Error creating order: \(error)")
-                    self?.currentStep = .error
-                }
-            } receiveValue: { [weak self] order in
-                guard let self = self else { return }
-                
-                Logger.info("Order created successfully: \(order.id)")
-                
-                // Store the created order
-                self.order = order
-                
-                // Proceed with payment processing
-                self.processPayment(orderId: order.id)
-            }
-            .store(in: &cancellables)
+        let order = Order(
+            id: Int.random(in: 1000...9999),
+            userId: getCurrentUserId() ?? 0,
+            orderDate: ISO8601DateFormatter().string(from: Date()),
+            totalAmount: Decimal(calculateTotalAmount()),
+            status: "pending",
+            items: orderItems
+        )
+        
+        currentOrder = order
+        return order
     }
     
     // MARK: - Payment Processing
-    /*
-     func processPayment(orderId: Int) {
-     guard let userId = getCurrentUserId() else {
-     self.errorMessage = "No authenticated user"
-     return
-     }
-     
-     self.isLoading = true
-     self.errorMessage = nil
-     self.currentStep = .processing
-     
-     // Si es pago con tarjeta, crear primero el método de pago
-     if selectedPaymentMethod == .creditCard {
-     stripeService.createPaymentMethod(cardDetails: creditCardDetails)
-     .flatMap { [weak self] paymentMethodId -> AnyPublisher<PaymentIntentResponse, Error> in
-     guard let self = self else {
-     return Fail(error: NSError(domain: "CheckoutViewModel", code: 0, userInfo: [NSLocalizedDescriptionKey: "Self is nil"]))
-     .eraseToAnyPublisher()
-     }
-     
-     let paymentRequest = PaymentRequest(
-     orderId: orderId,
-     paymentMethodId: paymentMethodId,
-     currency: "usd",
-     receiptEmail: nil,
-     description: nil
-     )
-     
-     return self.paymentService.createPaymentIntent(orderId: orderId, request: paymentRequest)
-     .mapError { $0 as Error }
-     .eraseToAnyPublisher()
-     }
-     .receive(on: DispatchQueue.main)
-     .sink { [weak self] completion in
-     if case .failure(let error) = completion {
-     self?.isLoading = false
-     self?.errorMessage = "Payment processing failed: \(error.localizedDescription)"
-     Logger.error("Error processing payment: \(error)")
-     self?.currentStep = .error
-     }
-     } receiveValue: { [weak self] response in
-     guard let self = self else { return }
-     
-     Logger.info("Payment intent created: \(response.paymentIntentId)")
-     
-     self.paymentIntentId = response.paymentIntentId
-     self.clientSecret = response.clientSecret
-     
-     // En una implementación real, aquí confirmarías el pago
-     // Para esta demo, simularemos el éxito
-     DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
-     self.isLoading = false
-     self.successMessage = "Payment processed successfully"
-     self.currentStep = .confirmation
-     }
-     }
-     .store(in: &cancellables)
-     } else {
-     // Manejo de otros métodos de pago
-     // ...
-     }
-     }
-     */
     
     func processPayment(orderId: Int) {
         guard let userId = getCurrentUserId() else {
@@ -611,7 +563,6 @@ class CheckoutViewModel: ObservableObject {
                     Logger.info("Payment method created successfully: \(paymentMethodId)")
                     
                     let paymentRequest = PaymentRequest(
-                        orderId: orderId,
                         paymentMethodId: paymentMethodId,
                         currency: "usd",
                         receiptEmail: nil,
@@ -695,8 +646,8 @@ class CheckoutViewModel: ObservableObject {
     
     private func generatePaymentMethodId(from cardDetails: CreditCardDetails) -> AnyPublisher<String, Error> {
         return stripeService.createPaymentMethod(cardDetails: creditCardDetails)
+            .mapError { $0 as Error }
             .map { paymentMethodId -> String in
-                // Ya estamos recibiendo directamente el String del ID del método de pago
                 Logger.info("Payment method created: \(paymentMethodId)")
                 return paymentMethodId
             }
@@ -731,42 +682,21 @@ class CheckoutViewModel: ObservableObject {
     func proceedToNextStep() {
         switch currentStep {
         case .shippingInfo:
-            if hasExistingShippingDetails && !isEditingShippingDetails {
-                // If has existing details and not editing, can continue directly
+            if selectedAddress != nil {
                 currentStep = .paymentMethod
-            } else if shippingDetailsForm.isValid {
-                // Save shipping details and continue
-                saveShippingDetails()
             } else {
-                errorMessage = "Please complete all shipping information"
+                errorMessage = "Por favor, selecciona una dirección de envío"
+                showError = true
             }
-            
         case .paymentMethod:
-            switch selectedPaymentMethod {
-            case .creditCard:
-                currentStep = .cardDetails
-            case .applePay:
-                // In a real app, this would launch Apple Pay
-                currentStep = .review
-            }
-            
+            currentStep = .cardDetails
         case .cardDetails:
-            if creditCardDetails.isValid {
-                currentStep = .review
-            } else {
-                errorMessage = "Please correctly complete all card details"
-            }
-            
+            currentStep = .review
         case .review:
-            // Start order creation and payment processing
-            createOrder()
-            
+            currentStep = .processing
         case .processing:
-            // Wait for processing to complete
-            break
-            
+            currentStep = .confirmation
         case .confirmation, .error:
-            // Return to main screen or cart
             break
         }
     }
@@ -778,13 +708,8 @@ class CheckoutViewModel: ObservableObject {
         case .cardDetails:
             currentStep = .paymentMethod
         case .review:
-            if selectedPaymentMethod == .creditCard {
-                currentStep = .cardDetails
-            } else {
-                currentStep = .paymentMethod
-            }
-        default:
-            // For other stages, stay on current stage
+            currentStep = .cardDetails
+        case .processing, .confirmation, .error, .shippingInfo:
             break
         }
     }
@@ -848,6 +773,47 @@ class CheckoutViewModel: ObservableObject {
         }
         
         return cleaned
+    }
+    
+    private func loadUserAddress() {
+        guard case let .loggedIn(user) = authRepository.authState.value else { return }
+        
+        isLoading = true
+        shippingService.getShippingDetails(userId: user.id)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] (completion: Subscribers.Completion<NetworkError>) in
+                self?.isLoading = false
+                if case .failure(let error) = completion {
+                    self?.errorMessage = error.localizedDescription
+                    self?.showError = true
+                }
+            } receiveValue: { [weak self] (details: ShippingDetailsResponse?) in
+                if let details = details {
+                    // Convertir ShippingDetailsResponse a Address
+                    let address = Address(
+                        id: details.id,
+                        userId: user.id,
+                        street: details.address,
+                        city: details.city,
+                        state: details.state ?? "",
+                        postalCode: details.postalCode,
+                        country: details.country,
+                        isDefault: true
+                    )
+                    self?.selectedAddress = address
+                }
+            }
+            .store(in: &cancellables)
+    }
+    
+    // MARK: - Public Methods
+    
+    func calculateTotalAmount() -> Double {
+        cartItems.reduce(0) { $0 + (NSDecimalNumber(decimal: $1.product.price).doubleValue * Double($1.quantity)) }
+    }
+    
+    func getCurrentOrder() -> Order? {
+        return currentOrder
     }
 }
 

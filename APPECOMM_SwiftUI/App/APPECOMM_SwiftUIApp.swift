@@ -16,6 +16,9 @@ struct APPECOMM_SwiftUIApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     
     init() {
+        // La inicialización de Stripe se maneja automáticamente a través del PaymentViewModel
+        // cuando se obtiene la configuración del servidor
+        
         // Initialize core app dependencies
         configureDependencies()
         configureAppearance()
