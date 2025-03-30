@@ -9,13 +9,16 @@ protocol PaymentServiceProtocol {
 }
 
 final class PaymentService: PaymentServiceProtocol {
-    private let networkDispatcher: NetworkDispatcher
+    private let networkDispatcher: NetworkDispatcherProtocol
     private let stripeService: StripeServiceProtocol
+    private let stripeAPIClient: StripeAPIClientProtocol
     
-    init(networkDispatcher: NetworkDispatcher = NetworkDispatcher(),
-         stripeService: StripeServiceProtocol = StripeService()) {
+    init(networkDispatcher: NetworkDispatcherProtocol = DependencyInjector.shared.resolve(NetworkDispatcherProtocol.self),
+         stripeService: StripeServiceProtocol = DependencyInjector.shared.resolve(StripeServiceProtocol.self),
+         stripeAPIClient: StripeAPIClientProtocol = DependencyInjector.shared.resolve(StripeAPIClientProtocol.self)) {
         self.networkDispatcher = networkDispatcher
         self.stripeService = stripeService
+        self.stripeAPIClient = stripeAPIClient
     }
     
     func getStripeConfig() -> AnyPublisher<StripeConfig, NetworkError> {
@@ -23,10 +26,11 @@ final class PaymentService: PaymentServiceProtocol {
         Logger.info("Obteniendo configuración de Stripe")
         
         return networkDispatcher.dispatch(ApiResponse<StripeConfig>.self, endpoint)
-            .map { response -> StripeConfig in
-                Logger.info("Configuración de Stripe obtenida exitosamente")
-                return response.data
-            }
+            .handleEvents(receiveOutput: { [weak self] response in
+                // Configurar Stripe SDK con la clave publicable
+                self?.stripeAPIClient.configure(with: response.data.publicKey)
+            })
+            .map { $0.data }
             .eraseToAnyPublisher()
     }
     

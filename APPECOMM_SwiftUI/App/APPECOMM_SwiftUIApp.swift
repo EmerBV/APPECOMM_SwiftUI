@@ -23,6 +23,9 @@ struct APPECOMM_SwiftUIApp: App {
         configureDependencies()
         configureAppearance()
         
+        // Configurar Stripe
+        _ = AppConfig.shared
+        
 #if DEBUG
         Logger.info("App initialized in debug mode [Version: \(Bundle.main.fullVersion)]")
         Logger.debug("Debug logging enabled")
@@ -119,7 +122,11 @@ class AppDelegate: NSObject, UIApplicationDelegate {
     
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil) -> Bool {
         // Configura Stripe con tu clave publicable
-        StripeAPI.defaultPublishableKey = "pk_test_51R7MBXQeIvmhXc8UtJmUCUVT6zcjB1Wuvc29fzk1dPww2CbsyrrHRJ8Pqa5aSn9OXPoDMUWMEbZH49baYhN7mijG003fghp0ei" // Usa una clave de prueba de Stripe
+        let publishableKey = "pk_test_51R7MBXQeIvmhXc8UtJmUCUVT6zcjB1Wuvc29fzk1dPww2CbsyrrHRJ8Pqa5aSn9OXPoDMUWMEbZH49baYhN7mijG003fghp0ei"
+        StripeAPI.defaultPublishableKey = publishableKey
+        
+        // Configura el manejador de pagos de Stripe
+        STPPaymentHandler.shared().apiClient = STPAPIClient(publishableKey: publishableKey)
         
         return true
     }

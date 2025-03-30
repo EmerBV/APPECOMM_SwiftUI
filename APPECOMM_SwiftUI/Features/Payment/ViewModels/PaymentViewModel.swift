@@ -53,7 +53,7 @@ class PaymentViewModel: ObservableObject {
             .store(in: &cancellables)
     }
     
-    func processPayment(orderId: Int, card: STPCardParams) {
+    func processPayment(orderId: Int, card: STPPaymentMethodCardParams) {
         isLoading = true
         currentStep = .processing
         paymentStatus = .processing

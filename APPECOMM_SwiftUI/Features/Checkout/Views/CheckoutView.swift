@@ -40,112 +40,14 @@ struct CheckoutView: View {
     // MARK: - Body
     
     var body: some View {
-        ZStack {
-            contentView
-                .navigationTitle(navigationTitle)
-                .navigationBarTitleDisplayMode(.inline)
-                .toolbar {
-                    toolbarItems
-                }
-                .disabled(viewModel.isLoading)
-            
-            // Loading overlay
-            if viewModel.isLoading {
-                LoadingOverlay()
-            }
-            
-            // Error toast
-            if let errorMessage = viewModel.errorMessage {
-                ErrorToastView(message: errorMessage) {
-                    viewModel.errorMessage = nil
-                }
-            }
+        NavigationStack {
+            CheckoutContentView(
+                viewModel: viewModel,
+                showingPaymentForm: $showingPaymentForm,
+                selectedOrder: $selectedOrder
+            )
         }
-        .sheet(isPresented: $showingPaymentForm) {
-            if let order = selectedOrder {
-                PaymentFormView(orderId: order.id, amount: order.totalAmount)
-            }
-        }
-        .alert("Error", isPresented: $viewModel.showError) {
-            Button("OK", role: .cancel) {}
-        } message: {
-            Text(viewModel.errorMessage ?? "Ha ocurrido un error")
-        }
-    }
-    
-    // MARK: - Content Views
-    
-    /// The main content view based on the current checkout step
-    @ViewBuilder
-    private var contentView: some View {
-        switch viewModel.currentStep {
-        case .shippingInfo:
-            ShippingInfoView(viewModel: viewModel)
-        case .paymentMethod:
-            PaymentMethodSelectionView(viewModel: viewModel)
-        case .cardDetails:
-            CreditCardDetailsView(viewModel: viewModel)
-        case .review:
-            OrderReviewView(viewModel: viewModel)
-        case .processing:
-            PaymentProcessingView()
-        case .confirmation:
-            PaymentConfirmationView(viewModel: viewModel)
-        case .error:
-            PaymentErrorView(viewModel: viewModel)
-        }
-    }
-    
-    /// Dynamic navigation title based on the current step
-    private var navigationTitle: String {
-        switch viewModel.currentStep {
-        case .shippingInfo:
-            return "Shipping"
-        case .paymentMethod:
-            return "Payment Method"
-        case .cardDetails:
-            return "Card Details"
-        case .review:
-            return "Order Review"
-        case .processing:
-            return "Processing"
-        case .confirmation:
-            return "Confirmation"
-        case .error:
-            return "Error"
-        }
-    }
-    
-    /// Toolbar content based on the current step
-    private var toolbarItems: some ToolbarContent {
-        Group {
-            ToolbarItem(placement: .navigationBarLeading) {
-                if canGoBack {
-                    Button(action: viewModel.goBack) {
-                        Image(systemName: "chevron.left")
-                            .foregroundColor(.blue)
-                    }
-                }
-            }
-            
-            ToolbarItem(placement: .navigationBarTrailing) {
-                if viewModel.currentStep == .confirmation {
-                    Button("Done") {
-                        dismiss()
-                    }
-                }
-            }
-        }
-    }
-    
-    /// Determines if the back button should be shown
-    private var canGoBack: Bool {
-        switch viewModel.currentStep {
-        case .shippingInfo, .processing, .confirmation, .error:
-            return false
-        default:
-            return true
-        }
+        .interactiveDismissDisabled()
     }
 }
 
@@ -184,47 +86,50 @@ struct ErrorToastView: View {
     }
 }
 
-struct CartItemRow: View {
-    let item: CartItem
-    
-    var body: some View {
-        HStack {
-            AsyncImage(url: URL(string: item.product.imageUrl)) { image in
-                image
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-            } placeholder: {
-                ProgressView()
-            }
-            .frame(width: 60, height: 60)
-            
-            VStack(alignment: .leading) {
-                Text(item.product.name)
-                    .font(.headline)
-                Text("Cantidad: \(item.quantity)")
-                    .font(.subheadline)
-                Text(String(format: "%.2f €", item.product.price * Double(item.quantity)))
-                    .font(.subheadline)
-                    .foregroundColor(.blue)
-            }
-        }
-        .padding(.vertical, 8)
-    }
-}
-
-struct AddressRow: View {
-    let address: Address
-    
-    var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text(address.name)
-                .font(.headline)
-            Text(address.street)
-                .font(.subheadline)
-            Text("\(address.city), \(address.postalCode)")
-                .font(.subheadline)
-            Text(address.country)
-                .font(.subheadline)
-        }
-    }
-}
+/*
+ struct CartItemRow: View {
+ let item: CartItem
+ 
+ var body: some View {
+ HStack {
+ AsyncImage(url: URL(string: item.product.imageUrl)) { image in
+ image
+ .resizable()
+ .aspectRatio(contentMode: .fit)
+ } placeholder: {
+ ProgressView()
+ }
+ .frame(width: 60, height: 60)
+ 
+ VStack(alignment: .leading) {
+ Text(item.product.name)
+ .font(.headline)
+ Text("Cantidad: \(item.quantity)")
+ .font(.subheadline)
+ Text(String(format: "%.2f €", item.product.price * Double(item.quantity)))
+ .font(.subheadline)
+ .foregroundColor(.blue)
+ }
+ }
+ .padding(.vertical, 8)
+ }
+ }
+ 
+ 
+ struct AddressRow: View {
+ let address: Address
+ 
+ var body: some View {
+ VStack(alignment: .leading, spacing: 4) {
+ Text(address.name)
+ .font(.headline)
+ Text(address.street)
+ .font(.subheadline)
+ Text("\(address.city), \(address.postalCode)")
+ .font(.subheadline)
+ Text(address.country)
+ .font(.subheadline)
+ }
+ }
+ }
+ */

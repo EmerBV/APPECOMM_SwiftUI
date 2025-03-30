@@ -10,8 +10,18 @@ import Combine
 import Stripe
 import UIKit
 
+protocol StripeAPIClientProtocol {
+    func configure(with publicKey: String)
+    func getStripeConfig() -> AnyPublisher<StripeConfig, NetworkError>
+    func createPaymentIntent(orderId: Int, paymentRequest: PaymentRequest) -> AnyPublisher<PaymentIntentResponse, NetworkError>
+    func confirmPaymentIntent(paymentIntentId: String, paymentMethodId: String) -> AnyPublisher<PaymentConfirmationResponse, NetworkError>
+    func cancelPaymentIntent(paymentIntentId: String) -> AnyPublisher<Void, NetworkError>
+    func createPaymentMethod(withCard card: CreditCardDetails) -> AnyPublisher<String, Error>
+    func handlePaymentAuthentication(paymentIntentClientSecret: String, from viewController: UIViewController, completion: @escaping (Bool, Error?) -> Void)
+}
+
 /// Cliente especializado para interactuar con la API de Stripe
-class StripeAPIClient {
+class StripeAPIClient: StripeAPIClientProtocol {
     private let networkDispatcher: NetworkDispatcherProtocol
     private var stripePublishableKey: String?
     
@@ -20,9 +30,8 @@ class StripeAPIClient {
     }
     
     /// Configura la clave publicable de Stripe
-    func configure(with publishableKey: String) {
-        self.stripePublishableKey = publishableKey
-        StripeAPI.defaultPublishableKey = publishableKey
+    func configure(with publicKey: String) {
+        StripeAPI.defaultPublishableKey = publicKey
         Logger.payment("Stripe configured with publishable key", level: .info)
     }
     

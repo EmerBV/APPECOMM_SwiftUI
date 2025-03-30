@@ -17,7 +17,7 @@ struct MainTabView: View {
     
     var body: some View {
         TabView(selection: $selectedTab) {
-            NavigationView {
+            NavigationStack {
                 HomeView(viewModel: DependencyInjector.shared.resolve(HomeViewModel.self))
             }
             .tabItem {
@@ -28,7 +28,7 @@ struct MainTabView: View {
                 Logger.info("HomeView appeared")
             }
             
-            NavigationView {
+            NavigationStack {
                 ProductListView(viewModel: DependencyInjector.shared.resolve(ProductListViewModel.self))
             }
             .tabItem {
@@ -39,7 +39,7 @@ struct MainTabView: View {
                 Logger.info("ProductListView appeared")
             }
             
-            NavigationView {
+            NavigationStack {
                 CartView(viewModel: DependencyInjector.shared.resolve(CartViewModel.self))
             }
             .tabItem {
@@ -50,7 +50,7 @@ struct MainTabView: View {
                 Logger.info("CartView appeared")
             }
             
-            NavigationView {
+            NavigationStack {
                 ProfileView(viewModel: profileViewModel)
             }
             .tabItem {

@@ -77,12 +77,20 @@ struct PaymentFormView: View {
     }
     
     private func processPayment() {
-        let cardParams = STPCardParams()
+        let cardParams = STPPaymentMethodCardParams()
         cardParams.number = cardNumber
-        cardParams.expMonth = UInt(expiryDate.prefix(2)) ?? 0
-        cardParams.expYear = UInt(expiryDate.suffix(2)) ?? 0
+        cardParams.expMonth = NSNumber(value: UInt(expiryDate.prefix(2)) ?? 0)
+        cardParams.expYear = NSNumber(value: UInt(expiryDate.suffix(2)) ?? 0)
         cardParams.cvc = cvc
-        cardParams.name = name
+        
+        let billingDetails = STPPaymentMethodBillingDetails()
+        billingDetails.name = name
+        
+        let paymentMethodParams = STPPaymentMethodParams(
+            card: cardParams,
+            billingDetails: billingDetails,
+            metadata: nil
+        )
         
         viewModel.processPayment(orderId: orderId, card: cardParams)
     }

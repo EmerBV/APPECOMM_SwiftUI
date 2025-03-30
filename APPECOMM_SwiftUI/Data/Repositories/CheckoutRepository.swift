@@ -27,7 +27,21 @@ final class CheckoutRepository: CheckoutRepositoryProtocol {
     func createOrder(userId: Int) -> AnyPublisher<Order, Error> {
         Logger.info("CheckoutRepository: Creating order for user \(userId)")
         
-        return checkoutService.createOrder(userId: userId)
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
+        dateFormatter.timeZone = TimeZone(secondsFromGMT: 0)
+        let orderDateString = dateFormatter.string(from: Date())
+        
+        let order = Order(
+            id: 0, // El ID será asignado por el servidor
+            userId: userId,
+            orderDate: orderDateString,
+            totalAmount: 0.0,
+            status: "pending",
+            items: []
+        )
+        
+        return checkoutService.createOrder(order)
             .mapError { $0 as Error }
             .handleEvents(receiveOutput: { order in
                 Logger.info("CheckoutRepository: Order created successfully: \(order.id)")
@@ -43,11 +57,10 @@ final class CheckoutRepository: CheckoutRepositoryProtocol {
         Logger.info("CheckoutRepository: Processing payment for order \(orderId)")
         
         let paymentRequest = PaymentRequest(
-            orderId: orderId,
             paymentMethodId: paymentMethodId,
-            currency: "usd", // Default currency
+            currency: "usd",
             receiptEmail: nil,
-            description: nil
+            description: "Order #\(orderId)"
         )
         
         return paymentService.createPaymentIntent(orderId: orderId, request: paymentRequest)
@@ -82,7 +95,7 @@ final class CheckoutRepository: CheckoutRepositoryProtocol {
     func getOrderDetails(orderId: Int) -> AnyPublisher<Order, Error> {
         Logger.info("CheckoutRepository: Fetching order details for order \(orderId)")
         
-        return checkoutService.getOrderById(orderId: orderId)
+        return checkoutService.getOrder(id: orderId)
             .mapError { $0 as Error }
             .handleEvents(receiveOutput: { order in
                 Logger.info("CheckoutRepository: Order details fetched successfully: \(order.id)")

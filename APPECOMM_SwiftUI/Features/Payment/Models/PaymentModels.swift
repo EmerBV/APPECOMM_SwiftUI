@@ -37,9 +37,15 @@ struct PaymentConfirmationResponse: Codable {
 }
 
 struct StripeConfig: Codable {
-    let publishableKey: String
-    let merchantId: String?
-    let countryCode: String
+    let publicKey: String
+    let currency: String
+    let locale: String
+    
+    enum CodingKeys: String, CodingKey {
+        case publicKey
+        case currency
+        case locale
+    }
 }
 
 // MARK: - Payment Errors
