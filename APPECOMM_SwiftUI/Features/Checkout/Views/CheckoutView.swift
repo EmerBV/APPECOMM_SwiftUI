@@ -344,35 +344,6 @@ struct ShippingFormSummary: View {
     }
 }
 
-struct CreditCardSummaryView: View {
-    let details: CreditCardDetails
-    
-    var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            HStack {
-                Image(systemName: "creditcard.fill")
-                    .foregroundColor(.blue)
-                    .imageScale(.large)
-                
-                let lastFour = details.cardNumber.count >= 4 ?
-                String(details.cardNumber.suffix(4)) : "****"
-                
-                Text("•••• \(lastFour)")
-                    .font(.subheadline)
-                    .fontWeight(.semibold)
-            }
-            
-            Text(details.cardholderName)
-                .font(.subheadline)
-                .foregroundColor(.secondary)
-            
-            Text("Expires: \(details.expiryDate)")
-                .font(.caption)
-                .foregroundColor(.secondary)
-        }
-    }
-}
-
 struct CheckoutView: View {
     @Environment(\.dismiss) private var dismiss
     @ObservedObject private var viewModel: CheckoutViewModel
@@ -482,8 +453,6 @@ struct CheckoutContentView: View {
             ShippingInfoView(viewModel: viewModel)
         case .paymentMethod:
             PaymentMethodSelectionView(viewModel: viewModel)
-        case .cardDetails:
-            CreditCardDetailsView(viewModel: viewModel)
         case .review:
             OrderReviewView(viewModel: viewModel)
         case .processing:
@@ -502,8 +471,6 @@ struct CheckoutContentView: View {
             return "Shipping"
         case .paymentMethod:
             return "Payment Method"
-        case .cardDetails:
-            return "Card Details"
         case .review:
             return "Order Review"
         case .processing:
@@ -612,15 +579,11 @@ struct OrderReviewView: View {
                     Text("Payment Method")
                         .font(.headline)
                     
-                    if viewModel.selectedPaymentMethod == .creditCard {
-                        CreditCardSummaryView(details: viewModel.creditCardDetails)
-                    } else {
-                        HStack {
-                            Image(systemName: viewModel.selectedPaymentMethod.iconName)
-                                .foregroundColor(.blue)
-                            Text(viewModel.selectedPaymentMethod.displayName)
-                                .fontWeight(.semibold)
-                        }
+                    HStack {
+                        Image(systemName: viewModel.selectedPaymentMethod.iconName)
+                            .foregroundColor(.blue)
+                        Text(viewModel.selectedPaymentMethod.displayName)
+                            .fontWeight(.semibold)
                     }
                 }
                 .padding()

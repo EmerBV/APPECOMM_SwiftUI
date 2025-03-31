@@ -13,7 +13,6 @@ import Stripe
 enum CheckoutStep {
     case shippingInfo
     case paymentMethod
-    case cardDetails
     case review
     case processing
     case confirmation
@@ -50,7 +49,6 @@ class CheckoutViewModel: ObservableObject {
     @Published var currentStep: CheckoutStep = .shippingInfo
     @Published var selectedPaymentMethod: PaymentMethod = .creditCard
     @Published var shippingDetailsForm = ShippingDetailsForm()
-    @Published var creditCardDetails = CreditCardDetails()
     @Published var isLoading = false
     @Published var errorMessage: String?
     @Published var successMessage: String?
@@ -451,12 +449,6 @@ class CheckoutViewModel: ObservableObject {
             .store(in: &cancellables)
     }
     
-    // MARK: - Credit Card Validation
-    
-    func validateCreditCardForm() {
-        creditCardDetails.validateAll(validator: validator)
-    }
-    
     // MARK: - Navigation
     
     func proceedToNextStep() {
@@ -475,17 +467,7 @@ class CheckoutViewModel: ObservableObject {
                 showError = true
                 return
             }
-            
-            if selectedPaymentMethod == .creditCard {
-                currentStep = .cardDetails
-            } else {
-                currentStep = .review
-            }
-        case .cardDetails:
-            validateCreditCardForm()
-            if creditCardDetails.isValid {
-                currentStep = .review
-            }
+            currentStep = .review
         case .review:
             processPayment()
         case .processing:
@@ -500,14 +482,8 @@ class CheckoutViewModel: ObservableObject {
         switch currentStep {
         case .paymentMethod:
             currentStep = .shippingInfo
-        case .cardDetails:
-            currentStep = .paymentMethod
         case .review:
-            if selectedPaymentMethod == .creditCard {
-                currentStep = .cardDetails
-            } else {
-                currentStep = .paymentMethod
-            }
+            currentStep = .paymentMethod
         case .processing, .confirmation, .error, .shippingInfo:
             break
         }
