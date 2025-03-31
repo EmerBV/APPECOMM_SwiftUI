@@ -95,6 +95,20 @@ class PaymentSheetViewModel: ObservableObject {
                     configuration.customer = .init(id: customerId, ephemeralKeySecret: ephemeralKey)
                 }
                 
+                // Configurar la apariencia del PaymentSheet
+                var appearance = PaymentSheet.Appearance()
+                appearance.colors.primary = .systemBlue
+                appearance.colors.background = .systemBackground
+                appearance.colors.componentBackground = .secondarySystemBackground
+                appearance.colors.componentBorder = .separator
+                appearance.primaryButton.backgroundColor = .systemBlue
+                appearance.primaryButton.textColor = .white
+                appearance.primaryButton.cornerRadius = 10
+                
+                // Configurar el PaymentSheet
+                configuration.appearance = appearance
+                configuration.defaultBillingDetails.address.country = "ES"
+                
                 self.paymentSheet = PaymentSheet(
                     paymentIntentClientSecret: checkout.clientSecret,
                     configuration: configuration

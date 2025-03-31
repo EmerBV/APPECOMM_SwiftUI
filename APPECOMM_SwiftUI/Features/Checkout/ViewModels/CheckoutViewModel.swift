@@ -406,12 +406,8 @@ class CheckoutViewModel: ObservableObject {
             // Limpiar el PaymentSheetViewModel
             self.paymentSheetViewModel = nil
             
-            // Notificar a la vista de confirmación
-            NotificationCenter.default.post(
-                name: Notification.Name("OrderConfirmed"),
-                object: nil,
-                userInfo: ["orderId": orderId]
-            )
+            // Actualizar el estado de la orden
+            self.updateOrderStatus(orderId: orderId, status: "paid")
         }
     }
     
@@ -426,6 +422,20 @@ class CheckoutViewModel: ObservableObject {
             // Limpiar el PaymentSheetViewModel
             self.paymentSheetViewModel = nil
         }
+    }
+    
+    private func updateOrderStatus(orderId: Int, status: String) {
+        checkoutService.updateOrderStatus(id: orderId, status: status)
+            .receive(on: DispatchQueue.main)
+            .sink { completion in
+                if case .failure(let error) = completion {
+                    Logger.error("Failed to update order status: \(error)")
+                }
+            } receiveValue: { [weak self] updatedOrder in
+                self?.order = updatedOrder
+                Logger.info("Order status updated to: \(status)")
+            }
+            .store(in: &cancellables)
     }
     
     // MARK: - Credit Card Validation
