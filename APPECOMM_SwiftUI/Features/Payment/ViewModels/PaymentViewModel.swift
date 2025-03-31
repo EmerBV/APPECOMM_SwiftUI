@@ -66,13 +66,10 @@ class PaymentViewModel: ObservableObject {
             .store(in: &cancellables)
     }
     
-    func processPayment(orderId: Int, card: STPPaymentMethodCardParams) {
+    private func processPayment(orderId: Int, cardDetails: CreditCardDetails) {
         isLoading = true
-        currentStep = .processing
+        error = nil
         paymentStatus = .processing
-        
-        // Convertir STPPaymentMethodCardParams a CreditCardDetails
-        let cardDetails = convertToCardDetails(from: card)
         
         stripeService.createPaymentMethod(cardDetails: cardDetails)
             .flatMap { [weak self] paymentMethodId -> AnyPublisher<PaymentIntentResponse, PaymentError> in
@@ -164,5 +161,82 @@ class PaymentViewModel: ObservableObject {
         error = nil
         paymentStatus = .idle
         currentStep = .cardDetails
+    }
+    
+    // MARK: - Public Methods
+    
+    func processPayment(orderId: Int, card: STPPaymentMethodCardParams) {
+        isLoading = true
+        currentStep = .processing
+        paymentStatus = .processing
+        
+        // Convertir STPPaymentMethodCardParams a CreditCardDetails
+        let cardDetails = convertToCardDetails(from: card)
+        processPaymentWithDetails(orderId: orderId, cardDetails: cardDetails)
+    }
+    
+    private func processPaymentWithDetails(orderId: Int, cardDetails: CreditCardDetails) {
+        isLoading = true
+        error = nil
+        paymentStatus = .processing
+        
+        stripeService.createPaymentMethod(cardDetails: cardDetails)
+            .flatMap { [weak self] paymentMethodId -> AnyPublisher<PaymentIntentResponse, PaymentError> in
+                guard let self = self else {
+                    return Fail(error: .paymentFailed).eraseToAnyPublisher()
+                }
+                
+                let request = PaymentRequest(paymentMethodId: paymentMethodId)
+                return self.paymentService.createPaymentIntent(orderId: orderId, request: request)
+                    .mapError { _ in PaymentError.paymentFailed }
+                    .eraseToAnyPublisher()
+            }
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] completion in
+                self?.isLoading = false
+                if case .failure(let error) = completion {
+                    self?.error = error.message
+                    self?.paymentStatus = .failed
+                    self?.currentStep = .error
+                }
+            } receiveValue: { [weak self] response in
+                self?.confirmPayment(paymentIntentId: response.paymentIntentId, paymentMethodId: response.paymentIntentId)
+            }
+            .store(in: &cancellables)
+    }
+    
+    private func processPaymentWithCard(orderId: Int, card: STPPaymentMethodCardParams) {
+        isLoading = true
+        error = nil
+        paymentStatus = .processing
+        
+        stripeService.createPaymentMethod(cardDetails: CreditCardDetails(
+            cardNumber: card.number ?? "",
+            expiryDate: "\(card.expMonth ?? 0)/\(card.expYear ?? 0)",
+            cvv: card.cvc ?? "",
+            cardholderName: ""
+        ))
+        .flatMap { [weak self] paymentMethodId -> AnyPublisher<PaymentIntentResponse, PaymentError> in
+            guard let self = self else {
+                return Fail(error: .paymentFailed).eraseToAnyPublisher()
+            }
+            
+            let request = PaymentRequest(paymentMethodId: paymentMethodId)
+            return self.paymentService.createPaymentIntent(orderId: orderId, request: request)
+                .mapError { _ in PaymentError.paymentFailed }
+                .eraseToAnyPublisher()
+        }
+        .receive(on: DispatchQueue.main)
+        .sink { [weak self] completion in
+            self?.isLoading = false
+            if case .failure(let error) = completion {
+                self?.error = error.message
+                self?.paymentStatus = .failed
+                self?.currentStep = .error
+            }
+        } receiveValue: { [weak self] response in
+            self?.confirmPayment(paymentIntentId: response.paymentIntentId, paymentMethodId: response.paymentIntentId)
+        }
+        .store(in: &cancellables)
     }
 }

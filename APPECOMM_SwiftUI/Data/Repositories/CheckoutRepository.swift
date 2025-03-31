@@ -56,12 +56,12 @@ final class CheckoutRepository: CheckoutRepositoryProtocol {
     func processPayment(orderId: Int, paymentMethodId: String?) -> AnyPublisher<PaymentIntentResponse, Error> {
         Logger.info("CheckoutRepository: Processing payment for order \(orderId)")
         
-        let paymentRequest = PaymentRequest(
-            paymentMethodId: paymentMethodId,
-            currency: "usd",
-            receiptEmail: nil,
-            description: "Order #\(orderId)"
-        )
+        guard let paymentMethodId = paymentMethodId else {
+            return Fail(error: NSError(domain: "CheckoutRepository", code: 0, userInfo: [NSLocalizedDescriptionKey: "Payment method ID is required"]))
+                .eraseToAnyPublisher()
+        }
+        
+        let paymentRequest = PaymentRequest(paymentMethodId: paymentMethodId)
         
         return paymentService.createPaymentIntent(orderId: orderId, request: paymentRequest)
             .mapError { $0 as Error }

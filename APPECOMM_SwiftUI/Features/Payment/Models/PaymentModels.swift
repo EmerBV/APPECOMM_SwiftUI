@@ -3,37 +3,27 @@ import Foundation
 // MARK: - Payment Models
 struct PaymentRequest: Codable {
     let paymentMethodId: String?
-    let currency: String
-    let receiptEmail: String?
-    let description: String?
     
     enum CodingKeys: String, CodingKey {
-        case paymentMethodId
-        case currency
-        case receiptEmail
-        case description
-    }
-    
-    init(paymentMethodId: String? = nil,
-         currency: String = "usd",
-         receiptEmail: String? = nil,
-         description: String? = nil) {
-        self.paymentMethodId = paymentMethodId
-        self.currency = currency
-        self.receiptEmail = receiptEmail
-        self.description = description
+        case paymentMethodId = "payment_method_id"
     }
 }
 
 struct PaymentIntentResponse: Codable {
     let paymentIntentId: String
     let clientSecret: String
-    let status: String
+    let order: Order
+    
+    enum CodingKeys: String, CodingKey {
+        case paymentIntentId = "paymentIntentId"
+        case clientSecret = "clientSecret"
+        case order
+    }
 }
 
 struct PaymentConfirmationResponse: Codable {
     let success: Bool
-    let message: String?
+    let message: String
 }
 
 struct StripeConfig: Codable {

@@ -44,7 +44,7 @@ struct PaymentFormView: View {
                             .font(.caption)
                     }
                     
-                    Button(action: processPayment) {
+                    Button(action: handlePayment) {
                         HStack {
                             Text("Pagar")
                             Text(String(format: "%.2f €", amount))
@@ -84,7 +84,12 @@ struct PaymentFormView: View {
         !name.isEmpty
     }
     
-    private func processPayment() {
+    private func handlePayment() {
+        guard isFormValid else {
+            viewModel.error = "Por favor, complete todos los campos de la tarjeta"
+            return
+        }
+        
         let cardParams = STPPaymentMethodCardParams()
         cardParams.number = cardNumber
         cardParams.expMonth = NSNumber(value: UInt(expiryDate.prefix(2)) ?? 0)

@@ -94,12 +94,8 @@ final class PaymentService: PaymentServiceProtocol {
                 .eraseToAnyPublisher()
         }
 
-        // 1. Crear PaymentIntent
-        let paymentRequest = PaymentRequest(
-            currency: "usd",
-            receiptEmail: email,
-            description: "Order #\(orderId)"
-        )
+        // 1. Crear PaymentIntent sin paymentMethodId
+        let paymentRequest = PaymentRequest(paymentMethodId: nil)
         
         return createPaymentIntent(orderId: orderId, request: paymentRequest)
             .mapError { $0 as Error }

@@ -52,43 +52,19 @@ class StripeAPIClient: StripeAPIClientProtocol {
     
     /// Crea un PaymentIntent para procesar un pago
     func createPaymentIntent(orderId: Int, paymentRequest: PaymentRequest) -> AnyPublisher<PaymentIntentResponse, NetworkError> {
-        // Verificar que Stripe esté configurado
-        guard stripePublishableKey != nil else {
-            Logger.payment("Stripe not configured before creating payment intent", level: .error)
-            return Fail(error: NetworkError.unknown(NSError(
-                domain: "com.appecomm.StripeAPIClient",
-                code: 1001,
-                userInfo: [NSLocalizedDescriptionKey: "Stripe not configured"]
-            )))
-            .eraseToAnyPublisher()
-        }
-        
-        // Verificar que el orderId sea válido
-        guard orderId > 0 else {
-            Logger.payment("Invalid order ID provided: \(orderId)", level: .error)
-            return Fail(error: NetworkError.badRequest(APIError(
-                message: "Invalid order ID",
-                code: "INVALID_ORDER_ID",
-                details: nil
-            )))
-                .eraseToAnyPublisher()
-        }
+        Logger.payment("Creating PaymentIntent for order \(orderId)", level: .info)
         
         let endpoint = PaymentEndpoints.createPaymentIntent(orderId: orderId, request: paymentRequest)
         
         return networkDispatcher.dispatch(ApiResponse<PaymentIntentResponse>.self, endpoint)
-            .map { $0.data }
-            .handleEvents(receiveOutput: { response in
-                Logger.payment("PaymentIntent created: \(response.paymentIntentId)", level: .info)
-            }, receiveCompletion: { completion in
-                if case .failure(let error) = completion {
-                    if case .notFound = error {
-                        Logger.payment("Order not found: \(orderId)", level: .error)
-                    } else {
-                        Logger.payment("Failed to create PaymentIntent: \(error)", level: .error)
-                    }
-                }
-            })
+            .map { response -> PaymentIntentResponse in
+                Logger.payment("PaymentIntent created successfully: \(response.data.paymentIntentId)", level: .info)
+                return response.data
+            }
+            .mapError { error -> NetworkError in
+                Logger.payment("Failed to create PaymentIntent: \(error)", level: .error)
+                return error
+            }
             .eraseToAnyPublisher()
     }
     
