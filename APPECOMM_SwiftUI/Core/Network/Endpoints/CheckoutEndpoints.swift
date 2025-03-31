@@ -23,7 +23,7 @@ enum CheckoutEndpoints: APIEndpoint {
         case .getOrder:
             return HTTPMethod.get.rawValue
         case .updateOrderStatus:
-            return HTTPMethod.patch.rawValue
+            return HTTPMethod.put.rawValue
         }
     }
     
