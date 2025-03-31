@@ -18,6 +18,7 @@ protocol StripeAPIClientProtocol {
     func cancelPaymentIntent(paymentIntentId: String) -> AnyPublisher<Void, NetworkError>
     func createPaymentMethod(withCard card: CreditCardDetails) -> AnyPublisher<String, Error>
     func handlePaymentAuthentication(paymentIntentClientSecret: String, from viewController: UIViewController, completion: @escaping (Bool, Error?) -> Void)
+    func createCustomer(userId: Int, email: String) -> AnyPublisher<StripeCustomer, NetworkError>
 }
 
 /// Cliente especializado para interactuar con la API de Stripe
@@ -31,8 +32,9 @@ class StripeAPIClient: StripeAPIClientProtocol {
     
     /// Configura la clave publicable de Stripe
     func configure(with publicKey: String) {
+        self.stripePublishableKey = publicKey
         StripeAPI.defaultPublishableKey = publicKey
-        Logger.payment("Stripe configured with publishable key", level: .info)
+        Logger.payment("Stripe configured with publishable key: \(publicKey)", level: .info)
     }
     
     /// Obtener configuración de Stripe desde el servidor
@@ -54,7 +56,7 @@ class StripeAPIClient: StripeAPIClientProtocol {
         guard stripePublishableKey != nil else {
             Logger.payment("Stripe not configured before creating payment intent", level: .error)
             return Fail(error: NetworkError.unknown(NSError(
-                domain: "com.emerbv.APPECOMM-SwiftUI.StripeAPIClient",
+                domain: "com.appecomm.StripeAPIClient",
                 code: 1001,
                 userInfo: [NSLocalizedDescriptionKey: "Stripe not configured"]
             )))
@@ -65,15 +67,34 @@ class StripeAPIClient: StripeAPIClientProtocol {
         
         return networkDispatcher.dispatch(ApiResponse<PaymentIntentResponse>.self, endpoint)
             .map { $0.data }
+            .handleEvents(receiveOutput: { response in
+                Logger.payment("PaymentIntent created: \(response.paymentIntentId)", level: .info)
+            }, receiveCompletion: { completion in
+                if case .failure(let error) = completion {
+                    Logger.payment("Failed to create PaymentIntent: \(error)", level: .error)
+                }
+            })
             .eraseToAnyPublisher()
     }
     
     /// Confirma un PaymentIntent existente
     func confirmPaymentIntent(paymentIntentId: String, paymentMethodId: String) -> AnyPublisher<PaymentConfirmationResponse, NetworkError> {
+        // Crear parámetros para confirmación
+        let parameters: [String: Any] = [
+            "paymentMethodId": paymentMethodId
+        ]
+        
         let endpoint = PaymentEndpoints.confirmPayment(paymentIntentId: paymentIntentId)
         
         return networkDispatcher.dispatch(ApiResponse<PaymentConfirmationResponse>.self, endpoint)
             .map { $0.data }
+            .handleEvents(receiveOutput: { response in
+                Logger.payment("Payment confirmation: \(response.success)", level: .info)
+            }, receiveCompletion: { completion in
+                if case .failure(let error) = completion {
+                    Logger.payment("Payment confirmation failed: \(error)", level: .error)
+                }
+            })
             .eraseToAnyPublisher()
     }
     
@@ -83,6 +104,13 @@ class StripeAPIClient: StripeAPIClientProtocol {
         
         return networkDispatcher.dispatch(ApiResponse<EmptyResponse>.self, endpoint)
             .map { _ in () }
+            .handleEvents(receiveOutput: { _ in
+                Logger.payment("Payment intent canceled: \(paymentIntentId)", level: .info)
+            }, receiveCompletion: { completion in
+                if case .failure(let error) = completion {
+                    Logger.payment("Failed to cancel payment: \(error)", level: .error)
+                }
+            })
             .eraseToAnyPublisher()
     }
     
@@ -92,82 +120,94 @@ class StripeAPIClient: StripeAPIClientProtocol {
             // Verificar que Stripe esté configurado
             guard self.stripePublishableKey != nil else {
                 Logger.payment("Stripe not configured before creating payment method", level: .error)
-                promise(.failure(PaymentError.notConfigured))
+                promise(.failure(NSError(
+                    domain: "com.appecomm.StripeAPIClient",
+                    code: 1001,
+                    userInfo: [NSLocalizedDescriptionKey: "Stripe not configured"]
+                )))
                 return
             }
             
-            // Verificar datos de la tarjeta
-            if card.cardNumber.isEmpty || card.expiryDate.isEmpty || card.cvv.isEmpty {
-                promise(.failure(PaymentError.invalidCardDetails))
-                return
-            }
-            
-            // Crear parámetros para la tarjeta
-            let cardParams = STPPaymentMethodCardParams()
-            cardParams.number = card.cardNumber.replacingOccurrences(of: " ", with: "")
-            
-            // Parsear fecha de expiración
-            let expiryComponents = card.expiryDate.split(separator: "/")
-            if expiryComponents.count == 2,
-               let month = UInt(expiryComponents[0]),
-               let year = UInt("20" + String(expiryComponents[1])) {
-                cardParams.expMonth = NSNumber(value: month)
-                cardParams.expYear = NSNumber(value: year)
-            } else {
-                promise(.failure(PaymentError.invalidExpiryDate))
-                return
-            }
-            
-            cardParams.cvc = card.cvv
-            
-            // Detalles de facturación
-            let billingDetails = STPPaymentMethodBillingDetails()
-            billingDetails.name = card.cardholderName
-            
-            // Crear parámetros para el método de pago
-            let paymentMethodParams = STPPaymentMethodParams(
-                card: cardParams,
-                billingDetails: billingDetails,
-                metadata: nil
-            )
-            
-            // Crear el método de pago con Stripe
-            STPAPIClient.shared.createPaymentMethod(with: paymentMethodParams) { paymentMethod, error in
-                if let error = error {
-                    Logger.payment("Error creating payment method: \(error.localizedDescription)", level: .error)
-                    promise(.failure(error))
-                    return
-                }
+            // Validar datos de la tarjeta
+            do {
+                let cardParams = try self.validateAndCreateCardParams(card)
                 
-                guard let paymentMethod = paymentMethod else {
-                    promise(.failure(PaymentError.paymentMethodCreationFailed))
-                    return
-                }
+                // Detalles de facturación
+                let billingDetails = STPPaymentMethodBillingDetails()
+                billingDetails.name = card.cardholderName
                 
-                Logger.payment("Payment method created: \(paymentMethod.stripeId)", level: .info)
-                promise(.success(paymentMethod.stripeId))
+                // Crear parámetros para el método de pago
+                let paymentMethodParams = STPPaymentMethodParams(
+                    card: cardParams,
+                    billingDetails: billingDetails,
+                    metadata: nil
+                )
+                
+                // Crear el método de pago con Stripe
+                STPAPIClient.shared.createPaymentMethod(with: paymentMethodParams) { paymentMethod, error in
+                    if let error = error {
+                        Logger.payment("Error creating payment method: \(error.localizedDescription)", level: .error)
+                        promise(.failure(error))
+                        return
+                    }
+                    
+                    guard let paymentMethod = paymentMethod else {
+                        promise(.failure(NSError(
+                            domain: "com.appecomm.StripeAPIClient",
+                            code: 1004,
+                            userInfo: [NSLocalizedDescriptionKey: "Failed to create payment method"]
+                        )))
+                        return
+                    }
+                    
+                    Logger.payment("Payment method created: \(paymentMethod.stripeId)", level: .info)
+                    promise(.success(paymentMethod.stripeId))
+                }
+            } catch {
+                promise(.failure(error))
             }
         }.eraseToAnyPublisher()
     }
     
-    class SwiftUIAuthenticationContext: NSObject, STPAuthenticationContext {
-        var presentingViewController: UIViewController {
-            // Obtener el UIViewController principal desde la escena SwiftUI
-            return UIApplication.shared.windows.first?.rootViewController ?? UIViewController()
+    /// Validar y crear parámetros de tarjeta de crédito
+    private func validateAndCreateCardParams(_ card: CreditCardDetails) throws -> STPPaymentMethodCardParams {
+        // Verificar datos de la tarjeta
+        if card.cardNumber.isEmpty || card.expiryDate.isEmpty || card.cvv.isEmpty {
+            throw NSError(
+                domain: "com.appecomm.StripeAPIClient",
+                code: 1002,
+                userInfo: [NSLocalizedDescriptionKey: "Invalid card details"]
+            )
         }
         
-        func authenticationPresentingViewController() -> UIViewController {
-            return presentingViewController
+        // Crear parámetros para la tarjeta
+        let cardParams = STPPaymentMethodCardParams()
+        cardParams.number = card.cardNumber.replacingOccurrences(of: " ", with: "")
+        
+        // Parsear fecha de expiración
+        let expiryComponents = card.expiryDate.split(separator: "/")
+        if expiryComponents.count == 2,
+           let month = UInt(expiryComponents[0]),
+           let year = UInt("20" + String(expiryComponents[1])) {
+            cardParams.expMonth = NSNumber(value: month)
+            cardParams.expYear = NSNumber(value: year)
+        } else {
+            throw NSError(
+                domain: "com.appecomm.StripeAPIClient",
+                code: 1003,
+                userInfo: [NSLocalizedDescriptionKey: "Invalid expiry date"]
+            )
         }
+        
+        cardParams.cvc = card.cvv
+        return cardParams
     }
     
     /// Presentar flujo de pago 3D Secure si es necesario
     func handlePaymentAuthentication(paymentIntentClientSecret: String, from viewController: UIViewController, completion: @escaping (Bool, Error?) -> Void) {
         let paymentIntentParams = STPPaymentIntentParams(clientSecret: paymentIntentClientSecret)
         
-        let authContext = SwiftUIAuthenticationContext()
-        
-        STPPaymentHandler.shared().confirmPayment(paymentIntentParams, with: authContext) { status, paymentIntent, error in
+        STPPaymentHandler.shared().confirmPayment(paymentIntentParams, with: viewController) { status, paymentIntent, error in
             switch status {
             case .succeeded:
                 Logger.payment("Payment confirmation succeeded", level: .info)
@@ -175,56 +215,55 @@ class StripeAPIClient: StripeAPIClientProtocol {
             case .canceled:
                 Logger.payment("Payment confirmation canceled by user", level: .info)
                 completion(false, NSError(
-                    domain: "com.emerbv.APPECOMM-SwiftUI.PaymentError",
-                    code: PaymentError.userCancelled.rawValue,
-                    userInfo: [NSLocalizedDescriptionKey: PaymentError.userCancelled.errorDescription ?? "User cancelled"]
+                    domain: "com.appecomm.StripeAPIClient",
+                    code: 1011,
+                    userInfo: [NSLocalizedDescriptionKey: "User cancelled the payment"]
                 ))
             case .failed:
                 let paymentError = error ?? NSError(
-                    domain: "com.emerbv.APPECOMM-SwiftUI.PaymentError",
-                    code: PaymentError.unknown.rawValue,
-                    userInfo: [NSLocalizedDescriptionKey: PaymentError.unknown.errorDescription ?? "Unknown error"]
+                    domain: "com.appecomm.StripeAPIClient",
+                    code: 1000,
+                    userInfo: [NSLocalizedDescriptionKey: "Unknown payment error"]
                 )
                 Logger.payment("Payment confirmation failed: \(paymentError.localizedDescription)", level: .error)
                 completion(false, paymentError)
             @unknown default:
                 Logger.payment("Unknown payment confirmation status", level: .error)
                 completion(false, NSError(
-                    domain: "com.emerbv.APPECOMM-SwiftUI.PaymentError",
-                    code: PaymentError.unknown.rawValue,
-                    userInfo: [NSLocalizedDescriptionKey: PaymentError.unknown.errorDescription ?? "Unknown error"]
+                    domain: "com.appecomm.StripeAPIClient",
+                    code: 1000,
+                    userInfo: [NSLocalizedDescriptionKey: "Unknown error"]
                 ))
             }
         }
     }
     
-    /// Errores específicos de pago
-    enum PaymentError: Int, Error, LocalizedError {
-        case notConfigured = 1001
-        case invalidCardDetails = 1002
-        case invalidExpiryDate = 1003
-        case paymentMethodCreationFailed = 1004
-        case paymentIntentCreationFailed = 1005
-        case paymentConfirmationFailed = 1006
-        case paymentAuthenticationRequired = 1007
-        case insufficientFunds = 1008
-        case cardDeclined = 1009
-        case cardExpired = 1010
-        case userCancelled = 1011
-        case unknown = 1000
+    /// Crea un cliente en Stripe para el usuario
+    func createCustomer(userId: Int, email: String) -> AnyPublisher<StripeCustomer, NetworkError> {
+        let parameters: [String: Any] = [
+            "userId": userId,
+            "email": email
+        ]
         
-        // Resto del código de PaymentError...
+        // Endpoint para crear cliente en Stripe (debe ser implementado en tu API)
+        let endpoint = PaymentEndpoints.createCustomer(parameters: parameters)
         
-        // Para convertir a NSError directamente
-        func asNSError() -> NSError {
-            return NSError(
-                domain: "com.emerbv.APPECOMM-SwiftUI.PaymentError",
-                code: self.rawValue,
-                userInfo: [
-                    NSLocalizedDescriptionKey: self.errorDescription ?? "Unknown error",
-                    NSLocalizedRecoverySuggestionErrorKey: self.recoverySuggestion ?? ""
-                ]
-            )
-        }
+        return networkDispatcher.dispatch(ApiResponse<StripeCustomer>.self, endpoint)
+            .map { $0.data }
+            .handleEvents(receiveOutput: { customer in
+                Logger.payment("Stripe customer created: \(customer.id)", level: .info)
+            }, receiveCompletion: { completion in
+                if case .failure(let error) = completion {
+                    Logger.payment("Failed to create Stripe customer: \(error)", level: .error)
+                }
+            })
+            .eraseToAnyPublisher()
     }
+}
+
+struct StripeCustomer: Codable {
+    let id: String
+    let object: String
+    let email: String?
+    let created: Int
 }

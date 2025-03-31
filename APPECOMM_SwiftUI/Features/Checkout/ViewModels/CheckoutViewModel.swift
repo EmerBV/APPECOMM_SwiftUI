@@ -8,6 +8,7 @@
 import Foundation
 import Combine
 import SwiftUI
+import Stripe
 
 enum CheckoutStep {
     case shippingInfo
@@ -44,235 +45,6 @@ enum PaymentMethod: String, CaseIterable, Identifiable {
     }
 }
 
-/// Credit card details model with validation
-struct CreditCardDetails {
-    var cardNumber: String = ""
-    var cardholderName: String = ""
-    var expiryDate: String = ""
-    var cvv: String = ""
-    
-    // Validation states
-    var isCardNumberValid: Bool = false
-    var isCardholderNameValid: Bool = false
-    var isExpiryDateValid: Bool = false
-    var isCvvValid: Bool = false
-    
-    // Validation error messages
-    var cardNumberError: String?
-    var cardholderNameError: String?
-    var expiryDateError: String?
-    var cvvError: String?
-    
-    /// Check if all fields are valid
-    var isValid: Bool {
-        return isCardNumberValid && isCardholderNameValid && isExpiryDateValid && isCvvValid
-    }
-    
-    /// Initialize with default empty values
-    init() {
-        // Default initializer with empty values
-    }
-    
-    /// Initialize with values and validate
-    init(cardNumber: String, cardholderName: String, expiryDate: String, cvv: String) {
-        self.cardNumber = cardNumber
-        self.cardholderName = cardholderName
-        self.expiryDate = expiryDate
-        self.cvv = cvv
-        
-        self.validateAll()
-    }
-    
-    /// Validate all fields using a validator
-    mutating func validateAll(validator: InputValidatorProtocol = InputValidator()) {
-        // Validar número de tarjeta
-        let cardNumberResult = validator.validateCreditCardNumber(cardNumber)
-        switch cardNumberResult {
-        case .valid:
-            isCardNumberValid = true
-            cardNumberError = nil
-        case .invalid(let message):
-            isCardNumberValid = false
-            cardNumberError = message
-        }
-        
-        // Validar nombre del titular
-        let nameResult = validator.validateName(cardholderName)
-        switch nameResult {
-        case .valid:
-            isCardholderNameValid = true
-            cardholderNameError = nil
-        case .invalid(let message):
-            isCardholderNameValid = false
-            cardholderNameError = message
-        }
-        
-        // Validar fecha de expiración
-        let expiryResult = validator.validateExpiryDate(expiryDate)
-        switch expiryResult {
-        case .valid:
-            isExpiryDateValid = true
-            expiryDateError = nil
-        case .invalid(let message):
-            isExpiryDateValid = false
-            expiryDateError = message
-        }
-        
-        // Validar CVV
-        let cvvResult = validator.validateCVV(cvv)
-        switch cvvResult {
-        case .valid:
-            isCvvValid = true
-            cvvError = nil
-        case .invalid(let message):
-            isCvvValid = false
-            cvvError = message
-        }
-    }
-    
-    /// Reset all fields to empty and invalidate them
-    mutating func reset() {
-        cardNumber = ""
-        cardholderName = ""
-        expiryDate = ""
-        cvv = ""
-        
-        isCardNumberValid = false
-        isCardholderNameValid = false
-        isExpiryDateValid = false
-        isCvvValid = false
-        
-        cardNumberError = nil
-        cardholderNameError = nil
-        expiryDateError = nil
-        cvvError = nil
-    }
-    
-    /// Format card number for display (groups of 4 digits)
-    func formattedCardNumber() -> String {
-        let cleaned = cardNumber.replacingOccurrences(of: " ", with: "")
-        var formatted = ""
-        
-        for (index, char) in cleaned.enumerated() {
-            if index > 0 && index % 4 == 0 {
-                formatted.append(" ")
-            }
-            formatted.append(char)
-        }
-        
-        return formatted
-    }
-    
-    /// Format expiry date for display (MM/YY)
-    func formattedExpiryDate() -> String {
-        let cleaned = expiryDate.replacingOccurrences(of: "/", with: "")
-        
-        if cleaned.count > 2 {
-            let month = cleaned.prefix(2)
-            let year = cleaned.dropFirst(2)
-            return "\(month)/\(year)"
-        }
-        
-        return cleaned
-    }
-    
-    /// Get card brand from first digit
-    func cardBrand() -> String {
-        guard !cardNumber.isEmpty else {
-            return "Unknown"
-        }
-        
-        let firstChar = cardNumber.first!
-        
-        switch firstChar {
-        case "4":
-            return "Visa"
-        case "5":
-            return "Mastercard"
-        case "3":
-            return "American Express"
-        case "6":
-            return "Discover"
-        default:
-            return "Unknown"
-        }
-    }
-    
-    /// Get last 4 digits of card number
-    func lastFourDigits() -> String {
-        let cleaned = cardNumber.replacingOccurrences(of: " ", with: "")
-        if cleaned.count >= 4 {
-            return String(cleaned.suffix(4))
-        }
-        return ""
-    }
-}
-
-struct OrderSummaryCheckout {
-    var subtotal: Decimal = 0
-    var shippingCost: Decimal = 0
-    var tax: Decimal = 0
-    var total: Decimal = 0
-    
-    /// Formatted subtotal currency string
-    var formattedSubtotal: String { subtotal.toCurrentLocalePrice }
-    
-    /// Formatted shipping cost currency string or "Free" if 0
-    var formattedShipping: String {
-        shippingCost > 0 ? shippingCost.toCurrentLocalePrice : "Free"
-    }
-    
-    /// Formatted tax currency string
-    var formattedTax: String { tax.toCurrentLocalePrice }
-    
-    /// Formatted total currency string
-    var formattedTotal: String { total.toCurrentLocalePrice }
-    
-    /// Initialize with default values
-    init() {}
-    
-    /// Initialize with values
-    init(subtotal: Decimal, shippingCost: Decimal, tax: Decimal) {
-        self.subtotal = subtotal
-        self.shippingCost = shippingCost
-        self.tax = tax
-        self.total = calculateTotal()
-    }
-    
-    /// Initialize from cart
-    init(cart: Cart) {
-        self.subtotal = cart.totalAmount
-        self.shippingCost = calculateShipping(subtotal)
-        self.tax = calculateTax(subtotal)
-        self.total = calculateTotal()
-    }
-    
-    /// Calculate total by summing subtotal, shipping and tax
-    private func calculateTotal() -> Decimal {
-        return subtotal + shippingCost + tax
-    }
-    
-    /// Calculate shipping cost based on order total
-    private func calculateShipping(_ amount: Decimal) -> Decimal {
-        // Free shipping for orders over $50, otherwise $5.99
-        return amount > 50 ? 0 : Decimal(5.99)
-    }
-    
-    /// Calculate tax based on subtotal
-    private func calculateTax(_ amount: Decimal) -> Decimal {
-        // Default tax rate: 8%
-        return (amount * Decimal(0.08)).rounded(2)
-    }
-    
-    /// Update values and recalculate total
-    mutating func update(subtotal: Decimal) {
-        self.subtotal = subtotal
-        self.shippingCost = calculateShipping(subtotal)
-        self.tax = calculateTax(subtotal)
-        self.total = calculateTotal()
-    }
-}
-
 class CheckoutViewModel: ObservableObject {
     // MARK: - Published properties
     @Published var currentStep: CheckoutStep = .shippingInfo
@@ -285,18 +57,19 @@ class CheckoutViewModel: ObservableObject {
     @Published var cart: Cart?
     @Published var orderSummary = OrderSummaryCheckout()
     @Published var order: Order?
-    @Published var paymentIntentId: String?
-    @Published var clientSecret: String?
     @Published var showError = false
     @Published var cartItems: [CartItem] = []
     @Published var selectedAddress: Address?
     @Published var currentOrder: Order?
-    @Published var paymentViewModel: PaymentViewModel
     
     // Shipping details related properties
     @Published var existingShippingDetails: ShippingDetailsResponse?
     @Published var hasExistingShippingDetails = false
     @Published var isEditingShippingDetails = false
+    
+    // Payment specific properties
+    @Published var paymentSheetViewModel: PaymentSheetViewModel?
+    @Published var showPaymentSheet = false
     
     // Dependencies
     private let checkoutService: CheckoutServiceProtocol
@@ -306,10 +79,6 @@ class CheckoutViewModel: ObservableObject {
     private let shippingService: ShippingServiceProtocol
     private let stripeService: StripeServiceProtocol
     private var cancellables = Set<AnyCancellable>()
-    
-    var totalAmount: Double {
-        cartItems.reduce(0) { $0 + (NSDecimalNumber(decimal: $1.product.price).doubleValue * Double($1.quantity)) }
-    }
     
     // MARK: - Initialization
     
@@ -329,7 +98,6 @@ class CheckoutViewModel: ObservableObject {
         self.validator = validator
         self.shippingService = shippingService
         self.stripeService = stripeService
-        self.paymentViewModel = PaymentViewModel(paymentService: paymentService, stripeService: stripeService)
         
         if let cart = cart {
             self.cartItems = cart.items
@@ -343,6 +111,22 @@ class CheckoutViewModel: ObservableObject {
         // Load existing shipping details if available
         loadExistingShippingDetails()
         loadUserAddress()
+        
+        // Configurar notificaciones para resultados de pago
+        setupNotifications()
+    }
+    
+    private func setupNotifications() {
+        NotificationCenter.default.publisher(for: Notification.Name("PaymentCompleted"))
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] notification in
+                if let orderId = notification.userInfo?["orderId"] as? Int {
+                    self?.handlePaymentSuccess(orderId: orderId)
+                } else {
+                    self?.handlePaymentSuccess()
+                }
+            }
+            .store(in: &cancellables)
     }
     
     // MARK: - Order Summary Calculation
@@ -425,34 +209,10 @@ class CheckoutViewModel: ObservableObject {
         validateShippingForm()
     }
     
-    /// Validate all shipping form fields
-    /*
-     func validateShippingForm() {
-     let (isFullNameValid, fullNameError) = validateFullName(shippingDetailsForm.fullName)
-     let (isAddressValid, addressError) = validateAddress(shippingDetailsForm.address)
-     let (isCityValid, cityError) = validateCity(shippingDetailsForm.city)
-     let (isStateValid, stateError) = validateState(shippingDetailsForm.state)
-     let (isPostalCodeValid, postalCodeError) = validatePostalCode(shippingDetailsForm.postalCode)
-     let (isCountryValid, countryError) = validateCountry(shippingDetailsForm.country)
-     let (isPhoneNumberValid, phoneNumberError) = validatePhoneNumber(shippingDetailsForm.phoneNumber)
-     
-     shippingDetailsForm.isFullNameValid = isFullNameValid
-     shippingDetailsForm.isAddressValid = isAddressValid
-     shippingDetailsForm.isCityValid = isCityValid
-     shippingDetailsForm.isStateValid = isStateValid
-     shippingDetailsForm.isPostalCodeValid = isPostalCodeValid
-     shippingDetailsForm.isCountryValid = isCountryValid
-     shippingDetailsForm.isPhoneNumberValid = isPhoneNumberValid
-     
-     shippingDetailsForm.fullNameError = fullNameError
-     shippingDetailsForm.addressError = addressError
-     shippingDetailsForm.cityError = cityError
-     shippingDetailsForm.stateError = stateError
-     shippingDetailsForm.postalCodeError = postalCodeError
-     shippingDetailsForm.countryError = countryError
-     shippingDetailsForm.phoneNumberError = phoneNumberError
-     }
-     */
+    func validateShippingForm() {
+        // Validar todos los campos del formulario
+        shippingDetailsForm.validateAll(validator: validator)
+    }
     
     func saveShippingDetails() {
         guard let userId = getCurrentUserId() else {
@@ -538,145 +298,110 @@ class CheckoutViewModel: ObservableObject {
     
     // MARK: - Payment Processing
     
-    func processPayment(orderId: Int) {
-        guard let userId = getCurrentUserId() else {
-            self.errorMessage = "No authenticated user"
-            return
-        }
-        
-        self.isLoading = true
-        self.errorMessage = nil
-        self.currentStep = .processing
-        
-        // Si es pago con tarjeta, crear primero el método de pago
-        if selectedPaymentMethod == .creditCard {
-            stripeService.createPaymentMethod(cardDetails: creditCardDetails)
-                .catch { error -> AnyPublisher<String, Error> in
-                    Logger.error("Error creating payment method: \(error)")
-                    return Fail(error: error)
-                        .eraseToAnyPublisher()
-                }
-                .flatMap { [weak self] paymentMethodId -> AnyPublisher<PaymentIntentResponse, Error> in
-                    guard let self = self else {
-                        return Fail(error: NSError(domain: "CheckoutViewModel", code: 0, userInfo: [NSLocalizedDescriptionKey: "Self is nil"]))
-                            .eraseToAnyPublisher()
-                    }
-                    
-                    Logger.info("Payment method created successfully: \(paymentMethodId)")
-                    
-                    let paymentRequest = PaymentRequest(
-                        paymentMethodId: paymentMethodId,
-                        currency: "usd",
-                        receiptEmail: nil,
-                        description: "Payment for Order #\(orderId)"
-                    )
-                    
-                    return self.paymentService.createPaymentIntent(orderId: orderId, request: paymentRequest)
-                        .mapError { $0 as Error }
-                        .eraseToAnyPublisher()
-                }
-                .receive(on: DispatchQueue.main)
-                .sink { [weak self] completion in
-                    guard let self = self else { return }
-                    
-                    if case .failure(let error) = completion {
-                        self.isLoading = false
-                        self.errorMessage = "Payment processing failed: \(error.localizedDescription)"
-                        Logger.error("Error processing payment: \(error)")
-                        self.currentStep = .error
-                    }
-                } receiveValue: { [weak self] response in
-                    guard let self = self else { return }
-                    
-                    Logger.info("Payment intent created: \(response.paymentIntentId)")
-                    
-                    self.paymentIntentId = response.paymentIntentId
-                    self.clientSecret = response.clientSecret
-                    
-                    // En una implementación real, aquí confirmarías el pago con Stripe SDK
-                    // Para demos sin el SDK, simularemos el éxito después de un tiempo
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
-                        self.isLoading = false
-                        self.successMessage = "Payment processed successfully"
-                        self.currentStep = .confirmation
-                    }
-                }
-                .store(in: &cancellables)
-        } else if selectedPaymentMethod == .applePay {
-            // Simulación simple para Apple Pay en una demo
-            Logger.info("Processing Apple Pay payment for order \(orderId)")
+    func processPayment() {
+        if let order = createOrder() {
+            self.order = order
             
-            // Simular procesamiento
-            DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
-                self.isLoading = false
-                self.successMessage = "Apple Pay payment processed successfully"
-                self.currentStep = .confirmation
+            switch selectedPaymentMethod {
+            case .creditCard:
+                prepareStripePayment(for: order)
+            case .applePay:
+                processApplePayPayment(for: order)
             }
-        } else {
-            // Método de pago no soportado
-            self.isLoading = false
-            self.errorMessage = "Payment method not supported"
-            self.currentStep = .error
         }
     }
     
-    // Nuevo método para confirmar pagos con Stripe SDK
-    private func confirmPaymentWithStripe(clientSecret: String) {
-        // Aquí implementarías la confirmación del pago usando la interfaz de Stripe
-        // Esto generalmente involucra mostrar una hoja de pago o interfaz 3D Secure
-        // Ejemplo conceptual:
+    private func prepareStripePayment(for order: Order) {
+        isLoading = true
+        currentStep = .processing
         
-        // Nota: Esto es simplificado. En una implementación real,
-        // usarías STPPaymentSheet o STPPaymentHandler para manejar la confirmación
+        // Create PaymentSheetViewModel
+        let email = getCurrentUserEmail()
+        let paymentSheetVM = PaymentSheetViewModel(
+            paymentService: paymentService,
+            orderId: order.id,
+            amount: order.totalAmount,
+            email: email
+        )
         
-        // Simulamos la confirmación para esta demostración
+        self.paymentSheetViewModel = paymentSheetVM
+        
+        // Observe changes in payment status
+        paymentSheetVM.$paymentStatus
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] status in
+                switch status {
+                case .completed:
+                    self?.handlePaymentSuccess(orderId: order.id)
+                case .failed(let message):
+                    self?.handlePaymentFailure(message: message)
+                default:
+                    break
+                }
+            }
+            .store(in: &cancellables)
+        
+        // Prepare payment sheet
+        paymentSheetVM.preparePaymentSheet()
+        
+        // Show payment sheet
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+            self?.isLoading = false
+            self?.showPaymentSheet = true
+        }
+    }
+    
+    private func processApplePayPayment(for order: Order) {
+        // Implementación de Apple Pay
+        // En un caso real, usarías PKPaymentRequest y el framework de Apple Pay
+        
+        // Esta es una simulación
+        isLoading = true
+        currentStep = .processing
+        
         DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) { [weak self] in
             self?.isLoading = false
-            
-            // Simular éxito para fines de demostración
-            let success = true
-            
-            if success {
-                self?.successMessage = "Payment processed successfully"
-                self?.currentStep = .confirmation
-            } else {
-                self?.errorMessage = "Payment processing failed. Please try again."
-                self?.currentStep = .error
-            }
+            self?.handlePaymentSuccess(orderId: order.id)
         }
     }
     
-    private func generatePaymentMethodId(from cardDetails: CreditCardDetails) -> AnyPublisher<String, Error> {
-        return stripeService.createPaymentMethod(cardDetails: creditCardDetails)
-            .mapError { $0 as Error }
-            .map { paymentMethodId -> String in
-                Logger.info("Payment method created: \(paymentMethodId)")
-                return paymentMethodId
-            }
-            .eraseToAnyPublisher()
+    func handlePaymentSuccess(orderId: Int = 0) {
+        isLoading = false
+        currentStep = .confirmation
+        successMessage = "Payment processed successfully"
+        
+        // Si tenemos un orderId, actualizar el estado del pedido
+        if orderId > 0 {
+            // Actualizar estado de la orden
+            updateOrderStatus(orderId: orderId, status: "paid")
+        }
     }
     
-    func confirmPayment(paymentIntentId: String) {
-        self.isLoading = true
-        
-        // In a real app, this would use Stripe SDK to handle 3D Secure, etc.
-        // For this example, we'll simulate confirmation directly
-        
-        // Simulate processing time
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) { [weak self] in
-            self?.isLoading = false
-            
-            // For demo purposes, simulate success most of the time
-            let success = Int.random(in: 1...10) <= 9
-            
-            if success {
-                self?.successMessage = "Payment processed successfully"
-                self?.currentStep = .confirmation
-            } else {
-                self?.errorMessage = "Payment processing failed. Please try again."
-                self?.currentStep = .error
+    func handlePaymentFailure(message: String) {
+        isLoading = false
+        errorMessage = message
+        currentStep = .error
+    }
+    
+    private func updateOrderStatus(orderId: Int, status: String) {
+        // Actualizar el estado de la orden en el servidor
+        checkoutService.updateOrderStatus(id: orderId, status: status)
+            .receive(on: DispatchQueue.main)
+            .sink { completion in
+                if case .failure(let error) = completion {
+                    Logger.error("Failed to update order status: \(error)")
+                }
+            } receiveValue: { [weak self] updatedOrder in
+                self?.order = updatedOrder
+                Logger.info("Order status updated to: \(status)")
             }
-        }
+            .store(in: &cancellables)
+    }
+    
+    // MARK: - Credit Card Validation
+    
+    func validateCreditCardForm() {
+        creditCardDetails.validateAll(validator: validator)
     }
     
     // MARK: - Navigation
@@ -691,13 +416,21 @@ class CheckoutViewModel: ObservableObject {
                 showError = true
             }
         case .paymentMethod:
-            currentStep = .cardDetails
+            if selectedPaymentMethod == .creditCard {
+                currentStep = .cardDetails
+            } else {
+                currentStep = .review
+            }
         case .cardDetails:
-            currentStep = .review
+            validateCreditCardForm()
+            if creditCardDetails.isValid {
+                currentStep = .review
+            }
         case .review:
-            currentStep = .processing
+            processPayment()
         case .processing:
-            currentStep = .confirmation
+            // Waiting for payment processing to complete
+            break
         case .confirmation, .error:
             break
         }
@@ -710,34 +443,13 @@ class CheckoutViewModel: ObservableObject {
         case .cardDetails:
             currentStep = .paymentMethod
         case .review:
-            currentStep = .cardDetails
+            if selectedPaymentMethod == .creditCard {
+                currentStep = .cardDetails
+            } else {
+                currentStep = .paymentMethod
+            }
         case .processing, .confirmation, .error, .shippingInfo:
             break
-        }
-    }
-    
-    // MARK: - Credit Card Validation
-    /*
-     func validateCardNumber(_ number: String) -> Bool {
-     return validator.validateCreditCardNumber(number)
-     }
-     
-     func validateExpiryDate(_ date: String) -> Bool {
-     return validator.validateExpiryDate(date)
-     }
-     
-     func validateCVV(_ cvv: String) -> Bool {
-     return validator.validateCVV(cvv)
-     }
-     */
-    
-    func validateCardholderName(_ name: String) -> Bool {
-        let result = validator.validateName(name)
-        switch result {
-        case .valid:
-            return true
-        case .invalid:
-            return false
         }
     }
     
@@ -750,31 +462,11 @@ class CheckoutViewModel: ObservableObject {
         return nil
     }
     
-    // Card formatting
-    func formatCardNumber(_ number: String) -> String {
-        let cleaned = number.replacingOccurrences(of: " ", with: "")
-        var formatted = ""
-        
-        for (index, char) in cleaned.enumerated() {
-            if index > 0 && index % 4 == 0 {
-                formatted.append(" ")
-            }
-            formatted.append(char)
+    func getCurrentUserEmail() -> String? {
+        if case let .loggedIn(user) = authRepository.authState.value {
+            return user.email
         }
-        
-        return formatted
-    }
-    
-    func formatExpiryDate(_ date: String) -> String {
-        let cleaned = date.replacingOccurrences(of: "/", with: "")
-        
-        if cleaned.count > 2 {
-            let month = cleaned.prefix(2)
-            let year = cleaned.dropFirst(2)
-            return "\(month)/\(year)"
-        }
-        
-        return cleaned
+        return nil
     }
     
     private func loadUserAddress() {
@@ -816,176 +508,5 @@ class CheckoutViewModel: ObservableObject {
     
     func getCurrentOrder() -> Order? {
         return currentOrder
-    }
-}
-
-extension CheckoutViewModel {
-    // MARK: - Credit Card Validation
-    
-    func validateCardNumber(_ number: String) -> (Bool, String?) {
-        let result = validator.validateCreditCardNumber(number)
-        switch result {
-        case .valid:
-            return (true, nil)
-        case .invalid(let message):
-            return (false, message)
-        }
-    }
-    
-    func validateExpiryDate(_ date: String) -> (Bool, String?) {
-        let result = validator.validateExpiryDate(date)
-        switch result {
-        case .valid:
-            return (true, nil)
-        case .invalid(let message):
-            return (false, message)
-        }
-    }
-    
-    func validateCVV(_ cvv: String) -> (Bool, String?) {
-        let result = validator.validateCVV(cvv)
-        switch result {
-        case .valid:
-            return (true, nil)
-        case .invalid(let message):
-            return (false, message)
-        }
-    }
-    
-    func validateCardholderName(_ name: String) -> (Bool, String?) {
-        let result = validator.validateName(name)
-        switch result {
-        case .valid:
-            return (true, nil)
-        case .invalid(let message):
-            return (false, message)
-        }
-    }
-    
-    // MARK: - Shipping Details Validation
-    
-    func validateShippingForm() {
-        // Validar nombre completo
-        let fullNameResult = validator.validateFullName(shippingDetailsForm.fullName)
-        switch fullNameResult {
-        case .valid:
-            shippingDetailsForm.isFullNameValid = true
-            shippingDetailsForm.fullNameError = nil
-        case .invalid(let message):
-            shippingDetailsForm.isFullNameValid = false
-            shippingDetailsForm.fullNameError = message
-        }
-        
-        // Validar dirección
-        let addressResult = validator.validateName(shippingDetailsForm.address) // Usamos validateName por simplicidad
-        switch addressResult {
-        case .valid:
-            shippingDetailsForm.isAddressValid = true
-            shippingDetailsForm.addressError = nil
-        case .invalid(let message):
-            shippingDetailsForm.isAddressValid = false
-            shippingDetailsForm.addressError = message
-        }
-        
-        // Validar ciudad
-        let cityResult = validator.validateName(shippingDetailsForm.city)
-        switch cityResult {
-        case .valid:
-            shippingDetailsForm.isCityValid = true
-            shippingDetailsForm.cityError = nil
-        case .invalid(let message):
-            shippingDetailsForm.isCityValid = false
-            shippingDetailsForm.cityError = message
-        }
-        
-        // Validar estado/provincia
-        let stateResult = validator.validateName(shippingDetailsForm.state)
-        switch stateResult {
-        case .valid:
-            shippingDetailsForm.isStateValid = true
-            shippingDetailsForm.stateError = nil
-        case .invalid(let message):
-            shippingDetailsForm.isStateValid = false
-            shippingDetailsForm.stateError = message
-        }
-        
-        // Validar código postal
-        let postalCodeResult = validator.validatePostalCode(shippingDetailsForm.postalCode)
-        switch postalCodeResult {
-        case .valid:
-            shippingDetailsForm.isPostalCodeValid = true
-            shippingDetailsForm.postalCodeError = nil
-        case .invalid(let message):
-            shippingDetailsForm.isPostalCodeValid = false
-            shippingDetailsForm.postalCodeError = message
-        }
-        
-        // Validar país
-        let countryResult = validator.validateName(shippingDetailsForm.country)
-        switch countryResult {
-        case .valid:
-            shippingDetailsForm.isCountryValid = true
-            shippingDetailsForm.countryError = nil
-        case .invalid(let message):
-            shippingDetailsForm.isCountryValid = false
-            shippingDetailsForm.countryError = message
-        }
-        
-        // Validar teléfono
-        let phoneResult = validator.validatePhoneNumber(shippingDetailsForm.phoneNumber)
-        switch phoneResult {
-        case .valid:
-            shippingDetailsForm.isPhoneNumberValid = true
-            shippingDetailsForm.phoneNumberError = nil
-        case .invalid(let message):
-            shippingDetailsForm.isPhoneNumberValid = false
-            shippingDetailsForm.phoneNumberError = message
-        }
-    }
-    
-    func validateCreditCardForm() {
-        // Validar número de tarjeta
-        let cardNumberResult = validator.validateCreditCardNumber(creditCardDetails.cardNumber)
-        switch cardNumberResult {
-        case .valid:
-            creditCardDetails.isCardNumberValid = true
-            creditCardDetails.cardNumberError = nil
-        case .invalid(let message):
-            creditCardDetails.isCardNumberValid = false
-            creditCardDetails.cardNumberError = message
-        }
-        
-        // Validar nombre del titular
-        let cardholderNameResult = validator.validateName(creditCardDetails.cardholderName)
-        switch cardholderNameResult {
-        case .valid:
-            creditCardDetails.isCardholderNameValid = true
-            creditCardDetails.cardholderNameError = nil
-        case .invalid(let message):
-            creditCardDetails.isCardholderNameValid = false
-            creditCardDetails.cardholderNameError = message
-        }
-        
-        // Validar fecha de expiración
-        let expiryDateResult = validator.validateExpiryDate(creditCardDetails.expiryDate)
-        switch expiryDateResult {
-        case .valid:
-            creditCardDetails.isExpiryDateValid = true
-            creditCardDetails.expiryDateError = nil
-        case .invalid(let message):
-            creditCardDetails.isExpiryDateValid = false
-            creditCardDetails.expiryDateError = message
-        }
-        
-        // Validar CVV
-        let cvvResult = validator.validateCVV(creditCardDetails.cvv)
-        switch cvvResult {
-        case .valid:
-            creditCardDetails.isCvvValid = true
-            creditCardDetails.cvvError = nil
-        case .invalid(let message):
-            creditCardDetails.isCvvValid = false
-            creditCardDetails.cvvError = message
-        }
     }
 }

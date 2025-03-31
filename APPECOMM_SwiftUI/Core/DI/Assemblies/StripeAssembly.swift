@@ -10,17 +10,17 @@ import Swinject
 
 class StripeAssembly: Assembly {
     func assemble(container: Container) {
-        // Stripe Service
-        container.register(StripeServiceProtocol.self) { _ in
-            StripeService()
-        }.inObjectScope(.container)
-        
-        // Stripe API Client
+        // Stripe API Client - comunicación directa con API de Stripe
         container.register(StripeAPIClientProtocol.self) { resolver in
             StripeAPIClient(networkDispatcher: resolver.resolve(NetworkDispatcherProtocol.self)!)
         }.inObjectScope(.container)
         
-        // Payment Service
+        // Stripe Service - wrapper del SDK de Stripe
+        container.register(StripeServiceProtocol.self) { _ in
+            StripeService()
+        }.inObjectScope(.container)
+        
+        // Payment Service - lógica de negocio para pagos
         container.register(PaymentServiceProtocol.self) { resolver in
             PaymentService(
                 networkDispatcher: resolver.resolve(NetworkDispatcherProtocol.self)!,

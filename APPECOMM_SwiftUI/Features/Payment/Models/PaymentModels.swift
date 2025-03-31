@@ -49,22 +49,24 @@ struct StripeConfig: Codable {
 }
 
 // MARK: - Payment Errors
-enum PaymentError: LocalizedError {
-    case invalidPaymentMethod
-    case paymentFailed(String)
-    case invalidAmount
-    case networkError
-    
-    var errorDescription: String? {
-        switch self {
-        case .invalidPaymentMethod:
-            return "El método de pago no es válido"
-        case .paymentFailed(let message):
-            return "El pago falló: \(message)"
-        case .invalidAmount:
-            return "El monto del pago no es válido"
-        case .networkError:
-            return "Error de conexión. Por favor, intente nuevamente"
-        }
-    }
-} 
+/*
+ enum PaymentError: LocalizedError {
+ case invalidPaymentMethod
+ case paymentFailed(String)
+ case invalidAmount
+ case networkError
+ 
+ var errorDescription: String? {
+ switch self {
+ case .invalidPaymentMethod:
+ return "El método de pago no es válido"
+ case .paymentFailed(let message):
+ return "El pago falló: \(message)"
+ case .invalidAmount:
+ return "El monto del pago no es válido"
+ case .networkError:
+ return "Error de conexión. Por favor, intente nuevamente"
+ }
+ }
+ }
+ */
