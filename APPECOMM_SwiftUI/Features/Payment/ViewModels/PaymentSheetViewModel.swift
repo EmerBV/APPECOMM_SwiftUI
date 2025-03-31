@@ -18,13 +18,13 @@ class PaymentSheetViewModel: ObservableObject {
     @Published var paymentStatus: PaymentStatus = .idle
     @Published var paymentSheet: PaymentSheet?
     @Published var paymentResult: PaymentSheetResult?
+    @Published var clientSecret: String?
     
     // MARK: - Private Properties
     private let paymentService: PaymentServiceProtocol
     private let orderId: Int
     private let amount: Decimal
     private let email: String?
-    private var clientSecret: String?
     private var paymentIntentId: String?
     private var cancellables = Set<AnyCancellable>()
     

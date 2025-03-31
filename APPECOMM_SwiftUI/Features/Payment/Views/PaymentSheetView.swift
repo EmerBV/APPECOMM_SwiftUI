@@ -224,7 +224,9 @@ struct PaymentSheetView: View {
 }
 
 // Helper struct para manejar errores como elementos identificables para las alertas
-struct PaymentError: Identifiable {
-    let id = UUID()
-    let message: String
-}
+/*
+ struct PaymentError: Identifiable {
+ let id = UUID()
+ let message: String
+ }
+ */

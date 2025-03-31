@@ -6,7 +6,7 @@
 //
 
 import SwiftUI
-import StripePaymentSheet
+import Stripe
 
 struct StripePaymentConfirmationView: View {
     @ObservedObject var viewModel: CheckoutViewModel
@@ -17,17 +17,19 @@ struct StripePaymentConfirmationView: View {
         VStack {
             if viewModel.isLoading {
                 ProgressView("Preparing payment...")
-            } else if let clientSecret = viewModel.clientSecret {
+            } else if let paymentSheetVM = viewModel.paymentSheetViewModel, let clientSecret = paymentSheetVM.clientSecret {
                 Button("Complete Payment") {
                     preparePaymentSheet(clientSecret: clientSecret)
                     isPaymentSheetPresented = true
                 }
                 .buttonStyle(.borderedProminent)
                 .disabled(paymentSheet == nil)
+            } else {
+                Text("Waiting for payment information...")
             }
         }
         .onAppear {
-            if let clientSecret = viewModel.clientSecret {
+            if let paymentSheetVM = viewModel.paymentSheetViewModel, let clientSecret = paymentSheetVM.clientSecret {
                 preparePaymentSheet(clientSecret: clientSecret)
             }
         }
@@ -42,21 +44,27 @@ struct StripePaymentConfirmationView: View {
     private func preparePaymentSheet(clientSecret: String) {
         var configuration = PaymentSheet.Configuration()
         configuration.merchantDisplayName = "APPECOMM"
-        configuration.defaultBillingDetails.name = viewModel.creditCardDetails.cardholderName
+        if let cardholderName = viewModel.creditCardDetails.cardholderName, !cardholderName.isEmpty {
+            configuration.defaultBillingDetails.name = cardholderName
+        }
         
         paymentSheet = PaymentSheet(paymentIntentClientSecret: clientSecret, configuration: configuration)
     }
     
     private func handlePaymentResult(_ result: PaymentSheetResult) {
-        switch result {
-        case .completed:
-            viewModel.successMessage = "Payment completed successfully"
-            viewModel.currentStep = .confirmation
-        case .canceled:
-            viewModel.errorMessage = "Payment canceled"
-        case .failed(let error):
-            viewModel.errorMessage = "Payment failed: \(error.localizedDescription)"
-            viewModel.currentStep = .error
+        if let paymentSheetVM = viewModel.paymentSheetViewModel {
+            paymentSheetVM.handlePaymentResult(result)
+        } else {
+            switch result {
+            case .completed:
+                viewModel.successMessage = "Payment completed successfully"
+                viewModel.currentStep = .confirmation
+            case .canceled:
+                viewModel.errorMessage = "Payment canceled"
+            case .failed(let error):
+                viewModel.errorMessage = "Payment failed: \(error.localizedDescription)"
+                viewModel.currentStep = .error
+            }
         }
     }
 }

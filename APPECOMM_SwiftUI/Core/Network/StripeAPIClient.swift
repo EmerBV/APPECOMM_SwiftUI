@@ -79,11 +79,6 @@ class StripeAPIClient: StripeAPIClientProtocol {
     
     /// Confirma un PaymentIntent existente
     func confirmPaymentIntent(paymentIntentId: String, paymentMethodId: String) -> AnyPublisher<PaymentConfirmationResponse, NetworkError> {
-        // Crear parámetros para confirmación
-        let parameters: [String: Any] = [
-            "paymentMethodId": paymentMethodId
-        ]
-        
         let endpoint = PaymentEndpoints.confirmPayment(paymentIntentId: paymentIntentId)
         
         return networkDispatcher.dispatch(ApiResponse<PaymentConfirmationResponse>.self, endpoint)
@@ -207,7 +202,7 @@ class StripeAPIClient: StripeAPIClientProtocol {
     func handlePaymentAuthentication(paymentIntentClientSecret: String, from viewController: UIViewController, completion: @escaping (Bool, Error?) -> Void) {
         let paymentIntentParams = STPPaymentIntentParams(clientSecret: paymentIntentClientSecret)
         
-        STPPaymentHandler.shared().confirmPayment(paymentIntentParams, with: viewController) { status, paymentIntent, error in
+        STPPaymentHandler.shared().confirmPayment(paymentIntentParams, with: viewController as STPAuthenticationContext) { status, paymentIntent, error in
             switch status {
             case .succeeded:
                 Logger.payment("Payment confirmation succeeded", level: .info)
@@ -259,11 +254,4 @@ class StripeAPIClient: StripeAPIClientProtocol {
             })
             .eraseToAnyPublisher()
     }
-}
-
-struct StripeCustomer: Codable {
-    let id: String
-    let object: String
-    let email: String?
-    let created: Int
 }

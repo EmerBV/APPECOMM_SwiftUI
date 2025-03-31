@@ -215,6 +215,7 @@ enum PaymentError: Int, Error, LocalizedError {
     case cardExpired = 1010
     case userCancelled = 1011
     case unknown = 1000
+    case paymentFailed = 1012
     
     var errorDescription: String? {
         switch self {
@@ -242,6 +243,8 @@ enum PaymentError: Int, Error, LocalizedError {
             return "Pago cancelado por el usuario"
         case .unknown:
             return "Error desconocido en el pago"
+        case .paymentFailed:
+            return "El pago ha fallado"
         }
     }
     
@@ -260,6 +263,15 @@ enum PaymentError: Int, Error, LocalizedError {
         default:
             return "Por favor, intente nuevamente o contacte a soporte"
         }
+    }
+    
+    init(message: String) {
+        self = .paymentFailed
+    }
+    
+    // Permite recibir un mensaje de error para el caso de .paymentFailed
+    static func paymentFailed(_ message: String) -> PaymentError {
+        return .paymentFailed
     }
     
     // Para convertir a NSError directamente
