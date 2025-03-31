@@ -52,6 +52,11 @@ struct PaymentSheetView: View {
                 paymentError = PaymentError.paymentFailed(errorMsg)
             }
         }
+        .onChange(of: viewModel.shouldPresentPaymentSheet) { shouldPresent in
+            if shouldPresent {
+                viewModel.presentPaymentSheetIfReady()
+            }
+        }
     }
     
     // MARK: - View Components
@@ -86,9 +91,14 @@ struct PaymentSheetView: View {
     private var paymentButton: some View {
         VStack(spacing: 16) {
             Button {
+                Logger.payment("Payment button tapped", level: .info)
                 if viewModel.paymentSheet != nil {
-                    isPaymentSheetPresented = true
+                    Logger.payment("Presenting payment sheet", level: .info)
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                        viewModel.shouldPresentPaymentSheet = true
+                    }
                 } else {
+                    Logger.payment("Preparing payment sheet", level: .info)
                     viewModel.preparePaymentSheet()
                 }
             } label: {
@@ -99,18 +109,17 @@ struct PaymentSheetView: View {
                 }
                 .frame(maxWidth: .infinity)
                 .padding()
-                .background(Color.blue)
+                .background(viewModel.paymentSheet != nil ? Color.blue : Color.gray)
                 .foregroundColor(.white)
                 .cornerRadius(10)
             }
-            .disabled(viewModel.paymentSheet == nil)
-            .modifier(PaymentSheetViewModifier(
-                isPresented: $isPaymentSheetPresented,
-                paymentSheet: viewModel.paymentSheet,
-                onCompletion: { result in
-                    viewModel.handlePaymentResult(result)
-                }
-            ))
+            .disabled(viewModel.isLoading || viewModel.shouldPresentPaymentSheet)
+            
+            if viewModel.isLoading {
+                ProgressView()
+                    .scaleEffect(0.8)
+                    .padding(.top, 8)
+            }
             
             Text("Pago seguro procesado por Stripe")
                 .font(.caption)

@@ -20,6 +20,7 @@ class PaymentSheetViewModel: ObservableObject {
     @Published var paymentSheet: PaymentSheet?
     @Published var paymentResult: PaymentSheetResult?
     @Published var clientSecret: String?
+    @Published var shouldPresentPaymentSheet = false
     
     // MARK: - Private Properties
     private let paymentService: PaymentServiceProtocol
@@ -28,6 +29,7 @@ class PaymentSheetViewModel: ObservableObject {
     private let email: String?
     private var paymentIntentId: String?
     private var cancellables = Set<AnyCancellable>()
+    private var isPresenting = false
     
     // MARK: - Enums
     
@@ -111,8 +113,49 @@ class PaymentSheetViewModel: ObservableObject {
                 self.isLoading = false
                 self.paymentStatus = .ready
                 Logger.payment("Payment sheet ready with client secret", level: .info)
+                
+                // Indicar que el PaymentSheet está listo para ser presentado
+                self.shouldPresentPaymentSheet = true
             }
             .store(in: &cancellables)
+    }
+    
+    /// Presenta el PaymentSheet cuando sea seguro hacerlo
+    func presentPaymentSheetIfReady() {
+        guard !isPresenting else {
+            Logger.payment("Already presenting payment sheet", level: .warning)
+            return
+        }
+        
+        guard let paymentSheet = paymentSheet else {
+            Logger.payment("PaymentSheet is nil", level: .error)
+            return
+        }
+        
+        // Obtener la ventana principal
+        guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+              let window = windowScene.windows.first,
+              let rootViewController = window.rootViewController?.topMostViewController else {
+            Logger.payment("Failed to get root view controller", level: .error)
+            return
+        }
+        
+        isPresenting = true
+        Logger.payment("Attempting to present PaymentSheet", level: .info)
+        
+        // Asegurarse de que estamos en el hilo principal
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else { return }
+            
+            // Presentar el PaymentSheet
+            paymentSheet.present(from: rootViewController) { [weak self] result in
+                guard let self = self else { return }
+                self.isPresenting = false
+                self.shouldPresentPaymentSheet = false
+                self.handlePaymentResult(result)
+                Logger.payment("PaymentSheet presentation completed with result: \(result)", level: .info)
+            }
+        }
     }
     
     /// Maneja el resultado del pago
@@ -174,5 +217,21 @@ class PaymentSheetViewModel: ObservableObject {
     // Expone el monto para la vista
     var amountFormatted: String {
         return amount.toCurrentLocalePrice
+    }
+}
+
+// MARK: - UIViewController Extension
+extension UIViewController {
+    var topMostViewController: UIViewController {
+        if let presented = presentedViewController {
+            return presented.topMostViewController
+        }
+        if let navigation = self as? UINavigationController {
+            return navigation.visibleViewController?.topMostViewController ?? self
+        }
+        if let tab = self as? UITabBarController {
+            return tab.selectedViewController?.topMostViewController ?? self
+        }
+        return self
     }
 }
