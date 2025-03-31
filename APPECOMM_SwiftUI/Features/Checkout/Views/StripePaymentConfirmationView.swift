@@ -19,7 +19,6 @@ struct StripePaymentConfirmationView: View {
             if viewModel.isLoading {
                 ProgressView("Preparing payment...")
             } else if let paymentSheetVM = viewModel.paymentSheetViewModel {
-                // Verificar si tenemos el clientSecret sin usar if let
                 Button("Complete Payment") {
                     if paymentSheetVM.clientSecret != nil {
                         preparePaymentSheet()
@@ -43,7 +42,6 @@ struct StripePaymentConfirmationView: View {
     }
     
     private func preparePaymentSheet() {
-        // Verificamos que tengamos los datos necesarios sin usar if let
         guard let paymentSheetVM = viewModel.paymentSheetViewModel,
               let clientSecret = paymentSheetVM.clientSecret else {
             return
@@ -51,8 +49,8 @@ struct StripePaymentConfirmationView: View {
         
         var configuration = PaymentSheet.Configuration()
         configuration.merchantDisplayName = "APPECOMM"
-        if let cardholderName = viewModel.creditCardDetails.cardholderName, !cardholderName.isEmpty {
-            configuration.defaultBillingDetails.name = cardholderName
+        if !viewModel.creditCardDetails.cardholderName.isEmpty {
+            configuration.defaultBillingDetails.name = viewModel.creditCardDetails.cardholderName
         }
         
         self.paymentSheet = PaymentSheet(paymentIntentClientSecret: clientSecret, configuration: configuration)

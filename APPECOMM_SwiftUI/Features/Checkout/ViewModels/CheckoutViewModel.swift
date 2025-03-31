@@ -70,6 +70,7 @@ class CheckoutViewModel: ObservableObject {
     // Payment specific properties
     @Published var paymentSheetViewModel: PaymentSheetViewModel?
     @Published var showPaymentSheet = false
+    @Published var paymentViewModel: PaymentViewModel
     
     // Dependencies
     private let checkoutService: CheckoutServiceProtocol
@@ -99,10 +100,25 @@ class CheckoutViewModel: ObservableObject {
         self.shippingService = shippingService
         self.stripeService = stripeService
         
-        if let cart = cart {
-            self.cartItems = cart.items
+        // Inicializar PaymentViewModel primero
+        let dependencies = DependencyInjector.shared
+        let stripeAPIClient = dependencies.resolve(StripeAPIClientProtocol.self)
+        self.paymentViewModel = PaymentViewModel(
+            paymentService: paymentService,
+            stripeService: stripeService,
+            stripeAPIClient: stripeAPIClient
+        )
+        
+        // Una vez que todas las propiedades están inicializadas, podemos llamar a los métodos
+        if let cartItems = cart?.items {
+            self.cartItems = cartItems
         }
         
+        // Configurar todo lo demás después de la inicialización
+        self.setupInitialState()
+    }
+    
+    private func setupInitialState() {
         // Calculate order summary based on cart
         if let cart = cart {
             calculateOrderSummary(from: cart)

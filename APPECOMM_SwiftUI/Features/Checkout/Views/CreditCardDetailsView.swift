@@ -87,8 +87,9 @@ struct CreditCardDetailsView: View {
         }
         .sheet(isPresented: $showingPaymentForm) {
             if let order = viewModel.getCurrentOrder() {
+                let paymentVM = viewModel.paymentViewModel
                 PaymentFormView(
-                    viewModel: viewModel.paymentViewModel,
+                    viewModel: paymentVM,
                     orderId: order.id,
                     amount: NSDecimalNumber(decimal: order.totalAmount).doubleValue
                 )
