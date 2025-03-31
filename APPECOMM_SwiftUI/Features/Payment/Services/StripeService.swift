@@ -1,6 +1,7 @@
 import Foundation
 import Combine
 import Stripe
+import StripePaymentSheet
 import UIKit
 
 protocol StripeServiceProtocol {
@@ -32,8 +33,8 @@ final class StripeService: StripeServiceProtocol {
     }
     
     func createPaymentMethod(cardDetails: CreditCardDetails) -> AnyPublisher<String, PaymentError> {
-        return Future<String, PaymentError> { promise in
-            guard self.isStripeInitialized() else {
+        return Future<String, PaymentError> { [weak self] promise in
+            guard let self = self else {
                 promise(.failure(.notConfigured))
                 return
             }
@@ -136,23 +137,33 @@ final class StripeService: StripeServiceProtocol {
     }
     
     func checkoutWithPaymentSheet(amount: Int, currency: String, customerId: String?) -> AnyPublisher<String, PaymentError> {
-        // Esta función simula la creación de un Payment Intent en el servidor
-        // y devuelve un cliente secreto para usar con PaymentSheet
-        
-        return Future<String, PaymentError> { promise in
-            guard self.isStripeInitialized() else {
+        return Future<String, PaymentError> { [weak self] promise in
+            guard let self = self else {
                 promise(.failure(.notConfigured))
                 return
             }
             
-            // En una app real, llamarías a tu API para crear un PaymentIntent
-            // y recibirías el clientSecret
+            // Crear el PaymentIntent
+            let paymentIntentParams = STPPaymentIntentParams()
+            paymentIntentParams.amount = amount
+            paymentIntentParams.currency = currency.lowercased()
             
-            // Simulación para fines de demostración
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-                // Este es un clientSecret de ejemplo que no funcionará en producción
-                let mockClientSecret = "pi_MockPaymentIntent_secretkey_ForDemonstrationOnly"
-                promise(.success(mockClientSecret))
+            if let customerId = customerId {
+                paymentIntentParams.customer = customerId
+            }
+            
+            self.apiClient?.createPaymentIntent(with: paymentIntentParams) { paymentIntent, error in
+                if let error = error {
+                    promise(.failure(.paymentFailed(error.localizedDescription)))
+                    return
+                }
+                
+                guard let clientSecret = paymentIntent?.clientSecret else {
+                    promise(.failure(.paymentFailed("No se pudo obtener el client secret")))
+                    return
+                }
+                
+                promise(.success(clientSecret))
             }
         }.eraseToAnyPublisher()
     }
@@ -188,13 +199,6 @@ final class StripeService: StripeServiceProtocol {
         appearance.colors.background = UIColor.systemBackground
         appearance.colors.componentBackground = UIColor.secondarySystemBackground
         appearance.colors.componentBorder = UIColor.separator
-        appearance.colors.componentDivider = UIColor.separator
-        appearance.colors.text = UIColor.label
-        appearance.colors.textSecondary = UIColor.secondaryLabel
-        appearance.colors.componentText = UIColor.label
-        
-        appearance.cornerRadius = 8.0
-        
         return appearance
     }
 }

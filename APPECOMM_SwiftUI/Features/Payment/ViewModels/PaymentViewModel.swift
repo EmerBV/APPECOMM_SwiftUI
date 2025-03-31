@@ -2,10 +2,13 @@ import Foundation
 import Combine
 import SwiftUI
 import Stripe
+import StripePaymentSheet
 
 class PaymentViewModel: ObservableObject {
     private let paymentService: PaymentServiceProtocol
     private let stripeService: StripeServiceProtocol
+    private let networkDispatcher: NetworkDispatcher
+    private let stripeAPIClient: STPAPIClient
     private var cancellables = Set<AnyCancellable>()
     
     @Published var isLoading = false
@@ -29,10 +32,15 @@ class PaymentViewModel: ObservableObject {
         case error
     }
     
-    init(paymentService: PaymentServiceProtocol = PaymentService(),
-         stripeService: StripeServiceProtocol = StripeService()) {
-        self.paymentService = paymentService
+    init(networkDispatcher: NetworkDispatcher = NetworkDispatcher(),
+         stripeService: StripeServiceProtocol = StripeService(),
+         stripeAPIClient: STPAPIClient = STPAPIClient(publishableKey: "")) {
+        self.networkDispatcher = networkDispatcher
         self.stripeService = stripeService
+        self.stripeAPIClient = stripeAPIClient
+        self.paymentService = PaymentService(networkDispatcher: networkDispatcher,
+                                             stripeService: stripeService,
+                                             stripeAPIClient: stripeAPIClient)
         loadStripeConfig()
     }
     

@@ -6,6 +6,8 @@
 //
 
 import SwiftUI
+import Stripe
+import StripePaymentSheet
 
 extension View {
     func cornerRadius(_ radius: CGFloat, corners: UIRectCorner) -> some View {

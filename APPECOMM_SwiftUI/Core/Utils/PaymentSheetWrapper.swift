@@ -7,29 +7,15 @@
 
 import Foundation
 import Stripe
+import StripePaymentSheet
 import SwiftUI
 
 // Wrappers para los tipos de Stripe para simplificar su uso
-typealias PaymentSheet = STPPaymentSheet
-typealias PaymentSheetResult = STPPaymentSheetResult
-typealias PaymentSheetConfiguration = STPPaymentSheet.Configuration
-typealias PaymentSheetAppearance = STPPaymentSheet.Appearance
-typealias PaymentSheetError = STPPaymentSheetError
-
-// Extensión para View para integrar fácilmente PaymentSheet en SwiftUI
-extension View {
-    func paymentSheet(
-        isPresented: Binding<Bool>,
-        paymentSheet: PaymentSheet?,
-        onCompletion: @escaping (PaymentSheetResult) -> Void
-    ) -> some View {
-        self.modifier(PaymentSheetViewModifier(
-            isPresented: isPresented,
-            paymentSheet: paymentSheet,
-            onCompletion: onCompletion
-        ))
-    }
-}
+typealias PaymentSheet = StripePaymentSheet.PaymentSheet
+typealias PaymentSheetResult = StripePaymentSheet.PaymentSheetResult
+typealias PaymentSheetConfiguration = StripePaymentSheet.PaymentSheet.Configuration
+typealias PaymentSheetAppearance = StripePaymentSheet.PaymentSheet.Appearance
+typealias PaymentSheetError = StripePaymentSheet.PaymentSheetError
 
 // Modificador personalizado para manejar el paymentSheet opcional
 struct PaymentSheetViewModifier: ViewModifier {

@@ -9,6 +9,7 @@ import Foundation
 import Combine
 import SwiftUI
 import Stripe
+import StripePaymentSheet
 
 /// ViewModel específico para manejar el flujo de pago con PaymentSheet de Stripe
 class PaymentSheetViewModel: ObservableObject {
@@ -92,7 +93,9 @@ class PaymentSheetViewModel: ObservableObject {
                 // 3. Configurar PaymentSheet
                 var configuration = PaymentSheet.Configuration()
                 configuration.merchantDisplayName = "APPECOMM"
-                configuration.defaultBillingDetails.email = self.email
+                if let email = self.email {
+                    configuration.defaultBillingDetails.email = email
+                }
                 
                 // Configurar cliente si está disponible
                 if let customerId = checkout.customerId, let ephemeralKey = checkout.ephemeralKey {

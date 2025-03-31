@@ -7,9 +7,10 @@
 
 import SwiftUI
 import Stripe
+import StripePaymentSheet
 
 struct PaymentSheetView: View {
-    @ObservedObject var viewModel: PaymentSheetViewModel
+    @StateObject var viewModel: PaymentSheetViewModel
     @Environment(\.dismiss) private var dismiss
     @State private var isPaymentSheetPresented = false
     @State private var paymentError: PaymentError?
@@ -48,7 +49,6 @@ struct PaymentSheetView: View {
         }
         .onChange(of: viewModel.error) { errorMsg in
             if let errorMsg = errorMsg {
-                // Crear un PaymentError con un mensaje personalizado
                 paymentError = PaymentError.paymentFailed(errorMsg)
             }
         }
@@ -86,7 +86,7 @@ struct PaymentSheetView: View {
     private var paymentButton: some View {
         VStack(spacing: 16) {
             Button {
-                if let _ = viewModel.paymentSheet {
+                if viewModel.paymentSheet != nil {
                     isPaymentSheetPresented = true
                 } else {
                     viewModel.preparePaymentSheet()

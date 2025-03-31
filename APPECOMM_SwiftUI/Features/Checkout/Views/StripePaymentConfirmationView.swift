@@ -7,6 +7,7 @@
 
 import SwiftUI
 import Stripe
+import StripePaymentSheet
 
 struct StripePaymentConfirmationView: View {
     @ObservedObject var viewModel: CheckoutViewModel
@@ -18,7 +19,6 @@ struct StripePaymentConfirmationView: View {
             if viewModel.isLoading {
                 ProgressView("Preparing payment...")
             } else if let paymentSheetVM = viewModel.paymentSheetViewModel {
-                // Usar el clientSecret de manera opcional
                 if let clientSecret = paymentSheetVM.clientSecret {
                     Button("Complete Payment") {
                         preparePaymentSheet(clientSecret: clientSecret)
@@ -39,7 +39,6 @@ struct StripePaymentConfirmationView: View {
                 preparePaymentSheet(clientSecret: clientSecret)
             }
         }
-        // Aplicar el modificador solo si paymentSheet existe
         .modifier(PaymentSheetViewModifier(
             isPresented: $isPaymentSheetPresented,
             paymentSheet: paymentSheet,
@@ -54,7 +53,7 @@ struct StripePaymentConfirmationView: View {
             configuration.defaultBillingDetails.name = cardholderName
         }
         
-        paymentSheet = PaymentSheet(paymentIntentClientSecret: clientSecret, configuration: configuration)
+        self.paymentSheet = PaymentSheet(paymentIntentClientSecret: clientSecret, configuration: configuration)
     }
     
     private func handlePaymentResult(_ result: PaymentSheetResult) {
