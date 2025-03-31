@@ -138,8 +138,12 @@ class CheckoutViewModel: ObservableObject {
             .sink { [weak self] notification in
                 if let orderId = notification.userInfo?["orderId"] as? Int {
                     self?.handlePaymentSuccess(orderId: orderId)
+                } else if let order = self?.order {
+                    // Si no hay orderId en la notificación, usar el ID de la orden actual
+                    self?.handlePaymentSuccess(orderId: order.id)
                 } else {
-                    self?.handlePaymentSuccess()
+                    // Si no hay orden, mostrar un error
+                    self?.handlePaymentFailure(message: "No se pudo procesar el pago: Orden no encontrada")
                 }
             }
             .store(in: &cancellables)
@@ -391,37 +395,37 @@ class CheckoutViewModel: ObservableObject {
         }
     }
     
-    func handlePaymentSuccess(orderId: Int = 0) {
-        isLoading = false
-        currentStep = .confirmation
-        successMessage = "Payment processed successfully"
-        
-        // Si tenemos un orderId, actualizar el estado del pedido
-        if orderId > 0 {
-            // Actualizar estado de la orden
-            updateOrderStatus(orderId: orderId, status: "paid")
+    private func handlePaymentSuccess(orderId: Int) {
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else { return }
+            self.isLoading = false
+            self.showPaymentSheet = false
+            self.currentStep = .confirmation
+            self.successMessage = "¡Pago Completado!"
+            
+            // Limpiar el PaymentSheetViewModel
+            self.paymentSheetViewModel = nil
+            
+            // Notificar a la vista de confirmación
+            NotificationCenter.default.post(
+                name: Notification.Name("OrderConfirmed"),
+                object: nil,
+                userInfo: ["orderId": orderId]
+            )
         }
     }
     
-    func handlePaymentFailure(message: String) {
-        isLoading = false
-        errorMessage = message
-        currentStep = .error
-    }
-    
-    private func updateOrderStatus(orderId: Int, status: String) {
-        // Actualizar el estado de la orden en el servidor
-        checkoutService.updateOrderStatus(id: orderId, status: status)
-            .receive(on: DispatchQueue.main)
-            .sink { completion in
-                if case .failure(let error) = completion {
-                    Logger.error("Failed to update order status: \(error)")
-                }
-            } receiveValue: { [weak self] updatedOrder in
-                self?.order = updatedOrder
-                Logger.info("Order status updated to: \(status)")
-            }
-            .store(in: &cancellables)
+    private func handlePaymentFailure(message: String) {
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else { return }
+            self.isLoading = false
+            self.showPaymentSheet = false
+            self.currentStep = .error
+            self.errorMessage = message
+            
+            // Limpiar el PaymentSheetViewModel
+            self.paymentSheetViewModel = nil
+        }
     }
     
     // MARK: - Credit Card Validation

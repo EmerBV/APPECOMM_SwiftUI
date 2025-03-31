@@ -148,10 +148,15 @@ class PaymentSheetViewModel: ObservableObject {
         DispatchQueue.main.async { [weak self] in
             guard let self = self else { return }
             
+            // Asegurarse de que el PaymentSheet se cierre
+            self.shouldPresentPaymentSheet = false
+            self.paymentSheet = nil
+            
             switch result {
             case .completed:
                 self.paymentStatus = .completed
                 self.paymentResult = result
+                // Solo notificar el éxito, no mostrar pantalla de confirmación
                 NotificationCenter.default.post(
                     name: Notification.Name("PaymentCompleted"),
                     object: nil,
