@@ -78,7 +78,7 @@ final class CheckoutRepository: CheckoutRepositoryProtocol {
     func confirmPayment(paymentIntentId: String) -> AnyPublisher<Bool, Error> {
         Logger.info("CheckoutRepository: Confirming payment \(paymentIntentId)")
         
-        return paymentService.confirmPayment(paymentIntentId: paymentIntentId)
+        return paymentService.confirmPayment(paymentIntentId: paymentIntentId, paymentMethodId: "")
             .map { response -> Bool in
                 Logger.info("CheckoutRepository: Payment confirmation: \(response.success)")
                 return response.success

@@ -15,6 +15,18 @@ extension View {
     func keyboardAdaptive(isKeyboardVisible: Binding<Bool>) -> some View {
         self.modifier(KeyboardAdaptiveModifier(isKeyboardVisible: isKeyboardVisible))
     }
+    
+    func paymentSheet(
+        isPresented: Binding<Bool>,
+        paymentSheet: PaymentSheet?,
+        onCompletion: @escaping (PaymentSheetResult) -> Void
+    ) -> some View {
+        self.modifier(PaymentSheetViewModifier(
+            isPresented: isPresented,
+            paymentSheet: paymentSheet,
+            onCompletion: onCompletion
+        ))
+    }
 }
 
 struct RoundedCorner: Shape {

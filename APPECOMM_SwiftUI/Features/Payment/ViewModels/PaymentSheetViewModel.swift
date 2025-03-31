@@ -77,11 +77,8 @@ class PaymentSheetViewModel: ObservableObject {
             .sink { [weak self] completion in
                 guard let self = self else { return }
                 
-                switch completion {
-                case .finished:
-                    break
-                case .failure(let error):
-                    self.isLoading = false
+                self.isLoading = false
+                if case .failure(let error) = completion {
                     self.error = error.localizedDescription
                     self.paymentStatus = .failed(error.localizedDescription)
                     Logger.payment("Failed to prepare payment: \(error)", level: .error)
@@ -167,5 +164,12 @@ class PaymentSheetViewModel: ObservableObject {
                 Logger.payment("Payment intent canceled: \(paymentIntentId)", level: .info)
             }
             .store(in: &cancellables)
+    }
+    
+    // MARK: - Helper Methods
+    
+    // Expone el monto para la vista
+    var amountFormatted: String {
+        return amount.toCurrentLocalePrice
     }
 }

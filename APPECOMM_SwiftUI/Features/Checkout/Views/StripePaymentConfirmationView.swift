@@ -17,19 +17,25 @@ struct StripePaymentConfirmationView: View {
         VStack {
             if viewModel.isLoading {
                 ProgressView("Preparing payment...")
-            } else if let paymentSheetVM = viewModel.paymentSheetViewModel, let clientSecret = paymentSheetVM.clientSecret {
-                Button("Complete Payment") {
-                    preparePaymentSheet(clientSecret: clientSecret)
-                    isPaymentSheetPresented = true
+            } else if let paymentSheetVM = viewModel.paymentSheetViewModel {
+                // Usar el clientSecret de manera opcional
+                if let clientSecret = paymentSheetVM.clientSecret {
+                    Button("Complete Payment") {
+                        preparePaymentSheet(clientSecret: clientSecret)
+                        isPaymentSheetPresented = true
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .disabled(paymentSheet == nil)
+                } else {
+                    Text("Waiting for payment information...")
                 }
-                .buttonStyle(.borderedProminent)
-                .disabled(paymentSheet == nil)
             } else {
                 Text("Waiting for payment information...")
             }
         }
         .onAppear {
-            if let paymentSheetVM = viewModel.paymentSheetViewModel, let clientSecret = paymentSheetVM.clientSecret {
+            if let paymentSheetVM = viewModel.paymentSheetViewModel,
+               let clientSecret = paymentSheetVM.clientSecret {
                 preparePaymentSheet(clientSecret: clientSecret)
             }
         }
@@ -65,22 +71,6 @@ struct StripePaymentConfirmationView: View {
                 viewModel.errorMessage = "Payment failed: \(error.localizedDescription)"
                 viewModel.currentStep = .error
             }
-        }
-    }
-}
-
-// Modificador personalizado para manejar el paymentSheet opcional
-struct PaymentSheetViewModifier: ViewModifier {
-    @Binding var isPresented: Bool
-    var paymentSheet: PaymentSheet?
-    var onCompletion: (PaymentSheetResult) -> Void
-    
-    func body(content: Content) -> some View {
-        if let sheet = paymentSheet {
-            content
-                .paymentSheet(isPresented: $isPresented, paymentSheet: sheet, onCompletion: onCompletion)
-        } else {
-            content
         }
     }
 }

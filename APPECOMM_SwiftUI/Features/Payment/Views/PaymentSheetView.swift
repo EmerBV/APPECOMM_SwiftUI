@@ -9,9 +9,10 @@ import SwiftUI
 import Stripe
 
 struct PaymentSheetView: View {
-    @StateObject var viewModel: PaymentSheetViewModel
+    @ObservedObject var viewModel: PaymentSheetViewModel
     @Environment(\.dismiss) private var dismiss
     @State private var isPaymentSheetPresented = false
+    @State private var paymentError: PaymentError?
     
     var body: some View {
         VStack(spacing: 24) {
@@ -38,19 +39,18 @@ struct PaymentSheetView: View {
         .onAppear {
             viewModel.preparePaymentSheet()
         }
-        .alert(item: Binding<PaymentError?>(
-            get: { viewModel.error != nil ? PaymentError(message: viewModel.error!) : nil },
-            set: { error in
-                if error == nil {
-                    viewModel.error = nil
-                }
-            }
-        )) { error in
+        .alert(item: $paymentError) { error in
             Alert(
                 title: Text("Error de Pago"),
                 message: Text(error.message),
                 dismissButton: .default(Text("Aceptar"))
             )
+        }
+        .onChange(of: viewModel.error) { errorMsg in
+            if let errorMsg = errorMsg {
+                // Crear un PaymentError con un mensaje personalizado
+                paymentError = PaymentError.paymentFailed(errorMsg)
+            }
         }
     }
     
@@ -66,7 +66,7 @@ struct PaymentSheetView: View {
                 .font(.title2)
                 .fontWeight(.semibold)
             
-            Text("Total a pagar: \(viewModel.amount.toCurrentLocalePrice)")
+            Text("Total a pagar: \(viewModel.amountFormatted)")
                 .font(.headline)
         }
     }
@@ -86,7 +86,7 @@ struct PaymentSheetView: View {
     private var paymentButton: some View {
         VStack(spacing: 16) {
             Button {
-                if let paymentSheet = viewModel.paymentSheet {
+                if let _ = viewModel.paymentSheet {
                     isPaymentSheetPresented = true
                 } else {
                     viewModel.preparePaymentSheet()
@@ -104,13 +104,13 @@ struct PaymentSheetView: View {
                 .cornerRadius(10)
             }
             .disabled(viewModel.paymentSheet == nil)
-            .paymentSheet(
+            .modifier(PaymentSheetViewModifier(
                 isPresented: $isPaymentSheetPresented,
                 paymentSheet: viewModel.paymentSheet,
                 onCompletion: { result in
                     viewModel.handlePaymentResult(result)
                 }
-            )
+            ))
             
             Text("Pago seguro procesado por Stripe")
                 .font(.caption)
@@ -222,11 +222,3 @@ struct PaymentSheetView: View {
         }
     }
 }
-
-// Helper struct para manejar errores como elementos identificables para las alertas
-/*
- struct PaymentError: Identifiable {
- let id = UUID()
- let message: String
- }
- */
