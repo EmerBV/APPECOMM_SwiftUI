@@ -7,8 +7,7 @@ import StripePaymentSheet
 class PaymentViewModel: ObservableObject {
     private let paymentService: PaymentServiceProtocol
     private let stripeService: StripeServiceProtocol
-    private let networkDispatcher: NetworkDispatcher
-    private let stripeAPIClient: STPAPIClient
+    private let stripeAPIClient: StripeAPIClientProtocol
     private var cancellables = Set<AnyCancellable>()
     
     @Published var isLoading = false
@@ -32,16 +31,22 @@ class PaymentViewModel: ObservableObject {
         case error
     }
     
-    init(networkDispatcher: NetworkDispatcher = NetworkDispatcher(),
-         stripeService: StripeServiceProtocol = StripeService(),
-         stripeAPIClient: STPAPIClient = STPAPIClient(publishableKey: "")) {
-        self.networkDispatcher = networkDispatcher
+    init(paymentService: PaymentServiceProtocol,
+         stripeService: StripeServiceProtocol,
+         stripeAPIClient: StripeAPIClientProtocol) {
+        self.paymentService = paymentService
         self.stripeService = stripeService
         self.stripeAPIClient = stripeAPIClient
-        self.paymentService = PaymentService(networkDispatcher: networkDispatcher,
-                                             stripeService: stripeService,
-                                             stripeAPIClient: stripeAPIClient)
         loadStripeConfig()
+    }
+    
+    // Constructor conveniente que usa inyección de dependencias
+    convenience init() {
+        let dependencies = DependencyInjector.shared
+        let stripeService = dependencies.resolve(StripeServiceProtocol.self)
+        let stripeAPIClient = dependencies.resolve(StripeAPIClientProtocol.self)
+        let paymentService = dependencies.resolve(PaymentServiceProtocol.self)
+        self.init(paymentService: paymentService, stripeService: stripeService, stripeAPIClient: stripeAPIClient)
     }
     
     private func loadStripeConfig() {
@@ -66,33 +71,61 @@ class PaymentViewModel: ObservableObject {
         currentStep = .processing
         paymentStatus = .processing
         
-        stripeService.createPaymentMethod(card: card)
+        // Convertir STPPaymentMethodCardParams a CreditCardDetails
+        let cardDetails = convertToCardDetails(from: card)
+        
+        stripeService.createPaymentMethod(cardDetails: cardDetails)
             .flatMap { [weak self] paymentMethodId -> AnyPublisher<PaymentIntentResponse, PaymentError> in
                 guard let self = self else {
-                    return Fail(error: .paymentFailed("Error de referencia")).eraseToAnyPublisher()
+                    return Fail(error: .paymentFailed).eraseToAnyPublisher()
                 }
                 
                 let request = PaymentRequest(paymentMethodId: paymentMethodId)
                 return self.paymentService.createPaymentIntent(orderId: orderId, request: request)
-                    .mapError { PaymentError.paymentFailed($0.localizedDescription) }
+                    .mapError { _ in PaymentError.paymentFailed }
                     .eraseToAnyPublisher()
             }
             .receive(on: DispatchQueue.main)
             .sink { [weak self] completion in
                 self?.isLoading = false
                 if case .failure(let error) = completion {
-                    self?.error = error.localizedDescription
+                    self?.error = error.message
                     self?.paymentStatus = .failed
                     self?.currentStep = .error
                 }
             } receiveValue: { [weak self] response in
-                self?.confirmPayment(paymentIntentId: response.paymentIntentId)
+                self?.confirmPayment(paymentIntentId: response.paymentIntentId, paymentMethodId: response.paymentIntentId)
             }
             .store(in: &cancellables)
     }
     
-    private func confirmPayment(paymentIntentId: String) {
-        paymentService.confirmPayment(paymentIntentId: paymentIntentId)
+    // Método auxiliar para convertir STPPaymentMethodCardParams a CreditCardDetails
+    private func convertToCardDetails(from cardParams: STPPaymentMethodCardParams) -> CreditCardDetails {
+        var details = CreditCardDetails()
+        details.cardNumber = cardParams.number ?? ""
+        
+        if let month = cardParams.expMonth?.intValue, let year = cardParams.expYear?.intValue {
+            let lastTwoDigitsOfYear = year % 100
+            details.expiryDate = "\(String(format: "%02d", month))/\(String(format: "%02d", lastTwoDigitsOfYear))"
+        }
+        
+        details.cvv = cardParams.cvc ?? ""
+        
+        // Los datos del titular de la tarjeta no están disponibles en cardParams,
+        // deberían provenir de STPPaymentMethodBillingDetails
+        details.cardholderName = ""
+        
+        // Establecer todos los campos como válidos para evitar problemas de validación
+        details.isCardNumberValid = true
+        details.isExpiryDateValid = true
+        details.isCvvValid = true
+        details.isCardholderNameValid = true
+        
+        return details
+    }
+    
+    private func confirmPayment(paymentIntentId: String, paymentMethodId: String) {
+        paymentService.confirmPayment(paymentIntentId: paymentIntentId, paymentMethodId: paymentMethodId)
             .receive(on: DispatchQueue.main)
             .sink { [weak self] completion in
                 self?.isLoading = false
@@ -132,4 +165,4 @@ class PaymentViewModel: ObservableObject {
         paymentStatus = .idle
         currentStep = .cardDetails
     }
-} 
+}

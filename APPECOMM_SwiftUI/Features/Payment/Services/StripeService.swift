@@ -124,9 +124,10 @@ final class StripeService: StripeServiceProtocol {
             case .failed:
                 if let error = error {
                     Logger.error("Payment failed: \(error.localizedDescription)")
-                    promise(.failure(.paymentFailed(error.localizedDescription)))
+                    // Eliminar el argumento del parámetro clientSecret
+                    promise(.failure(.paymentFailed))
                 } else {
-                    promise(.failure(.paymentFailed("Unknown payment error")))
+                    promise(.failure(.paymentFailed))
                 }
             case .canceled:
                 promise(.failure(.userCancelled))
@@ -154,12 +155,14 @@ final class StripeService: StripeServiceProtocol {
             
             self.apiClient?.createPaymentIntent(with: paymentIntentParams) { paymentIntent, error in
                 if let error = error {
-                    promise(.failure(.paymentFailed(error.localizedDescription)))
+                    // Eliminar el argumento del parámetro clientSecret
+                    promise(.failure(.paymentFailed))
                     return
                 }
                 
                 guard let clientSecret = paymentIntent?.clientSecret else {
-                    promise(.failure(.paymentFailed("No se pudo obtener el client secret")))
+                    // Eliminar el argumento del parámetro clientSecret
+                    promise(.failure(.paymentFailed))
                     return
                 }
                 
