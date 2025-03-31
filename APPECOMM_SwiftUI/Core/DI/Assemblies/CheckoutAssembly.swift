@@ -20,7 +20,13 @@ final class CheckoutAssembly: Assembly {
         // Register Payment Service
         container.register(PaymentServiceProtocol.self) { r in
             let networkDispatcher = r.resolve(NetworkDispatcherProtocol.self)!
-            return PaymentService(networkDispatcher: networkDispatcher)
+            let stripeService = r.resolve(StripeServiceProtocol.self)!
+            let stripeAPIClient = r.resolve(StripeAPIClientProtocol.self)!
+            return PaymentService(
+                networkDispatcher: networkDispatcher,
+                stripeService: stripeService,
+                stripeAPIClient: stripeAPIClient
+            )
         }.inObjectScope(.container)
         
         // Register Checkout Repository

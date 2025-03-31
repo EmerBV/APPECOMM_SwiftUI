@@ -124,7 +124,6 @@ final class StripeService: StripeServiceProtocol {
             case .failed:
                 if let error = error {
                     Logger.error("Payment failed: \(error.localizedDescription)")
-                    // Eliminar el argumento del parámetro clientSecret
                     promise(.failure(.paymentFailed))
                 } else {
                     promise(.failure(.paymentFailed))
@@ -139,36 +138,94 @@ final class StripeService: StripeServiceProtocol {
     
     func checkoutWithPaymentSheet(amount: Int, currency: String, customerId: String?) -> AnyPublisher<String, PaymentError> {
         return Future<String, PaymentError> { [weak self] promise in
-            guard let self = self else {
+            guard let self = self, let apiClient = self.apiClient else {
                 promise(.failure(.notConfigured))
                 return
             }
             
-            // Crear el PaymentIntent
-            let paymentIntentParams = STPPaymentIntentParams()
-            paymentIntentParams.amount = amount
-            paymentIntentParams.currency = currency.lowercased()
-            
-            if let customerId = customerId {
-                paymentIntentParams.customer = customerId
-            }
-            
-            self.apiClient?.createPaymentIntent(with: paymentIntentParams) { paymentIntent, error in
-                if let error = error {
-                    // Eliminar el argumento del parámetro clientSecret
-                    promise(.failure(.paymentFailed))
-                    return
+            // Crear una llamada personalizada a la API para obtener un client secret
+            // En lugar de usar métodos directos de STPAPIClient
+            self.createPaymentIntentServerSide(
+                amount: amount,
+                currency: currency,
+                customerId: customerId,
+                apiClient: apiClient
+            ) { result in
+                switch result {
+                case .success(let clientSecret):
+                    promise(.success(clientSecret))
+                case .failure(let error):
+                    promise(.failure(error))
                 }
-                
-                guard let clientSecret = paymentIntent?.clientSecret else {
-                    // Eliminar el argumento del parámetro clientSecret
-                    promise(.failure(.paymentFailed))
-                    return
-                }
-                
-                promise(.success(clientSecret))
             }
         }.eraseToAnyPublisher()
+    }
+    
+    private func createPaymentIntentServerSide(
+        amount: Int,
+        currency: String,
+        customerId: String?,
+        apiClient: STPAPIClient,
+        completion: @escaping (Result<String, PaymentError>) -> Void
+    ) {
+        // Esta función simula una llamada al servidor para crear un PaymentIntent
+        // En una aplicación real, harías una solicitud a tu propio servidor
+        // que a su vez llamaría a la API de Stripe para crear un PaymentIntent
+        
+        // Ejemplo de URL de API del servidor
+        guard let url = URL(string: "\(AppConfig.shared.apiBaseUrl)/payments/create-intent") else {
+            completion(.failure(.invalidCardDetails))
+            return
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        
+        // Parámetros para el PaymentIntent
+        var parameters: [String: Any] = [
+            "amount": amount,
+            "currency": currency.lowercased()
+        ]
+        
+        if let customerId = customerId {
+            parameters["customer"] = customerId
+        }
+        
+        // Serializar parámetros
+        guard let httpBody = try? JSONSerialization.data(withJSONObject: parameters) else {
+            completion(.failure(.paymentIntentCreationFailed))
+            return
+        }
+        
+        request.httpBody = httpBody
+        
+        // Realizar la solicitud
+        URLSession.shared.dataTask(with: request) { data, response, error in
+            if let error = error {
+                Logger.error("Network error: \(error.localizedDescription)")
+                completion(.failure(.paymentIntentCreationFailed))
+                return
+            }
+            
+            guard let data = data else {
+                completion(.failure(.paymentIntentCreationFailed))
+                return
+            }
+            
+            // Analizar la respuesta
+            do {
+                if let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
+                   let clientSecret = json["clientSecret"] as? String {
+                    completion(.success(clientSecret))
+                } else {
+                    completion(.failure(.paymentIntentCreationFailed))
+                }
+            } catch {
+                Logger.error("JSON parsing error: \(error.localizedDescription)")
+                completion(.failure(.paymentIntentCreationFailed))
+            }
+        }.resume()
     }
     
     func configurePaymentSheet(clientSecret: String, customerEphemeralKey: String?, customerId: String?) -> PaymentSheet? {

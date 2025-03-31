@@ -19,25 +19,21 @@ struct StripePaymentConfirmationView: View {
             if viewModel.isLoading {
                 ProgressView("Preparing payment...")
             } else if let paymentSheetVM = viewModel.paymentSheetViewModel {
-                if let clientSecret = paymentSheetVM.clientSecret {
-                    Button("Complete Payment") {
-                        preparePaymentSheet(clientSecret: clientSecret)
+                // Verificar si tenemos el clientSecret sin usar if let
+                Button("Complete Payment") {
+                    if paymentSheetVM.clientSecret != nil {
+                        preparePaymentSheet()
                         isPaymentSheetPresented = true
                     }
-                    .buttonStyle(.borderedProminent)
-                    .disabled(paymentSheet == nil)
-                } else {
-                    Text("Waiting for payment information...")
                 }
+                .buttonStyle(.borderedProminent)
+                .disabled(paymentSheetVM.clientSecret == nil || paymentSheet == nil)
             } else {
                 Text("Waiting for payment information...")
             }
         }
         .onAppear {
-            if let paymentSheetVM = viewModel.paymentSheetViewModel,
-               let clientSecret = paymentSheetVM.clientSecret {
-                preparePaymentSheet(clientSecret: clientSecret)
-            }
+            preparePaymentSheet()
         }
         .modifier(PaymentSheetViewModifier(
             isPresented: $isPaymentSheetPresented,
@@ -46,7 +42,13 @@ struct StripePaymentConfirmationView: View {
         ))
     }
     
-    private func preparePaymentSheet(clientSecret: String) {
+    private func preparePaymentSheet() {
+        // Verificamos que tengamos los datos necesarios sin usar if let
+        guard let paymentSheetVM = viewModel.paymentSheetViewModel,
+              let clientSecret = paymentSheetVM.clientSecret else {
+            return
+        }
+        
         var configuration = PaymentSheet.Configuration()
         configuration.merchantDisplayName = "APPECOMM"
         if let cardholderName = viewModel.creditCardDetails.cardholderName, !cardholderName.isEmpty {
