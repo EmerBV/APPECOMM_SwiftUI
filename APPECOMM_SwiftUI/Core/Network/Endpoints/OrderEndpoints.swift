@@ -15,13 +15,13 @@ enum OrderEndpoints: APIEndpoint {
     var path: String {
         switch self {
         case .createOrder:
-            return "/orders/user/place-order"
+            return "user/place-order"
         case .getOrderById(let orderId):
-            return "/orders/\(orderId)/order"
+            return "orders/\(orderId)/order"
         case .getUserOrders(let userId):
-            return "/orders/user/\(userId)/order"
+            return "orders/user/\(userId)/order"
         case .updateOrderStatus(let orderId, _):
-            return "/orders/\(orderId)/update-status"
+            return "orders/\(orderId)/update-status"
         }
     }
     

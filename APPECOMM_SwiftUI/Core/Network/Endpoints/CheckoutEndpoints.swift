@@ -8,11 +8,11 @@ enum CheckoutEndpoints: APIEndpoint {
     var path: String {
         switch self {
         case .createOrder:
-            return "/orders"
+            return "orders/user/place-order"
         case .getOrder(let id):
-            return "/orders/\(id)"
+            return "orders/\(id)"
         case .updateOrderStatus(let id, _):
-            return "/orders/\(id)/status"
+            return "orders/\(id)/status"
         }
     }
     
@@ -30,16 +30,36 @@ enum CheckoutEndpoints: APIEndpoint {
     var parameters: [String: Any]? {
         switch self {
         case .createOrder(let order):
-            let encoder = JSONEncoder()
-            if let data = try? encoder.encode(order),
-               let dict = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
-                return dict
-            }
-            return nil
+            return [
+                "items": order.items.map { item in
+                    [
+                        "productId": item.productId,
+                        "quantity": item.quantity
+                    ]
+                }
+            ]
         case .updateOrderStatus(_, let status):
             return ["status": status]
         default:
             return nil
+        }
+    }
+    
+    var queryParameters: [String: Any]? {
+        switch self {
+        case .createOrder(let order):
+            return ["userId": order.userId]
+        default:
+            return nil
+        }
+    }
+    
+    var encoding: ParameterEncoding {
+        switch self {
+        case .createOrder, .updateOrderStatus:
+            return .json
+        default:
+            return .url
         }
     }
     

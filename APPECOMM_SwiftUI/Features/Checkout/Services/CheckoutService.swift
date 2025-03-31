@@ -12,11 +12,20 @@ final class CheckoutService: CheckoutServiceProtocol {
         let endpoint = CheckoutEndpoints.createOrder(order)
         
         return networkDispatcher.dispatch(ApiResponse<Order>.self, endpoint)
-            .map { response -> Order in
+            .handleEvents(receiveSubscription: { _ in
+                Logger.info("Creating order for user: \(order.userId)")
+            }, receiveOutput: { response in
                 Logger.info("Order created successfully: \(response.data.id)")
-                return response.data
+            }, receiveCompletion: { completion in
+                if case .failure(let error) = completion {
+                    Logger.error("Failed to create order: \(error)")
+                }
+            })
+            .map(\.data)
+            .mapError { error -> Error in
+                Logger.error("Order creation error: \(error)")
+                return error
             }
-            .mapError { $0 as Error }
             .eraseToAnyPublisher()
     }
     

@@ -284,26 +284,28 @@ class CheckoutViewModel: ObservableObject {
 
         isLoading = true
         
+        // Crear los items de la orden con solo los campos necesarios
         let orderItems = cartItems.map { item in
             OrderItem(
                 id: nil,
                 productId: item.product.id,
-                productName: item.product.name,
-                productBrand: item.product.brand,
+                productName: "", // No necesario para el backend
+                productBrand: "", // No necesario para el backend
                 variantId: nil,
                 variantName: nil,
                 quantity: item.quantity,
-                price: item.unitPrice,
-                totalPrice: item.unitPrice * Decimal(item.quantity)
+                price: 0, // No necesario para el backend
+                totalPrice: 0 // No necesario para el backend
             )
         }
         
+        // Crear la orden con solo los campos necesarios
         let orderToCreate = Order(
             id: 0, // El ID será asignado por el backend
             userId: getCurrentUserId() ?? 0,
-            orderDate: ISO8601DateFormatter().string(from: Date()),
-            totalAmount: Decimal(calculateTotalAmount()),
-            status: "pending",
+            orderDate: "", // No necesario para el backend
+            totalAmount: 0, // No necesario para el backend
+            status: "", // No necesario para el backend
             items: orderItems
         )
         
