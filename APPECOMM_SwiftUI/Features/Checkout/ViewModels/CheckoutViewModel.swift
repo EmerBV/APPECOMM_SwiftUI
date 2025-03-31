@@ -346,6 +346,11 @@ class CheckoutViewModel: ObservableObject {
             email: email
         )
         
+        // Asegurarse de que no haya un PaymentSheet anterior
+        self.paymentSheetViewModel = nil
+        self.showPaymentSheet = false
+        
+        // Asignar el nuevo PaymentSheetViewModel
         self.paymentSheetViewModel = paymentSheetVM
         
         // Observe changes in payment status
@@ -357,6 +362,11 @@ class CheckoutViewModel: ObservableObject {
                     self?.handlePaymentSuccess(orderId: order.id)
                 case .failed(let message):
                     self?.handlePaymentFailure(message: message)
+                case .ready:
+                    self?.isLoading = false
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                        self?.showPaymentSheet = true
+                    }
                 default:
                     break
                 }
@@ -365,12 +375,6 @@ class CheckoutViewModel: ObservableObject {
         
         // Prepare payment sheet
         paymentSheetVM.preparePaymentSheet()
-        
-        // Show payment sheet
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
-            self?.isLoading = false
-            self?.showPaymentSheet = true
-        }
     }
     
     private func processApplePayPayment(for order: Order) {

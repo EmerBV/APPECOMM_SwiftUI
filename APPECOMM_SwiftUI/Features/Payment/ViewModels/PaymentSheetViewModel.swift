@@ -21,6 +21,7 @@ class PaymentSheetViewModel: ObservableObject {
     @Published var paymentResult: PaymentSheetResult?
     @Published var clientSecret: String?
     @Published var shouldPresentPaymentSheet = false
+    @Published var order: Order?
     
     // MARK: - Private Properties
     private let paymentService: PaymentServiceProtocol
@@ -29,21 +30,16 @@ class PaymentSheetViewModel: ObservableObject {
     private let email: String?
     private var paymentIntentId: String?
     private var cancellables = Set<AnyCancellable>()
-    private var isPresenting = false
     
-    // MARK: - Enums
-    
-    enum PaymentStatus {
-        case idle
-        case loading
-        case ready
-        case processing
-        case completed
-        case failed(String)
+    // MARK: - Computed Properties
+    var amountFormatted: String {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .currency
+        formatter.locale = Locale.current
+        return formatter.string(from: NSDecimalNumber(decimal: amount)) ?? "\(amount)"
     }
     
     // MARK: - Initialization
-    
     init(paymentService: PaymentServiceProtocol, orderId: Int, amount: Decimal, email: String? = nil) {
         self.paymentService = paymentService
         self.orderId = orderId
@@ -52,24 +48,20 @@ class PaymentSheetViewModel: ObservableObject {
     }
     
     // MARK: - Public Methods
-    
-    /// Prepara el PaymentSheet con la configuración necesaria
     func preparePaymentSheet() {
         guard paymentSheet == nil else { return }
         
         isLoading = true
         paymentStatus = .loading
         
-        // 1. Primero aseguramos que tenemos la configuración de Stripe
         paymentService.getStripeConfig()
             .mapError { $0 as Error }
-            .flatMap { [weak self] _ -> AnyPublisher<PaymentCheckout, Error> in
+            .flatMap { [weak self] config -> AnyPublisher<PaymentCheckout, Error> in
                 guard let self = self else {
                     return Fail(error: NSError(domain: "PaymentSheetViewModel", code: 0, userInfo: [NSLocalizedDescriptionKey: "Self is nil"]))
                         .eraseToAnyPublisher()
                 }
                 
-                // 2. Preparar el checkout con el Payment Intent
                 return self.paymentService.prepareCheckout(
                     orderId: self.orderId,
                     amount: self.amount,
@@ -92,19 +84,17 @@ class PaymentSheetViewModel: ObservableObject {
                 self.clientSecret = checkout.clientSecret
                 self.paymentIntentId = checkout.paymentIntentId
                 
-                // 3. Configurar PaymentSheet
                 var configuration = PaymentSheet.Configuration()
                 configuration.merchantDisplayName = "APPECOMM"
                 if let email = self.email {
                     configuration.defaultBillingDetails.email = email
                 }
                 
-                // Configurar cliente si está disponible
-                if let customerId = checkout.customerId, let ephemeralKey = checkout.ephemeralKey {
+                if let customerId = checkout.customerId,
+                   let ephemeralKey = checkout.ephemeralKey {
                     configuration.customer = .init(id: customerId, ephemeralKeySecret: ephemeralKey)
                 }
                 
-                // Crear PaymentSheet
                 self.paymentSheet = PaymentSheet(
                     paymentIntentClientSecret: checkout.clientSecret,
                     configuration: configuration
@@ -113,110 +103,72 @@ class PaymentSheetViewModel: ObservableObject {
                 self.isLoading = false
                 self.paymentStatus = .ready
                 Logger.payment("Payment sheet ready with client secret", level: .info)
-                
-                // Indicar que el PaymentSheet está listo para ser presentado
-                self.shouldPresentPaymentSheet = true
             }
             .store(in: &cancellables)
     }
     
-    /// Presenta el PaymentSheet cuando sea seguro hacerlo
     func presentPaymentSheetIfReady() {
-        guard !isPresenting else {
-            Logger.payment("Already presenting payment sheet", level: .warning)
-            return
-        }
-        
         guard let paymentSheet = paymentSheet else {
             Logger.payment("PaymentSheet is nil", level: .error)
             return
         }
         
-        // Obtener la ventana principal
         guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-              let window = windowScene.windows.first,
-              let rootViewController = window.rootViewController?.topMostViewController else {
+              let rootViewController = windowScene.windows.first?.rootViewController else {
             Logger.payment("Failed to get root view controller", level: .error)
             return
         }
         
-        isPresenting = true
-        Logger.payment("Attempting to present PaymentSheet", level: .info)
+        let presentingViewController = rootViewController.topMostViewController
         
-        // Asegurarse de que estamos en el hilo principal
+        Logger.payment("Presenting PaymentSheet from topMostViewController", level: .info)
+        
         DispatchQueue.main.async { [weak self] in
             guard let self = self else { return }
             
-            // Presentar el PaymentSheet
-            paymentSheet.present(from: rootViewController) { [weak self] result in
-                guard let self = self else { return }
-                self.isPresenting = false
-                self.shouldPresentPaymentSheet = false
-                self.handlePaymentResult(result)
-                Logger.payment("PaymentSheet presentation completed with result: \(result)", level: .info)
-            }
-        }
-    }
-    
-    /// Maneja el resultado del pago
-    func handlePaymentResult(_ result: PaymentSheetResult) {
-        self.paymentResult = result
-        
-        switch result {
-        case .completed:
-            Logger.payment("Payment completed successfully", level: .info)
-            paymentStatus = .completed
-            // Notificar éxito al sistema
-            NotificationCenter.default.post(
-                name: Notification.Name("PaymentCompleted"),
-                object: nil,
-                userInfo: ["orderId": orderId, "paymentIntentId": paymentIntentId ?? ""]
-            )
-            
-        case .canceled:
-            Logger.payment("Payment canceled by user", level: .info)
-            paymentStatus = .idle
-            if let paymentIntentId = paymentIntentId {
-                // Cancelar el pago en el servidor
-                cancelPayment(paymentIntentId: paymentIntentId)
-            }
-            
-        case .failed(let error):
-            Logger.payment("Payment failed: \(error)", level: .error)
-            paymentStatus = .failed(error.localizedDescription)
-            self.error = error.localizedDescription
-        }
-    }
-    
-    /// Reinicia el estado del pago
-    func reset() {
-        paymentStatus = .idle
-        error = nil
-        paymentResult = nil
-        // No reiniciamos paymentSheet para evitar tener que crearlo de nuevo
-    }
-    
-    // MARK: - Private Methods
-    
-    /// Cancela un PaymentIntent
-    private func cancelPayment(paymentIntentId: String) {
-        paymentService.cancelPayment(paymentIntentId: paymentIntentId)
-            .receive(on: DispatchQueue.main)
-            .sink { completion in
-                if case .failure(let error) = completion {
-                    Logger.payment("Failed to cancel payment: \(error)", level: .error)
+            if presentingViewController.presentedViewController != nil {
+                presentingViewController.dismiss(animated: true) {
+                    paymentSheet.present(from: presentingViewController) { result in
+                        self.shouldPresentPaymentSheet = false
+                        self.handlePaymentResult(result)
+                        Logger.payment("PaymentSheet presentation completed with result: \(result)", level: .info)
+                    }
                 }
-            } receiveValue: { _ in
-                Logger.payment("Payment intent canceled: \(paymentIntentId)", level: .info)
+            } else {
+                paymentSheet.present(from: presentingViewController) { result in
+                    self.shouldPresentPaymentSheet = false
+                    self.handlePaymentResult(result)
+                    Logger.payment("PaymentSheet presentation completed with result: \(result)", level: .info)
+                }
             }
-            .store(in: &cancellables)
+        }
     }
     
-    // MARK: - Helper Methods
-    
-    // Expone el monto para la vista
-    var amountFormatted: String {
-        return amount.toCurrentLocalePrice
+    public func handlePaymentResult(_ result: PaymentSheetResult) {
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else { return }
+            
+            switch result {
+            case .completed:
+                self.paymentStatus = .completed
+                self.paymentResult = result
+                NotificationCenter.default.post(
+                    name: Notification.Name("PaymentCompleted"),
+                    object: nil,
+                    userInfo: ["orderId": self.orderId]
+                )
+                Logger.payment("Payment completed successfully", level: .info)
+                
+            case .canceled:
+                self.paymentStatus = .failed("Pago cancelado")
+                Logger.payment("Payment was canceled by user", level: .info)
+                
+            case .failed(let error):
+                self.paymentStatus = .failed(error.localizedDescription)
+                self.error = error.localizedDescription
+                Logger.payment("Payment failed: \(error.localizedDescription)", level: .error)
+            }
+        }
     }
 }
 

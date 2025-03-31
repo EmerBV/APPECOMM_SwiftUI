@@ -12,45 +12,36 @@ import StripePaymentSheet
 struct PaymentSheetView: View {
     @StateObject var viewModel: PaymentSheetViewModel
     @Environment(\.dismiss) private var dismiss
-    @State private var isPaymentSheetPresented = false
-    @State private var paymentError: PaymentError?
     
     var body: some View {
-        VStack(spacing: 24) {
-            headerSection
-            
-            if viewModel.isLoading {
-                loadingView
-            } else {
-                switch viewModel.paymentStatus {
-                case .idle, .loading, .ready:
-                    paymentButton
-                case .processing:
-                    processingView
-                case .completed:
-                    successView
-                case .failed(let message):
-                    failureView(message: message)
+        NavigationView {
+            VStack(spacing: 24) {
+                headerSection
+                
+                if viewModel.isLoading {
+                    loadingView
+                } else {
+                    switch viewModel.paymentStatus {
+                    case .idle, .loading, .ready:
+                        paymentButton
+                    case .processing:
+                        processingView
+                    case .completed:
+                        successView
+                    case .failed(let message):
+                        failureView(errorMessage: message)
+                    }
                 }
             }
+            .padding()
+            .navigationTitle("Pago Seguro")
+            .navigationBarTitleDisplayMode(.inline)
+            .navigationBarItems(trailing: Button("Cerrar") {
+                dismiss()
+            })
         }
-        .padding()
-        .navigationTitle("Pago Seguro")
-        .navigationBarTitleDisplayMode(.inline)
         .onAppear {
             viewModel.preparePaymentSheet()
-        }
-        .alert(item: $paymentError) { error in
-            Alert(
-                title: Text("Error de Pago"),
-                message: Text(error.message),
-                dismissButton: .default(Text("Aceptar"))
-            )
-        }
-        .onChange(of: viewModel.error) { errorMsg in
-            if let errorMsg = errorMsg {
-                paymentError = PaymentError.paymentFailed(errorMsg)
-            }
         }
         .onChange(of: viewModel.shouldPresentPaymentSheet) { shouldPresent in
             if shouldPresent {
@@ -92,15 +83,7 @@ struct PaymentSheetView: View {
         VStack(spacing: 16) {
             Button {
                 Logger.payment("Payment button tapped", level: .info)
-                if viewModel.paymentSheet != nil {
-                    Logger.payment("Presenting payment sheet", level: .info)
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                        viewModel.shouldPresentPaymentSheet = true
-                    }
-                } else {
-                    Logger.payment("Preparing payment sheet", level: .info)
-                    viewModel.preparePaymentSheet()
-                }
+                viewModel.shouldPresentPaymentSheet = true
             } label: {
                 HStack {
                     Image(systemName: "checkmark.shield.fill")
@@ -113,13 +96,7 @@ struct PaymentSheetView: View {
                 .foregroundColor(.white)
                 .cornerRadius(10)
             }
-            .disabled(viewModel.isLoading || viewModel.shouldPresentPaymentSheet)
-            
-            if viewModel.isLoading {
-                ProgressView()
-                    .scaleEffect(0.8)
-                    .padding(.top, 8)
-            }
+            .disabled(viewModel.paymentSheet == nil || viewModel.isLoading)
             
             Text("Pago seguro procesado por Stripe")
                 .font(.caption)
@@ -134,11 +111,6 @@ struct PaymentSheetView: View {
             
             Text("Procesando su pago...")
                 .font(.headline)
-            
-            Text("Por favor espere mientras completamos la transacción")
-                .font(.subheadline)
-                .foregroundColor(.secondary)
-                .multilineTextAlignment(.center)
         }
         .frame(maxWidth: .infinity)
         .padding()
@@ -146,88 +118,82 @@ struct PaymentSheetView: View {
     
     private var successView: some View {
         VStack(spacing: 24) {
-            ZStack {
-                Circle()
-                    .fill(Color.green.opacity(0.1))
-                    .frame(width: 100, height: 100)
-                
-                Image(systemName: "checkmark.circle.fill")
-                    .resizable()
-                    .scaledToFit()
-                    .foregroundColor(.green)
-                    .frame(width: 60, height: 60)
-            }
+            Image(systemName: "checkmark.circle.fill")
+                .resizable()
+                .scaledToFit()
+                .frame(width: 60, height: 60)
+                .foregroundColor(.green)
             
             Text("¡Pago Completado!")
                 .font(.title2)
                 .fontWeight(.bold)
             
             Text("Gracias por su compra. Hemos recibido su pago y estamos procesando su pedido.")
-                .font(.body)
                 .multilineTextAlignment(.center)
                 .foregroundColor(.secondary)
             
-            Button {
-                dismiss()
-            } label: {
-                Text("Continuar")
-                    .font(.headline)
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(Color.blue)
-                    .foregroundColor(.white)
-                    .cornerRadius(10)
+            VStack(spacing: 16) {
+                Button {
+                    NotificationCenter.default.post(name: Notification.Name("ContinueShopping"), object: nil)
+                    dismiss()
+                } label: {
+                    Text("Continuar Comprando")
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(Color.blue)
+                        .foregroundColor(.white)
+                        .cornerRadius(10)
+                }
+                
+                Button {
+                    if let orderId = viewModel.order?.id {
+                        NotificationCenter.default.post(
+                            name: Notification.Name("ViewOrder"),
+                            object: nil,
+                            userInfo: ["orderId": orderId]
+                        )
+                    }
+                    dismiss()
+                } label: {
+                    Text("Ver Pedido")
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(Color(.systemGray6))
+                        .foregroundColor(.primary)
+                        .cornerRadius(10)
+                }
             }
         }
+        .padding()
     }
     
-    private func failureView(message: String) -> some View {
+    private func failureView(errorMessage: String) -> some View {
         VStack(spacing: 24) {
-            ZStack {
-                Circle()
-                    .fill(Color.red.opacity(0.1))
-                    .frame(width: 100, height: 100)
-                
-                Image(systemName: "exclamationmark.circle.fill")
-                    .resizable()
-                    .scaledToFit()
-                    .foregroundColor(.red)
-                    .frame(width: 60, height: 60)
-            }
+            Image(systemName: "xmark.circle.fill")
+                .resizable()
+                .scaledToFit()
+                .frame(width: 60, height: 60)
+                .foregroundColor(.red)
             
             Text("Error en el Pago")
                 .font(.title2)
                 .fontWeight(.bold)
             
-            Text(message)
-                .font(.body)
+            Text(errorMessage)
                 .multilineTextAlignment(.center)
                 .foregroundColor(.secondary)
             
             Button {
-                viewModel.reset()
                 viewModel.preparePaymentSheet()
             } label: {
                 Text("Intentar Nuevamente")
-                    .font(.headline)
                     .frame(maxWidth: .infinity)
                     .padding()
                     .background(Color.blue)
                     .foregroundColor(.white)
                     .cornerRadius(10)
             }
-            
-            Button {
-                dismiss()
-            } label: {
-                Text("Cancelar")
-                    .font(.headline)
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(Color(.systemGray5))
-                    .foregroundColor(.primary)
-                    .cornerRadius(10)
-            }
         }
+        .padding()
     }
 }
