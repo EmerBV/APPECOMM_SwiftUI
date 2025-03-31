@@ -13,6 +13,7 @@ import Stripe
 struct PaymentConfirmationView: View {
     @ObservedObject var viewModel: CheckoutViewModel
     @Environment(\.dismiss) private var dismiss
+    @State private var navigateToOrderDetails = false
     
     var body: some View {
         ScrollView {
@@ -107,8 +108,14 @@ struct PaymentConfirmationView: View {
                 
                 // Continue Shopping button
                 Button(action: {
-                    // Return to main screen
+                    // Return to home screen
                     dismiss()
+                    
+                    // Post notification to navigate to home tab
+                    NotificationCenter.default.post(
+                        name: Notification.Name("NavigateToHomeTab"),
+                        object: nil
+                    )
                 }) {
                     Text("Continue Shopping")
                         .fontWeight(.semibold)
@@ -121,9 +128,9 @@ struct PaymentConfirmationView: View {
                 .padding(.top, 20)
                 
                 // View Order button
-                if viewModel.order != nil {
+                if let order = viewModel.order {
                     Button(action: {
-                        // Navigate to order details (would be implemented in a real app)
+                        navigateToOrderDetails = true
                     }) {
                         Text("View Order")
                             .fontWeight(.semibold)
@@ -136,6 +143,13 @@ struct PaymentConfirmationView: View {
                                     .stroke(Color.blue, lineWidth: 1)
                             )
                     }
+                    .background(
+                        NavigationLink(
+                            destination: OrderDetailView(orderId: order.id),
+                            isActive: $navigateToOrderDetails,
+                            label: { EmptyView() }
+                        )
+                    )
                 }
             }
             .padding()
@@ -396,7 +410,8 @@ struct CheckoutView: View {
             CheckoutContentView(
                 viewModel: viewModel,
                 showingPaymentForm: $showingPaymentForm,
-                selectedOrder: $selectedOrder
+                selectedOrder: $selectedOrder,
+                dismiss: dismiss
             )
             .fullScreenCover(isPresented: $viewModel.showPaymentSheet) {
                 if let paymentSheetViewModel = viewModel.paymentSheetViewModel {
@@ -414,6 +429,7 @@ struct CheckoutContentView: View {
     @ObservedObject var viewModel: CheckoutViewModel
     @Binding var showingPaymentForm: Bool
     @Binding var selectedOrder: Order?
+    var dismiss: DismissAction
     
     var body: some View {
         contentView
@@ -432,7 +448,7 @@ struct CheckoutContentView: View {
                 ToolbarItemGroup(placement: .navigationBarTrailing) {
                     if viewModel.currentStep == .confirmation {
                         Button("Done") {
-                            // Dismiss will be handled by the parent view
+                            dismiss()
                         }
                     }
                 }
@@ -493,7 +509,7 @@ struct CheckoutContentView: View {
         case .processing:
             return "Processing"
         case .confirmation:
-            return "Confirmation"
+            return "Payment Confirmation"
         case .error:
             return "Error"
         }

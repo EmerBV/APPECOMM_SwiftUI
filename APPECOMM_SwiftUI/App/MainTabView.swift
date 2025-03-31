@@ -65,5 +65,17 @@ struct MainTabView: View {
                 Logger.info("ProfileView appeared")
             }
         }
+        .onReceive(NotificationCenter.default.publisher(for: Notification.Name("NavigateToHomeTab"))) { _ in
+            // Switch to home tab when notification is received
+            selectedTab = 0
+        }
+        .onReceive(NotificationCenter.default.publisher(for: Notification.Name("NavigateToCartTab"))) { _ in
+            // Switch to cart tab when notification is received
+            selectedTab = 2
+        }
+        .onReceive(NotificationCenter.default.publisher(for: Notification.Name("NavigateToProfileTab"))) { _ in
+            // Switch to profile tab when notification is received
+            selectedTab = 3
+        }
     }
 }
