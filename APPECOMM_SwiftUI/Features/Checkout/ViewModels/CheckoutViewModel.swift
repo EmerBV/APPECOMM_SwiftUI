@@ -271,6 +271,19 @@ class CheckoutViewModel: ObservableObject {
                 self.hasExistingShippingDetails = true
                 self.isEditingShippingDetails = false
                 
+                // Actualizar selectedAddress con los nuevos detalles
+                let address = Address(
+                    id: details.id,
+                    userId: userId,
+                    street: details.address,
+                    city: details.city,
+                    state: details.state ?? "",
+                    postalCode: details.postalCode,
+                    country: details.country,
+                    isDefault: true
+                )
+                self.selectedAddress = address
+                
                 // Continue with checkout flow
                 self.currentStep = .paymentMethod
             }
@@ -449,13 +462,20 @@ class CheckoutViewModel: ObservableObject {
     func proceedToNextStep() {
         switch currentStep {
         case .shippingInfo:
-            if selectedAddress != nil {
-                currentStep = .paymentMethod
+            validateShippingForm()
+            if shippingDetailsForm.isValid {
+                saveShippingDetails()
             } else {
-                errorMessage = "Por favor, selecciona una dirección de envío"
+                errorMessage = "Por favor, completa todos los campos de envío correctamente"
                 showError = true
             }
         case .paymentMethod:
+            if selectedAddress == nil {
+                errorMessage = "Por favor, selecciona una dirección de envío"
+                showError = true
+                return
+            }
+            
             if selectedPaymentMethod == .creditCard {
                 currentStep = .cardDetails
             } else {
@@ -535,6 +555,15 @@ class CheckoutViewModel: ObservableObject {
                         isDefault: true
                     )
                     self?.selectedAddress = address
+                    
+                    // También actualizar el formulario con estos datos
+                    self?.shippingDetailsForm = ShippingDetailsForm(from: details)
+                    self?.hasExistingShippingDetails = true
+                    self?.isEditingShippingDetails = false
+                } else {
+                    self?.selectedAddress = nil
+                    self?.hasExistingShippingDetails = false
+                    self?.isEditingShippingDetails = true
                 }
             }
             .store(in: &cancellables)

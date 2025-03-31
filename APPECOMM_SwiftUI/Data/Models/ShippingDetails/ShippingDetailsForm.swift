@@ -36,8 +36,13 @@ struct ShippingDetailsForm {
     var phoneNumberError: String?
     
     var isValid: Bool {
-        return isFullNameValid && isAddressValid && isCityValid &&
-        isStateValid && isPostalCodeValid && isCountryValid && isPhoneNumberValid
+        return !fullName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
+               !address.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
+               !city.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
+               !state.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
+               !postalCode.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
+               !country.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
+               !phoneNumber.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
     
     /// Initialize with default empty values

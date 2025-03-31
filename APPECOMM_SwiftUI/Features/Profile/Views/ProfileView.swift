@@ -257,6 +257,7 @@ struct OrderStatusBadge: View {
         switch status.lowercased() {
         case "pending": return .orange
         case "processing": return .blue
+        case "paid": return .yellow
         case "shipped": return .purple
         case "delivered": return .green
         case "cancelled": return .red
