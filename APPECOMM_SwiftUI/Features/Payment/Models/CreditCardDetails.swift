@@ -34,6 +34,14 @@ struct CreditCardDetails {
         // Default initializer with empty values
     }
     
+    /// Initialize with provided values
+    init(cardNumber: String, expiryDate: String, cvv: String, cardholderName: String) {
+        self.cardNumber = cardNumber
+        self.expiryDate = expiryDate
+        self.cvv = cvv
+        self.cardholderName = cardholderName
+    }
+    
     /// Validate all fields
     mutating func validateAll(validator: InputValidatorProtocol = InputValidator()) {
         // Validar número de tarjeta

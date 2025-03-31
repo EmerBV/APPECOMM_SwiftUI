@@ -63,6 +63,17 @@ class StripeAPIClient: StripeAPIClientProtocol {
             .eraseToAnyPublisher()
         }
         
+        // Verificar que el orderId sea válido
+        guard orderId > 0 else {
+            Logger.payment("Invalid order ID provided: \(orderId)", level: .error)
+            return Fail(error: NetworkError.badRequest(APIError(
+                message: "Invalid order ID",
+                code: "INVALID_ORDER_ID",
+                details: nil
+            )))
+                .eraseToAnyPublisher()
+        }
+        
         let endpoint = PaymentEndpoints.createPaymentIntent(orderId: orderId, request: paymentRequest)
         
         return networkDispatcher.dispatch(ApiResponse<PaymentIntentResponse>.self, endpoint)
@@ -71,7 +82,11 @@ class StripeAPIClient: StripeAPIClientProtocol {
                 Logger.payment("PaymentIntent created: \(response.paymentIntentId)", level: .info)
             }, receiveCompletion: { completion in
                 if case .failure(let error) = completion {
-                    Logger.payment("Failed to create PaymentIntent: \(error)", level: .error)
+                    if case .notFound = error {
+                        Logger.payment("Order not found: \(orderId)", level: .error)
+                    } else {
+                        Logger.payment("Failed to create PaymentIntent: \(error)", level: .error)
+                    }
                 }
             })
             .eraseToAnyPublisher()

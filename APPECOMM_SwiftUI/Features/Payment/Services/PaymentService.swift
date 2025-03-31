@@ -84,6 +84,16 @@ final class PaymentService: PaymentServiceProtocol {
     // MARK: - Complete Checkout Flow
     
     func prepareCheckout(orderId: Int, amount: Decimal, email: String?) -> AnyPublisher<PaymentCheckout, Error> {
+        // Verificar que el orderId sea válido
+        guard orderId > 0 else {
+            return Fail(error: NetworkError.badRequest(APIError(
+                message: "Invalid order ID",
+                code: "INVALID_ORDER_ID",
+                details: nil
+            )))
+                .eraseToAnyPublisher()
+        }
+
         // 1. Crear PaymentIntent
         let paymentRequest = PaymentRequest(
             currency: "usd",
@@ -96,8 +106,8 @@ final class PaymentService: PaymentServiceProtocol {
             .map { response -> PaymentCheckout in
                 return PaymentCheckout(
                     clientSecret: response.clientSecret,
-                    ephemeralKey: nil, // En un caso real, obtendrías esto de tu API
-                    customerId: nil,   // En un caso real, obtendrías esto de tu API
+                    ephemeralKey: nil,
+                    customerId: nil,
                     paymentIntentId: response.paymentIntentId
                 )
             }

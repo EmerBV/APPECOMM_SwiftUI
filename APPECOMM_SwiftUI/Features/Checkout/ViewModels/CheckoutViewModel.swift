@@ -275,12 +275,14 @@ class CheckoutViewModel: ObservableObject {
     
     // MARK: - Order Creation
     
-    func createOrder() -> Order? {
+    func processPayment() {
         guard let address = selectedAddress else {
             errorMessage = "Por favor, selecciona una dirección de envío"
             showError = true
-            return nil
+            return
         }
+
+        isLoading = true
         
         let orderItems = cartItems.map { item in
             OrderItem(
@@ -296,8 +298,8 @@ class CheckoutViewModel: ObservableObject {
             )
         }
         
-        let order = Order(
-            id: Int.random(in: 1000...9999),
+        let orderToCreate = Order(
+            id: 0, // El ID será asignado por el backend
             userId: getCurrentUserId() ?? 0,
             orderDate: ISO8601DateFormatter().string(from: Date()),
             totalAmount: Decimal(calculateTotalAmount()),
@@ -305,23 +307,28 @@ class CheckoutViewModel: ObservableObject {
             items: orderItems
         )
         
-        currentOrder = order
-        return order
-    }
-    
-    // MARK: - Payment Processing
-    
-    func processPayment() {
-        if let order = createOrder() {
-            self.order = order
-            
-            switch selectedPaymentMethod {
-            case .creditCard:
-                prepareStripePayment(for: order)
-            case .applePay:
-                processApplePayPayment(for: order)
+        // Primero crear la orden en el backend
+        checkoutService.createOrder(orderToCreate)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] completion in
+                if case .failure(let error) = completion {
+                    self?.isLoading = false
+                    self?.errorMessage = error.localizedDescription
+                    self?.showError = true
+                }
+            } receiveValue: { [weak self] createdOrder in
+                guard let self = self else { return }
+                self.order = createdOrder
+                
+                // Una vez creada la orden, proceder con el pago
+                switch self.selectedPaymentMethod {
+                case .creditCard:
+                    self.prepareStripePayment(for: createdOrder)
+                case .applePay:
+                    self.processApplePayPayment(for: createdOrder)
+                }
             }
-        }
+            .store(in: &cancellables)
     }
     
     private func prepareStripePayment(for order: Order) {

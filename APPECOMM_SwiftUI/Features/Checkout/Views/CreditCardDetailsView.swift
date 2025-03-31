@@ -14,7 +14,6 @@ struct CreditCardDetailsView: View {
     @State private var expiryDate = ""
     @State private var cvc = ""
     @State private var name = ""
-    @State private var showingPaymentForm = false
     
     var body: some View {
         VStack(spacing: 20) {
@@ -65,9 +64,14 @@ struct CreditCardDetailsView: View {
                     }
                     
                     Button(action: {
-                        if let order = viewModel.createOrder() {
-                            showingPaymentForm = true
-                        }
+                        // Actualizar los detalles de la tarjeta en el viewModel
+                        viewModel.creditCardDetails = CreditCardDetails(
+                            cardNumber: cardNumber,
+                            expiryDate: expiryDate,
+                            cvv: cvc,
+                            cardholderName: name
+                        )
+                        viewModel.processPayment()
                     }) {
                         HStack {
                             Text("Proceder al pago")
@@ -85,8 +89,11 @@ struct CreditCardDetailsView: View {
                 .padding()
             }
         }
-        .sheet(isPresented: $showingPaymentForm) {
-            if let order = viewModel.getCurrentOrder() {
+        .sheet(isPresented: .init(
+            get: { viewModel.showPaymentSheet },
+            set: { viewModel.showPaymentSheet = $0 }
+        )) {
+            if let order = viewModel.order {
                 let paymentVM = viewModel.paymentViewModel
                 PaymentFormView(
                     viewModel: paymentVM,
