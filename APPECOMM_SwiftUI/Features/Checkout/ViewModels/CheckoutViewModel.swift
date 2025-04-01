@@ -145,6 +145,25 @@ class CheckoutViewModel: ObservableObject {
                 }
             }
             .store(in: &cancellables)
+        
+        NotificationCenter.default.publisher(for: Notification.Name("PaymentCancelled"))
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in
+                // Restaurar el estado de la orden a "pending" o eliminarla si es apropiado
+                if let orderId = self?.order?.id {
+                    self?.updateOrderStatus(orderId: orderId, status: "cancelled")
+                }
+                
+                // Actualizar la UI
+                self?.isLoading = false
+                self?.showPaymentSheet = false
+                self?.currentStep = .review
+                self?.errorMessage = "Pago cancelado. Puede intentarlo nuevamente."
+                
+                // Limpiar el PaymentSheetViewModel
+                self?.paymentSheetViewModel = nil
+            }
+            .store(in: &cancellables)
     }
     
     // MARK: - Order Summary Calculation
@@ -289,7 +308,6 @@ class CheckoutViewModel: ObservableObject {
     }
     
     // MARK: - Order Creation
-    
     func processPayment() {
         guard let address = selectedAddress else {
             errorMessage = "Por favor, selecciona una dirección de envío"

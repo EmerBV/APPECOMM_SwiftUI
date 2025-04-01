@@ -12,7 +12,7 @@ import Stripe
 
 struct PaymentConfirmationView: View {
     @ObservedObject var viewModel: CheckoutViewModel
-    @Environment(\.dismiss) private var dismiss
+    @Binding var shouldDismiss: Bool
     @State private var navigateToOrderDetails = false
     
     var body: some View {
@@ -109,7 +109,7 @@ struct PaymentConfirmationView: View {
                 // Continue Shopping button
                 Button(action: {
                     // Return to home screen
-                    dismiss()
+                    shouldDismiss = true
                     
                     // Post notification to navigate to home tab
                     NotificationCenter.default.post(
@@ -156,13 +156,6 @@ struct PaymentConfirmationView: View {
         }
         .navigationTitle("Payment Confirmation")
         .navigationBarBackButtonHidden(true)
-        .toolbar {
-            ToolbarItem(placement: .navigationBarTrailing) {
-                Button("Done") {
-                    dismiss()
-                }
-            }
-        }
     }
     
     private func formattedDate(from dateString: String) -> String {
@@ -216,6 +209,7 @@ struct PaymentErrorView: View {
                 // Return to review screen to try again
                 viewModel.currentStep = .review
                 viewModel.errorMessage = nil
+                //viewModel.preparePaymentSheet()
             }) {
                 Text("Try Again")
                     .fontWeight(.semibold)
@@ -349,6 +343,7 @@ struct CheckoutView: View {
     @ObservedObject private var viewModel: CheckoutViewModel
     @State private var showingPaymentForm = false
     @State private var selectedOrder: Order?
+    @State private var shouldDismiss = false
     
     // MARK: - Initialization
     
@@ -382,7 +377,7 @@ struct CheckoutView: View {
                 viewModel: viewModel,
                 showingPaymentForm: $showingPaymentForm,
                 selectedOrder: $selectedOrder,
-                dismiss: dismiss
+                shouldDismiss: $shouldDismiss
             )
             .fullScreenCover(isPresented: $viewModel.showPaymentSheet) {
                 if let paymentSheetViewModel = viewModel.paymentSheetViewModel {
@@ -391,6 +386,29 @@ struct CheckoutView: View {
             }
         }
         .interactiveDismissDisabled()
+        .onChange(of: shouldDismiss) { newValue in
+            if newValue {
+                // Primero publicamos la notificación para navegar al home tab
+                NotificationCenter.default.post(name: Notification.Name("NavigateToHomeTab"), object: nil)
+                // Luego cerramos la vista actual
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                    dismiss()
+                }
+            }
+        }
+        .onAppear {
+            setupNotificationObservers()
+        }
+    }
+    
+    private func setupNotificationObservers() {
+        NotificationCenter.default.addObserver(
+            forName: Notification.Name("PaymentCancelled"),
+            object: nil,
+            queue: .main
+        ) { [weak viewModel] _ in
+            viewModel?.currentStep = .review
+        }
     }
 }
 
@@ -400,7 +418,7 @@ struct CheckoutContentView: View {
     @ObservedObject var viewModel: CheckoutViewModel
     @Binding var showingPaymentForm: Bool
     @Binding var selectedOrder: Order?
-    var dismiss: DismissAction
+    @Binding var shouldDismiss: Bool
     
     var body: some View {
         contentView
@@ -419,7 +437,7 @@ struct CheckoutContentView: View {
                 ToolbarItemGroup(placement: .navigationBarTrailing) {
                     if viewModel.currentStep == .confirmation {
                         Button("Done") {
-                            dismiss()
+                            shouldDismiss = true
                         }
                     }
                 }
@@ -458,7 +476,7 @@ struct CheckoutContentView: View {
         case .processing:
             PaymentProcessingView()
         case .confirmation:
-            PaymentConfirmationView(viewModel: viewModel)
+            PaymentConfirmationView(viewModel: viewModel, shouldDismiss: $shouldDismiss)
         case .error:
             PaymentErrorView(viewModel: viewModel)
         }

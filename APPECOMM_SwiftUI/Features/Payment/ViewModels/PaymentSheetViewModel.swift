@@ -189,6 +189,42 @@ class PaymentSheetViewModel: ObservableObject {
             }
         }
     }
+    
+    func cancelPayment() {
+        // Limpiar el estado del pago
+        self.paymentSheet = nil
+        self.shouldPresentPaymentSheet = false
+        self.paymentStatus = .idle
+        self.isLoading = false
+        
+        // Si hay un paymentIntentId activo, cancelarlo en el servidor
+        if let paymentIntentId = self.paymentIntentId {
+            paymentService.cancelPayment(paymentIntentId: paymentIntentId)
+                .receive(on: DispatchQueue.main)
+                .sink { completion in
+                    if case .failure(let error) = completion {
+                        Logger.payment("Error canceling payment: \(error)", level: .error)
+                    }
+                } receiveValue: { [weak self] _ in
+                    Logger.payment("Payment cancelled successfully", level: .info)
+                    // Notificar la cancelación del pago
+                    NotificationCenter.default.post(
+                        name: Notification.Name("PaymentCancelled"),
+                        object: nil
+                    )
+                    // Asegurarse de que el estado se actualice
+                    self?.paymentStatus = .failed("Pago cancelado por el usuario")
+                }
+                .store(in: &cancellables)
+        } else {
+            // Si no hay paymentIntentId, simplemente notificar la cancelación
+            NotificationCenter.default.post(
+                name: Notification.Name("PaymentCancelled"),
+                object: nil
+            )
+            self.paymentStatus = .failed("Pago cancelado por el usuario")
+        }
+    }
 }
 
 // MARK: - UIViewController Extension

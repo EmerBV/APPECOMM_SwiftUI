@@ -12,6 +12,7 @@ import StripePaymentSheet
 struct PaymentSheetView: View {
     @StateObject var viewModel: PaymentSheetViewModel
     @Environment(\.dismiss) private var dismiss
+    @State private var showingCancelConfirmation = false
     
     var body: some View {
         NavigationView {
@@ -37,8 +38,18 @@ struct PaymentSheetView: View {
             .navigationTitle("Pago Seguro")
             .navigationBarTitleDisplayMode(.inline)
             .navigationBarItems(trailing: Button("Cerrar") {
-                dismiss()
+                showingCancelConfirmation = true
             })
+            .alert("¿Cancelar el pago?", isPresented: $showingCancelConfirmation) {
+                Button("No", role: .cancel) { }
+                Button("Sí", role: .destructive) {
+                    viewModel.cancelPayment()
+                    NotificationCenter.default.post(name: Notification.Name("ReturnToCart"), object: nil)
+                    dismiss()
+                }
+            } message: {
+                Text("¿Estás seguro de que deseas cancelar el proceso de pago? Podrás volver a intentarlo más tarde desde tu carrito.")
+            }
         }
         .onAppear {
             viewModel.preparePaymentSheet()
