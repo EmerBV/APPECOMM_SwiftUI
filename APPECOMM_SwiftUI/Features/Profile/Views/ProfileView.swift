@@ -167,30 +167,8 @@ struct ProfileView: View {
             // Orders
             Section(header: Text("my_orders".localized)) {
                 if let orders = user.orders, !orders.isEmpty {
-                    ForEach(orders) { order in
-                        NavigationLink(destination: Text("order_details".localized)) {
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text("order_number".localized + " \(order.id)")
-                                    .font(.subheadline)
-                                    .fontWeight(.semibold)
-                                
-                                HStack {
-                                    Text(formattedDate(order.orderDate))
-                                        .font(.caption)
-                                        .foregroundColor(.secondary)
-                                    
-                                    Spacer()
-                                    
-                                    OrderStatusBadge(status: order.status)
-                                }
-                                
-                                Text("total".localized + ": $\(order.totalAmount)")
-                                    .font(.caption)
-                                    .foregroundColor(.primary)
-                                    .padding(.top, 4)
-                            }
-                            .padding(.vertical, 4)
-                        }
+                    NavigationLink(destination: OrdersListView(viewModel: DependencyInjector.shared.resolve(OrdersViewModel.self))) {
+                        Label("Mis Pedidos", systemImage: "list.bullet.clipboard")
                     }
                 } else {
                     Text("no_orders".localized)

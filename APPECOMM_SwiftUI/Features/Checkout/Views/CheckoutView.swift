@@ -344,6 +344,7 @@ struct CheckoutView: View {
     @State private var showingPaymentForm = false
     @State private var selectedOrder: Order?
     @State private var shouldDismiss = false
+    @ObservedObject private var navigationCoordinator = NavigationCoordinator.shared
     
     // MARK: - Initialization
     

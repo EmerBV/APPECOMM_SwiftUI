@@ -13,6 +13,7 @@ protocol NavigationCoordinatorProtocol {
     func navigateToCheckout(with cart: Cart)
     func navigateToProductList()
     func navigateToLogin()
+    func navigateToOrdersList()
     func dismissCurrentView()
 }
 
@@ -23,6 +24,8 @@ class NavigationCoordinator: ObservableObject, NavigationCoordinatorProtocol {
     @Published var navigatingToLogin = false
     @Published var currentCart: Cart?
     @Published var shouldDismissCurrent = false
+    @Published var navigatingToCart = false
+    @Published var navigatingToOrdersList = false
     
     // Singleton instance
     static let shared = NavigationCoordinator()
@@ -84,6 +87,27 @@ class NavigationCoordinator: ObservableObject, NavigationCoordinatorProtocol {
         // Reset after navigation is handled
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
             self.navigatingToLogin = false
+        }
+    }
+    
+    // Navegar al carrito desde cualquier parte de la app
+    func navigateToCart() {
+        Logger.info("Navigating to cart")
+        self.navigatingToCart = true
+        
+        // Reset after navigation is handled
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            self.navigatingToCart = false
+        }
+    }
+    
+    func navigateToOrdersList() {
+        Logger.info("Navigating to orders list")
+        self.navigatingToOrdersList = true
+        
+        // Reset after navigation is handled
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            self.navigatingToOrdersList = false
         }
     }
     

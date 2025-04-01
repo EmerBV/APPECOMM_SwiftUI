@@ -42,13 +42,31 @@ struct PaymentSheetView: View {
             })
             .alert("¿Cancelar el pago?", isPresented: $showingCancelConfirmation) {
                 Button("No", role: .cancel) { }
-                Button("Sí", role: .destructive) {
+                Button("Guardar para después", role: .none) {
+                    // Guardar el pedido para completarlo más tarde
+                    viewModel.saveOrderForLater()
+                }
+                Button("Cancelar pedido", role: .destructive) {
                     viewModel.cancelPayment()
                     NotificationCenter.default.post(name: Notification.Name("ReturnToCart"), object: nil)
                     dismiss()
                 }
             } message: {
-                Text("¿Estás seguro de que deseas cancelar el proceso de pago? Podrás volver a intentarlo más tarde desde tu carrito.")
+                Text("Puedes guardar este pedido para completarlo más tarde o cancelarlo completamente.")
+            }
+            .alert("Pedido guardado", isPresented: $viewModel.showingSavedOrderConfirmation) {
+                Button("Aceptar") {
+                    // Primero cerramos la vista actual
+                    dismiss()
+                    
+                    // Luego navegamos al carrito
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                        NavigationCoordinator.shared.navigateToOrdersList()
+                        NotificationCenter.default.post(name: Notification.Name("OrderSavedForLater"), object: nil)
+                    }
+                }
+            } message: {
+                Text("Tu pedido ha sido guardado. Podrás completar el pago desde la sección 'Mis Pedidos' cuando lo desees.")
             }
         }
         .onAppear {

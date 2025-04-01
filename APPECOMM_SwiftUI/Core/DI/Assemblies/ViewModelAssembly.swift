@@ -57,5 +57,15 @@ final class ViewModelAssembly: Assembly {
                 authRepository: authRepository
             )
         }.inObjectScope(.container) // Singleton para mantener estado consistente
+        
+        // Orders ViewModel
+        container.register(OrdersViewModel.self) { r in
+            let authRepository = r.resolve(AuthRepositoryProtocol.self)!
+            let paymentService = r.resolve(PaymentServiceProtocol.self)!
+            return OrdersViewModel(
+                authRepository: authRepository,
+                paymentService: paymentService
+            )
+        }.inObjectScope(.container) // Singleton para mantener estado consistente
     }
 }
