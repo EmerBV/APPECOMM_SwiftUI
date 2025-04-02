@@ -60,6 +60,7 @@ class AppCoordinator: ObservableObject {
             
             // Verificar si hay un usuario guardado
             authRepository.checkAuthStatus()
+                .receive(on: DispatchQueue.main)
                 .sink { completion in
                     if case .failure(let error) = completion {
                         Logger.error("Error al verificar estado de autenticación: \(error)")
