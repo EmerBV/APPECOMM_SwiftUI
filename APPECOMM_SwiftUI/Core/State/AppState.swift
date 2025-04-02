@@ -7,10 +7,17 @@ class AppState: ObservableObject {
     @Published var successMessage: String?
     @Published var languageChanged = false
     
+    @Published var authState: AuthState?
+    @Published var cartState: CartState = .initial
+    @Published var wishListState: WishListState = .initial
+    @Published var networkActivity: Bool = false
+    
+    private var cancelBag = Set<AnyCancellable>()
     private var cancellables = Set<AnyCancellable>()
     
     init() {
         setupNotifications()
+        setupSubscriptions()
     }
     
     func refreshData() {
@@ -35,5 +42,17 @@ class AppState: ObservableObject {
                 Logger.info("Language changed, forcing view refresh")
             }
             .store(in: &cancellables)
+    }
+    
+    private func setupSubscriptions() {
+        // Observar cambios de autenticación para actualizar el carrito y la lista de deseos
+        $authState
+            .sink { [weak self] state in
+                if case .loggedOut = state {
+                    self?.cartState = .initial
+                    self?.wishListState = .initial
+                }
+            }
+            .store(in: &cancelBag)
     }
 }

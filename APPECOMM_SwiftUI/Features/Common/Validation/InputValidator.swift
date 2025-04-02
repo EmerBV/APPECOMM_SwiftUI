@@ -48,7 +48,7 @@ struct InputValidator: InputValidatorProtocol {
             return .invalid(NSLocalizedString("error_password_empty", comment: "Error: Password is empty"))
         }
         
-        if password.count < 8 {
+        if password.count < 6 {
             return .invalid(NSLocalizedString("error_password_short", comment: "Error: Password is too short"))
         }
         
