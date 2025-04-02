@@ -118,31 +118,35 @@ class AppConfig {
             )
         }
         
-        // Configurar esquemas URL
-        if let infoDictionary = Bundle.main.infoDictionary as? [String: Any] {
-            var urlTypes = infoDictionary["CFBundleURLTypes"] as? [[String: Any]] ?? []
-            
-            // Agregar esquema de Stripe si no existe
-            if !urlTypes.contains(where: { ($0["CFBundleURLSchemes"] as? [String])?.contains("stripe") == true }) {
-                urlTypes.append([
-                    "CFBundleURLSchemes": ["stripe"]
-                ])
-                
-                // Actualizar el diccionario de información
-                var updatedInfoDictionary = infoDictionary
-                updatedInfoDictionary["CFBundleURLTypes"] = urlTypes
-                updatedInfoDictionary["LSApplicationQueriesSchemes"] = ["stripe"]
-                
-                // Guardar el diccionario actualizado
-                if let data = try? PropertyListSerialization.data(
-                    fromPropertyList: updatedInfoDictionary,
-                    format: .xml,
-                    options: 0
-                ) {
-                    try? data.write(to: Bundle.main.bundleURL.appendingPathComponent("Info.plist"))
-                }
-            }
-        }
+        /*
+         // Configurar esquemas URL
+         if let infoDictionary = Bundle.main.infoDictionary as? [String: Any] {
+         var urlTypes = infoDictionary["CFBundleURLTypes"] as? [[String: Any]] ?? []
+         
+         // Agregar esquema de Stripe si no existe
+         if !urlTypes.contains(where: { ($0["CFBundleURLSchemes"] as? [String])?.contains("stripe") == true }) {
+         urlTypes.append([
+         "CFBundleURLSchemes": ["stripe"]
+         ])
+         
+         // Actualizar el diccionario de información
+         var updatedInfoDictionary = infoDictionary
+         updatedInfoDictionary["CFBundleURLTypes"] = urlTypes
+         updatedInfoDictionary["LSApplicationQueriesSchemes"] = ["stripe"]
+         
+         // Guardar el diccionario actualizado
+         if let data = try? PropertyListSerialization.data(
+         fromPropertyList: updatedInfoDictionary,
+         format: .xml,
+         options: 0
+         ) {
+         try? data.write(to: Bundle.main.bundleURL.appendingPathComponent("Info.plist"))
+         }
+         }
+         }
+         */
+        
+        Logger.info("Stripe configured with publishable key")
     }
     
     // Método para cambiar el entorno (útil para testing o para usuarios de desarrollo)
