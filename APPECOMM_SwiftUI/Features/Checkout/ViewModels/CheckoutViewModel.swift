@@ -57,7 +57,7 @@ class CheckoutViewModel: ObservableObject {
     @Published var order: Order?
     @Published var showError = false
     @Published var cartItems: [CartItem] = []
-    @Published var selectedAddress: Address?
+    @Published var selectedAddress: ShippingDetails?
     @Published var currentOrder: Order?
     
     // Shipping details related properties
@@ -289,14 +289,15 @@ class CheckoutViewModel: ObservableObject {
                 self.isEditingShippingDetails = false
                 
                 // Actualizar selectedAddress con los nuevos detalles
-                let address = Address(
+                let address = ShippingDetails(
                     id: details.id,
-                    userId: userId,
-                    street: details.address,
+                    address: details.address,
                     city: details.city,
                     state: details.state ?? "",
                     postalCode: details.postalCode,
                     country: details.country,
+                    phoneNumber: details.phoneNumber ?? "",
+                    fullName: details.fullName,
                     isDefault: true
                 )
                 self.selectedAddress = address
@@ -314,7 +315,7 @@ class CheckoutViewModel: ObservableObject {
             showError = true
             return
         }
-
+        
         isLoading = true
         
         // Crear los items de la orden con solo los campos necesarios
@@ -538,14 +539,15 @@ class CheckoutViewModel: ObservableObject {
             } receiveValue: { [weak self] (details: ShippingDetailsResponse?) in
                 if let details = details {
                     // Convertir ShippingDetailsResponse a Address
-                    let address = Address(
+                    let address = ShippingDetails(
                         id: details.id,
-                        userId: user.id,
-                        street: details.address,
+                        address: details.address,
                         city: details.city,
                         state: details.state ?? "",
                         postalCode: details.postalCode,
                         country: details.country,
+                        phoneNumber: details.phoneNumber ?? "",
+                        fullName: details.fullName,
                         isDefault: true
                     )
                     self?.selectedAddress = address
