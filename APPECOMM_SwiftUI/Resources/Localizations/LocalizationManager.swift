@@ -39,10 +39,6 @@ class LocalizationManager: ObservableObject {
         let bundle = Bundle(path: path ?? "") ?? Bundle.main
         return NSLocalizedString(key, tableName: nil, bundle: bundle, value: key, comment: "")
     }
+    
 }
 
-extension String {
-    var localized: String {
-        return LocalizationManager.shared.localizedString(for: self)
-    }
-} 

@@ -162,19 +162,3 @@ final class TokenManager: TokenManagerProtocol {
     }
 }
 
-// Extensión para decodificar base64url
-extension String {
-    func base64UrlDecoded() -> Data? {
-        // Ajustar el padding para base64
-        var base64 = self
-            .replacingOccurrences(of: "-", with: "+")
-            .replacingOccurrences(of: "_", with: "/")
-        
-        while base64.count % 4 != 0 {
-            base64 += "="
-        }
-        
-        return Data(base64Encoded: base64)
-    }
-}
-
