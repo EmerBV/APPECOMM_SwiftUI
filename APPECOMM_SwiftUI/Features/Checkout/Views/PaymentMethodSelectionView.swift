@@ -20,7 +20,7 @@ struct PaymentMethodSelectionView: View {
                 
                 // Payment method options
                 VStack(spacing: 16) {
-                    ForEach(PaymentMethod.allCases) { method in
+                    ForEach(PaymentMethodOptions.allCases) { method in
                         PaymentMethodCard(
                             method: method,
                             isSelected: viewModel.selectedPaymentMethod == method,
@@ -49,7 +49,7 @@ struct PaymentMethodSelectionView: View {
 }
 
 struct PaymentMethodCard: View {
-    let method: PaymentMethod
+    let method: PaymentMethodOptions
     let isSelected: Bool
     let action: () -> Void
     

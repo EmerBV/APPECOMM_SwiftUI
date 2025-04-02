@@ -19,7 +19,7 @@ enum CheckoutStep {
     case error
 }
 
-enum PaymentMethod: String, CaseIterable, Identifiable {
+enum PaymentMethodOptions: String, CaseIterable, Identifiable {
     case creditCard = "credit_card"
     case applePay = "apple_pay"
     
@@ -47,7 +47,7 @@ enum PaymentMethod: String, CaseIterable, Identifiable {
 class CheckoutViewModel: ObservableObject {
     // MARK: - Published properties
     @Published var currentStep: CheckoutStep = .shippingInfo
-    @Published var selectedPaymentMethod: PaymentMethod = .creditCard
+    @Published var selectedPaymentMethod: PaymentMethodOptions = .creditCard
     @Published var shippingDetailsForm = ShippingDetailsForm()
     @Published var isLoading = false
     @Published var errorMessage: String?

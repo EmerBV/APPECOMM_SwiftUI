@@ -61,7 +61,25 @@ struct ProductImage: Identifiable, Codable, Equatable {
     let downloadUrl: String
 }
 
-enum ProductStatus: String, Codable, Equatable {
+enum ProductStatus: String, Codable, Equatable, CaseIterable {
     case inStock = "IN_STOCK"
     case outOfStock = "OUT_OF_STOCK"
+    
+    var displayName: String {
+        switch self {
+        case .inStock:
+            return NSLocalizedString("product_status_in_stock", comment: "Product status: in stock")
+        case .outOfStock:
+            return NSLocalizedString("product_status_out_of_stock", comment: "Product status: out of stock")
+        }
+    }
+    
+    var color: String {
+        switch self {
+        case .inStock:
+            return "StatusGreen"
+        case .outOfStock:
+            return "StatusRed"
+        }
+    }
 }
