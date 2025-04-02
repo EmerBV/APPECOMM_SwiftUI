@@ -19,9 +19,9 @@ enum AppEnvironment: String {
         case .development:
             return "http://localhost:9091/ecommdb/api/v1"
         case .staging:
-            return "https://staging-api.ecommdb.example.com/api/v1"
+            return "http://localhost:9091/ecommdb/api/v1"
         case .production:
-            return "https://api.ecommdb.example.com/api/v1"
+            return "http://localhost:9091/ecommdb/api/v1"
         }
     }
     
@@ -30,9 +30,9 @@ enum AppEnvironment: String {
         case .development:
             return "http://localhost:9091/ecommdb"
         case .staging:
-            return "https://staging-api.ecommdb.example.com"
+            return "http://localhost:9091/ecommdb"
         case .production:
-            return "https://api.ecommdb.example.com"
+            return "http://localhost:9091/ecommdb"
         }
     }
     
@@ -117,34 +117,6 @@ class AppConfig {
                 ]
             )
         }
-        
-        /*
-         // Configurar esquemas URL
-         if let infoDictionary = Bundle.main.infoDictionary as? [String: Any] {
-         var urlTypes = infoDictionary["CFBundleURLTypes"] as? [[String: Any]] ?? []
-         
-         // Agregar esquema de Stripe si no existe
-         if !urlTypes.contains(where: { ($0["CFBundleURLSchemes"] as? [String])?.contains("stripe") == true }) {
-         urlTypes.append([
-         "CFBundleURLSchemes": ["stripe"]
-         ])
-         
-         // Actualizar el diccionario de información
-         var updatedInfoDictionary = infoDictionary
-         updatedInfoDictionary["CFBundleURLTypes"] = urlTypes
-         updatedInfoDictionary["LSApplicationQueriesSchemes"] = ["stripe"]
-         
-         // Guardar el diccionario actualizado
-         if let data = try? PropertyListSerialization.data(
-         fromPropertyList: updatedInfoDictionary,
-         format: .xml,
-         options: 0
-         ) {
-         try? data.write(to: Bundle.main.bundleURL.appendingPathComponent("Info.plist"))
-         }
-         }
-         }
-         */
         
         Logger.info("Stripe configured with publishable key")
     }

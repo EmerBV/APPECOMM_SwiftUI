@@ -9,6 +9,7 @@ import SwiftUI
 import Combine
 import UserNotifications
 import Stripe
+import Kingfisher
 
 @main
 struct APPECOMM_SwiftUIApp: App {
@@ -25,6 +26,9 @@ struct APPECOMM_SwiftUIApp: App {
         
         // Configurar Stripe
         _ = AppConfig.shared
+        
+        // Configurar Kingfisher
+        KingfisherConfig.configure()
         
 #if DEBUG
         Logger.info("App initialized in debug mode [Version: \(Bundle.main.fullVersion)]")

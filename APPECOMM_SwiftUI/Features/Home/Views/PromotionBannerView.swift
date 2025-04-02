@@ -1,4 +1,5 @@
 import SwiftUI
+import Kingfisher
 
 struct PromotionBannerView: View {
     @State private var currentIndex = 0
@@ -8,7 +9,7 @@ struct PromotionBannerView: View {
             id: "1",
             title: "summer_sale".localized,
             subtitle: "summer_sale_subtitle".localized,
-            imageUrl: "https://example.com/summer-sale.jpg",
+            imageUrl: "https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?q=80&w=1000",
             actionTitle: "shop_now".localized,
             actionUrl: "https://example.com/summer-sale"
         ),
@@ -16,7 +17,7 @@ struct PromotionBannerView: View {
             id: "2",
             title: "new_collection".localized,
             subtitle: "new_collection_subtitle".localized,
-            imageUrl: "https://example.com/new-arrivals.jpg",
+            imageUrl: "https://images.unsplash.com/photo-1607082350899-7e105aa886ae?q=80&w=1000",
             actionTitle: "view_collection".localized,
             actionUrl: "https://example.com/new-arrivals"
         ),
@@ -24,7 +25,7 @@ struct PromotionBannerView: View {
             id: "3",
             title: "special_offer".localized,
             subtitle: "special_offer_subtitle".localized,
-            imageUrl: "https://example.com/special-offer.jpg",
+            imageUrl: "https://images.unsplash.com/photo-1607082350899-7e105aa886ae?q=80&w=1000",
             actionTitle: "learn_more".localized,
             actionUrl: "https://example.com/special-offer"
         )
@@ -63,20 +64,17 @@ private struct PromotionCard: View {
             // Imagen de fondo
             if let imageUrl = promotion.imageUrl,
                let url = URL(string: imageUrl) {
-                AsyncImage(url: url) { phase in
-                    switch phase {
-                    case .empty:
+                KFImage(url)
+                    .placeholder {
                         ProgressView()
-                    case .success(let image):
-                        image
-                            .resizable()
-                            .aspectRatio(contentMode: .fill)
-                    case .failure:
-                        Color.gray.opacity(0.3)
-                    @unknown default:
-                        Color.gray
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
                     }
-                }
+                    .onFailure { error in
+                        Logger.error("Error al cargar imagen: \(error.localizedDescription)")
+                    }
+                    .fade(duration: 0.3)
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
             } else {
                 Color.gray.opacity(0.3)
             }
@@ -128,4 +126,4 @@ struct Promotion: Identifiable {
     let imageUrl: String?
     let actionTitle: String
     let actionUrl: String?
-} 
+}
