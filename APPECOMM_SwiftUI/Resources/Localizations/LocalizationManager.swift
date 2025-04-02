@@ -35,10 +35,14 @@ class LocalizationManager: ObservableObject {
     }
     
     func localizedString(for key: String) -> String {
-        let path = Bundle.main.path(forResource: currentLanguage.rawValue, ofType: "lproj")
-        let bundle = Bundle(path: path ?? "") ?? Bundle.main
-        return NSLocalizedString(key, tableName: nil, bundle: bundle, value: key, comment: "")
+        // Primero intentamos obtener el bundle específico del idioma
+        if let path = Bundle.main.path(forResource: currentLanguage.rawValue, ofType: "lproj"),
+           let bundle = Bundle(path: path) {
+            return NSLocalizedString(key, tableName: nil, bundle: bundle, value: key, comment: "")
+        }
+        
+        // Si no encontramos el bundle específico, usamos el bundle principal
+        return NSLocalizedString(key, tableName: nil, bundle: Bundle.main, value: key, comment: "")
     }
-    
 }
 

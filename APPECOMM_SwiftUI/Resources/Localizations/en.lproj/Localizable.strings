@@ -215,4 +215,4 @@
 // Success Messages
 "success" = "Success";
 "added_to_cart" = "Product added to cart";
-"products_updated" = "%d products have been loaded"; 
+"products_updated" = "%d products have been loaded";
