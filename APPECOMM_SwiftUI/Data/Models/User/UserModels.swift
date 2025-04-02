@@ -57,6 +57,7 @@ struct OrderSummary: Codable, Equatable, Identifiable {
     let orderDate: String
     let status: String
     let totalAmount: Decimal
+    let items: [OrderItem]
 }
 
 // DTO para enviar detalles de envío a la API
