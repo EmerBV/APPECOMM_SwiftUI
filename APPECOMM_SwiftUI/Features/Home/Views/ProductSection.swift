@@ -66,7 +66,8 @@ private struct ProductCardView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             ZStack(alignment: .topTrailing) {
-                ProductImage(
+                ProductImageView(
+                    size: 160,
                     imageUrl: product.images?.first?.downloadUrl,
                     baseURL: baseURL,
                     isOutOfStock: product.status == .outOfStock
@@ -81,58 +82,6 @@ private struct ProductCardView: View {
             ProductInfo(product: product, viewModel: viewModel)
         }
         .frame(width: 160)
-    }
-}
-
-private struct ProductImage: View {
-    let imageUrl: String?
-    let baseURL: String
-    let isOutOfStock: Bool
-    
-    var body: some View {
-        if let imageUrl = imageUrl {
-            let fullImageUrl = "\(baseURL)\(imageUrl)"
-            if let url = URL(string: fullImageUrl) {
-                ZStack {
-                    KFImage(url)
-                        .placeholder {
-                            ProgressView()
-                        }
-                        .onFailure { error in
-                            Logger.error("Error al cargar imagen: \(error.localizedDescription)")
-                        }
-                        .fade(duration: 0.3)
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                        .frame(width: 160, height: 160)
-                        .clipped()
-                    
-                    if isOutOfStock {
-                        Color.black.opacity(0.6)
-                        
-                        Text("Sin Stock")
-                            .font(.system(size: 16, weight: .bold))
-                            .foregroundColor(.white)
-                            .shadow(color: .black.opacity(0.5), radius: 3, x: 0, y: 1)
-                    }
-                }
-                .cornerRadius(8)
-            } else {
-                Image(systemName: "photo")
-                    .font(.largeTitle)
-                    .foregroundColor(.gray)
-                    .frame(width: 160, height: 160)
-                    .background(Color.gray.opacity(0.3))
-                    .cornerRadius(8)
-            }
-        } else {
-            Image(systemName: "photo")
-                .font(.largeTitle)
-                .foregroundColor(.gray)
-                .frame(width: 160, height: 160)
-                .background(Color.gray.opacity(0.3))
-                .cornerRadius(8)
-        }
     }
 }
 

@@ -22,7 +22,7 @@ struct Product: Identifiable, Codable, Equatable {
     let preOrder: Bool
     let createdAt: String  // Asegurarnos de que esto sea String para la fecha
     let variants: [Variant]?
-    let images: [ImageDto]?
+    let images: [ProductImage]?
     
     // Añadir CodingKeys solo si los nombres no coinciden exactamente
     enum CodingKeys: String, CodingKey {
@@ -45,9 +45,17 @@ struct Variant: Identifiable, Codable, Equatable {
     let name: String
     let price: Decimal
     let inventory: Int
+    
+    enum CodingKeys: String, CodingKey {
+        case id, name, price, inventory
+    }
+    
+    static func == (lhs: Variant, rhs: Variant) -> Bool {
+        return lhs.id == rhs.id
+    }
 }
 
-struct ImageDto: Identifiable, Codable, Equatable {
+struct ProductImage: Identifiable, Codable, Equatable {
     let id: Int
     let fileName: String
     let downloadUrl: String
