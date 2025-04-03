@@ -46,5 +46,11 @@ final class RepositoryAssembly: Assembly {
             let cartService = r.resolve(CartServiceProtocol.self)!
             return CartRepository(cartService: cartService)
         }.inObjectScope(.container)
+        
+        // Shipping Repository
+        container.register(ShippingRepositoryProtocol.self) { r in
+            let shippingService = r.resolve(ShippingServiceProtocol.self)!
+            return ShippingRepository(shippingService: shippingService)
+        }.inObjectScope(.container)
     }
 }
