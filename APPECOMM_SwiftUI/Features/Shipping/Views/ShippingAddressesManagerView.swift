@@ -161,7 +161,7 @@ struct AddressListItem: View {
                 
                 Spacer()
                 
-                if address.isDefault {
+                if address.isDefault ?? false {
                     Text("Default")
                         .font(.caption)
                         .fontWeight(.semibold)
@@ -175,13 +175,13 @@ struct AddressListItem: View {
             
             // Dirección
             Group {
-                Text(address.address)
+                Text(address.address ?? "")
                     .font(.subheadline)
                 
-                Text("\(address.city), \(address.state ?? "") \(address.postalCode)")
+                Text("\(address.city ?? ""), \(address.state ?? "") \(address.postalCode ?? "")")
                     .font(.subheadline)
                 
-                Text(address.country)
+                Text(address.country ?? "")
                     .font(.subheadline)
                 
                 if let phone = address.phoneNumber, !phone.isEmpty {

@@ -131,13 +131,13 @@ struct ShippingInfoView: View {
                             .fontWeight(.semibold)
                     }
                     
-                    Text(address.address)
+                    Text(address.address ?? "")
                         .font(.subheadline)
                     
-                    Text("\(address.city), \(address.state) \(address.postalCode)")
+                    Text("\(address.city ?? ""), \(address.state ?? "") \(address.postalCode ?? "")")
                         .font(.subheadline)
                     
-                    Text(address.country)
+                    Text(address.country ?? "")
                         .font(.subheadline)
                     
                     if let phoneNumber = address.phoneNumber, !phoneNumber.isEmpty {

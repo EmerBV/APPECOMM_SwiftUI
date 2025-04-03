@@ -154,7 +154,7 @@ struct ProfileView: View {
             }
             
             // Shipping Information
-            Section(header: Text("shipping_information".localized)) {
+            Section {
                 Button(action: {
                     showingAddressManager = true
                 }) {
@@ -175,7 +175,7 @@ struct ProfileView: View {
                                     .font(.subheadline)
                                     .fontWeight(.semibold)
                                 
-                                if address.isDefault {
+                                if address.isDefault ?? false {
                                     Text("Default")
                                         .font(.caption)
                                         .fontWeight(.semibold)
@@ -189,11 +189,11 @@ struct ProfileView: View {
                                 Spacer()
                             }
                             
-                            Text(address.address)
+                            Text(address.address ?? "")
                                 .font(.caption)
-                            Text("\(address.city), \(address.state ?? "") \(address.postalCode)")
+                            Text("\(address.city ?? ""), \(address.state ?? "") \(address.postalCode ?? "")")
                                 .font(.caption)
-                            Text(address.country)
+                            Text(address.country ?? "")
                                 .font(.caption)
                         }
                         .padding(.vertical, 4)
@@ -209,6 +209,8 @@ struct ProfileView: View {
                         .foregroundColor(.secondary)
                         .padding(.vertical, 8)
                 }
+            } header: {
+                Text("shipping_information".localized)
             }
             
             // Orders

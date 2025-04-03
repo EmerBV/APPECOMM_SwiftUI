@@ -111,7 +111,7 @@ struct AddressCard: View {
                         Text(address.fullName ?? "")
                             .font(.headline)
                         
-                        if address.isDefault {
+                        if address.isDefault ?? false {
                             Text("Default")
                                 .font(.caption)
                                 .fontWeight(.semibold)
@@ -124,13 +124,13 @@ struct AddressCard: View {
                     }
                     
                     // Dirección
-                    Text(address.address)
+                    Text(address.address ?? "")
                         .font(.subheadline)
                     
-                    Text("\(address.city), \(address.state) \(address.postalCode)")
+                    Text("\(address.city ?? ""), \(address.state ?? "") \(address.postalCode ?? "")")
                         .font(.subheadline)
                     
-                    Text(address.country)
+                    Text(address.country ?? "")
                         .font(.subheadline)
                     
                     if let phone = address.phoneNumber, !phone.isEmpty {
@@ -148,7 +148,7 @@ struct AddressCard: View {
             HStack {
                 Spacer()
                 
-                if !address.isDefault {
+                if !(address.isDefault ?? false) {
                     Button(action: onSetDefault) {
                         Text("Set as Default")
                             .font(.caption)

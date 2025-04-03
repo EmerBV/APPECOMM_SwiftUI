@@ -78,13 +78,13 @@ struct ShippingDetailsForm {
     /// Initialize with shipping details response
     init(from details: ShippingDetails) {
         self.fullName = details.fullName ?? ""
-        self.address = details.address
-        self.city = details.city
+        self.address = details.address ?? ""
+        self.city = details.city ?? ""
         self.state = details.state ?? ""
-        self.postalCode = details.postalCode
-        self.country = details.country
+        self.postalCode = details.postalCode ?? ""
+        self.country = details.country ?? ""
         self.phoneNumber = details.phoneNumber ?? ""
-        self.isDefaultAddress = details.isDefault
+        self.isDefaultAddress = details.isDefault ?? false
         
         // Set all fields as valid since they come from validated data
         self.isFullNameValid = !fullName.isEmpty

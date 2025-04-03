@@ -111,13 +111,13 @@ struct ShippingAddressFormView: View {
                 if let address = addressToEdit {
                     // Pre-populate form with existing address details
                     fullName = address.fullName ?? ""
-                    self.address = address.address
-                    city = address.city
+                    self.address = address.address ?? ""
+                    city = address.city ?? ""
                     state = address.state ?? ""
-                    postalCode = address.postalCode
-                    country = address.country
+                    postalCode = address.postalCode ?? ""
+                    country = address.country ?? ""
                     phoneNumber = address.phoneNumber ?? ""
-                    isDefault = address.isDefault
+                    isDefault = address.isDefault ?? false
                 }
             }
             .overlay {
@@ -151,11 +151,9 @@ struct ShippingAddressFormView: View {
         )
         
         if isNewAddress {
-            // Para crear dirección, no pasamos ID (será null en la solicitud)
             viewModel.createShippingAddress(form: shippingForm)
         } else if let addressToEdit = addressToEdit {
-            // Para actualizar, pasamos el ID existente
-            viewModel.updateShippingAddress(id: addressToEdit.id, form: shippingForm)
+            viewModel.updateShippingAddress(id: addressToEdit.id ?? 0, form: shippingForm)
         }
         
         onSave()

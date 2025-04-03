@@ -56,7 +56,7 @@ class ShippingAddressesViewModel: ObservableObject {
                 }
                 
                 // Seleccionar la dirección predeterminada si existe
-                self.selectedAddress = self.addresses.first(where: { $0.isDefault })
+                self.selectedAddress = self.addresses.first(where: { $0.isDefault ?? false })
                 
                 Logger.info("Loaded \(self.addresses.count) shipping addresses")
             }
@@ -306,5 +306,46 @@ class ShippingAddressesViewModel: ObservableObject {
         if let address = addresses.first(where: { $0.id == id }) {
             selectedAddress = address
         }
+    }
+    
+    func updateDefaultAddress(_ address: ShippingDetails) {
+        guard let index = addresses.firstIndex(where: { $0.id == address.id }) else { return }
+        
+        // Crear una nueva dirección con isDefault actualizado
+        let updatedAddress = ShippingDetails(
+            id: address.id,
+            address: address.address,
+            city: address.city,
+            state: address.state,
+            postalCode: address.postalCode,
+            country: address.country,
+            phoneNumber: address.phoneNumber,
+            fullName: address.fullName,
+            isDefault: true
+        )
+        
+        // Actualizar la dirección en la lista
+        addresses[index] = updatedAddress
+        
+        // Desmarcar todas las demás direcciones como no predeterminadas
+        addresses = addresses.map { existingAddress in
+            if existingAddress.id != address.id {
+                return ShippingDetails(
+                    id: existingAddress.id,
+                    address: existingAddress.address,
+                    city: existingAddress.city,
+                    state: existingAddress.state,
+                    postalCode: existingAddress.postalCode,
+                    country: existingAddress.country,
+                    phoneNumber: existingAddress.phoneNumber,
+                    fullName: existingAddress.fullName,
+                    isDefault: false
+                )
+            }
+            return existingAddress
+        }
+        
+        // Actualizar la dirección seleccionada
+        selectedAddress = updatedAddress
     }
 }

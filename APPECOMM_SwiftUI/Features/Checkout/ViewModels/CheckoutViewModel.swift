@@ -237,11 +237,11 @@ class CheckoutViewModel: ObservableObject {
     
     private func populateFormWithExistingDetails(_ details: ShippingDetails) {
         shippingDetailsForm.fullName = details.fullName ?? ""
-        shippingDetailsForm.address = details.address
-        shippingDetailsForm.city = details.city
+        shippingDetailsForm.address = details.address ?? ""
+        shippingDetailsForm.city = details.city ?? ""
         shippingDetailsForm.state = details.state ?? ""
-        shippingDetailsForm.postalCode = details.postalCode
-        shippingDetailsForm.country = details.country
+        shippingDetailsForm.postalCode = details.postalCode ?? ""
+        shippingDetailsForm.country = details.country ?? ""
         shippingDetailsForm.phoneNumber = details.phoneNumber ?? ""
         
         // Validate the form
@@ -715,7 +715,7 @@ class CheckoutViewModel: ObservableObject {
         
         let shippingRepository = DependencyInjector.shared.resolve(ShippingRepositoryProtocol.self)
         
-        shippingRepository.deleteShippingAddress(addressId: id)
+        shippingRepository.deleteShippingAddress(userId: <#Int#>, addressId: id)
             .receive(on: DispatchQueue.main)
             .sink { [weak self] completion in
                 self?.isLoading = false
@@ -733,7 +733,7 @@ class CheckoutViewModel: ObservableObject {
                 
                 // Si se eliminó la dirección seleccionada, seleccionar otra
                 if self.selectedShippingAddressId == id {
-                    if let defaultAddress = self.shippingAddresses.first(where: { $0.isDefault }) {
+                    if let defaultAddress = self.shippingAddresses.first(where: { $0.isDefault ?? false }) {
                         self.selectedShippingAddressId = defaultAddress.id
                         self.selectedAddress = defaultAddress
                     } else if !self.shippingAddresses.isEmpty {
@@ -758,4 +758,43 @@ class CheckoutViewModel: ObservableObject {
         // Cargar todas las direcciones y seleccionar la predeterminada
         loadShippingAddresses()
     }
+    
+    private func createShippingDetailsRequest() -> ShippingDetailsRequest {
+        return ShippingDetailsRequest(
+            id: selectedAddress?.id,
+            address: selectedAddress?.address ?? "",
+            city: selectedAddress?.city ?? "",
+            state: selectedAddress?.state,
+            postalCode: selectedAddress?.postalCode ?? "",
+            country: selectedAddress?.country ?? "",
+            phoneNumber: selectedAddress?.phoneNumber,
+            fullName: selectedAddress?.fullName,
+            isDefault: selectedAddress?.isDefault ?? false
+        )
+    }
+    
+    private func updateDefaultAddress(_ address: ShippingDetails) {
+        // En lugar de modificar la dirección existente, creamos una nueva
+        let updatedAddress = ShippingDetails(
+            id: address.id,
+            address: address.address,
+            city: address.city,
+            state: address.state,
+            postalCode: address.postalCode,
+            country: address.country,
+            phoneNumber: address.phoneNumber,
+            fullName: address.fullName,
+            isDefault: true
+        )
+        selectedAddress = updatedAddress
+    }
+    
+    private func validatePaymentMethod() -> Bool {
+        guard let isDefault = selectedAddress?.isDefault else {
+            errorMessage = "Seleccione una dirección de envío"
+            return false
+        }
+        return isDefault
+    }
+    
 }
