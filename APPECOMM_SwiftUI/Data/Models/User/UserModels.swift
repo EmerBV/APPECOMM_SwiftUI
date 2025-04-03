@@ -50,39 +50,28 @@ struct OrderSummary: Codable, Equatable, Identifiable {
 }
 
 // DTO para enviar detalles de envío a la API
-struct ShippingDetailsRequest: Codable, Equatable {
-    let id: Int? // ID es opcional para nuevas direcciones, pero requerido para actualizaciones
+struct ShippingDetailsRequest: Codable {
+    let id: Int?
     let address: String
     let city: String
-    let state: String?
+    let state: String
     let postalCode: String
     let country: String
-    let phoneNumber: String?
-    let fullName: String?
-    let isDefault: Bool?
+    let phoneNumber: String
+    let fullName: String
+    let isDefault: Bool
     
-    static func == (lhs: ShippingDetailsRequest, rhs: ShippingDetailsRequest) -> Bool {
-        return lhs.id == rhs.id &&
-        lhs.address == rhs.address &&
-        lhs.city == rhs.city &&
-        lhs.state == rhs.state &&
-        lhs.postalCode == rhs.postalCode &&
-        lhs.country == rhs.country &&
-        lhs.phoneNumber == rhs.phoneNumber &&
-        lhs.fullName == rhs.fullName &&
-        lhs.isDefault == rhs.isDefault
-    }
-    
+    // Asegúrate de que los coding keys coincidan con los nombres en el backend
     enum CodingKeys: String, CodingKey {
         case id
         case address
         case city
         case state
-        case postalCode = "postal_code"
+        case postalCode = "postalCode" // Confirma que este es el nombre exacto en el backend
         case country
-        case phoneNumber = "phone_number"
-        case fullName = "full_name"
-        case isDefault = "is_default"
+        case phoneNumber = "phoneNumber" // Confirma que este es el nombre exacto en el backend
+        case fullName = "fullName" // Confirma que este es el nombre exacto en el backend
+        case isDefault = "isDefault"
     }
 }
 

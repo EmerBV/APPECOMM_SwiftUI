@@ -774,11 +774,11 @@ class CheckoutViewModel: ObservableObject {
             id: selectedAddress?.id,
             address: selectedAddress?.address ?? "",
             city: selectedAddress?.city ?? "",
-            state: selectedAddress?.state,
+            state: selectedAddress?.state ?? "",
             postalCode: selectedAddress?.postalCode ?? "",
             country: selectedAddress?.country ?? "",
-            phoneNumber: selectedAddress?.phoneNumber,
-            fullName: selectedAddress?.fullName,
+            phoneNumber: selectedAddress?.phoneNumber ?? "",
+            fullName: selectedAddress?.fullName ?? "",
             isDefault: selectedAddress?.isDefault ?? false
         )
     }

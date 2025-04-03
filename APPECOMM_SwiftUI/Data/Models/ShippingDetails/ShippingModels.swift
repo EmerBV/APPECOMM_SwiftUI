@@ -99,7 +99,7 @@ struct ShippingDetailsForm {
     /// Convert to ShippingDetailsRequest for API calls
     func toRequest(id: Int? = nil) -> ShippingDetailsRequest {
         return ShippingDetailsRequest(
-            id: id, // Incluir ID si se proporciona (para actualizaciones)
+            id: id,
             address: address,
             city: city,
             state: state,
@@ -107,7 +107,7 @@ struct ShippingDetailsForm {
             country: country,
             phoneNumber: phoneNumber,
             fullName: fullName,
-            isDefault: isDefaultAddress
+            isDefault: isDefaultAddress ?? false
         )
     }
     
