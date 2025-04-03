@@ -14,64 +14,8 @@ struct ShippingAddressSelectorView: View {
     
     var body: some View {
         VStack {
-            // Título y botón de cierre
-            HStack {
-                Text("Select Shipping Address")
-                    .font(.headline)
-                
-                Spacer()
-                
-                Button(action: {
-                    presentationMode.wrappedValue.dismiss()
-                }) {
-                    Image(systemName: "xmark.circle.fill")
-                        .foregroundColor(.gray)
-                }
-            }
-            .padding()
-            
-            // Lista de direcciones
-            ScrollView {
-                VStack(spacing: 12) {
-                    ForEach(viewModel.shippingAddresses, id: \.id) { address in
-                        AddressCard(
-                            address: address,
-                            isSelected: viewModel.selectedShippingAddressId == address.id,
-                            onSelect: {
-                                viewModel.selectShippingAddress(id: address.id)
-                            },
-                            onSetDefault: {
-                                viewModel.setAddressAsDefault(id: address.id)
-                            },
-                            onDelete: {
-                                showingDeleteConfirmation = address.id
-                            }
-                        )
-                    }
-                }
-                .padding(.horizontal)
-                
-                // Botón para agregar nueva dirección
-                Button(action: {
-                    // Resetear formulario y mostrar vista de agregar dirección
-                    viewModel.shippingDetailsForm = ShippingDetailsForm()
-                    viewModel.isAddingNewAddress = true
-                    presentationMode.wrappedValue.dismiss()
-                }) {
-                    HStack {
-                        Image(systemName: "plus.circle.fill")
-                        Text("Add New Address")
-                    }
-                    .padding()
-                    .foregroundColor(.blue)
-                    .frame(maxWidth: .infinity)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 8)
-                            .stroke(Color.blue, lineWidth: 1)
-                    )
-                }
-                .padding()
-            }
+            headerView
+            addressesListView
         }
         .alert(item: $showingDeleteConfirmation) { addressId in
             Alert(
@@ -86,6 +30,71 @@ struct ShippingAddressSelectorView: View {
         .overlay(
             viewModel.isLoading ? LoadingView() : nil
         )
+    }
+    
+    private var headerView: some View {
+        HStack {
+            Text("Select Shipping Address")
+                .font(.headline)
+            
+            Spacer()
+            
+            Button(action: {
+                presentationMode.wrappedValue.dismiss()
+            }) {
+                Image(systemName: "xmark.circle.fill")
+                    .foregroundColor(.gray)
+            }
+        }
+        .padding()
+    }
+    
+    private var addressesListView: some View {
+        ScrollView {
+            VStack(spacing: 12) {
+                ForEach(viewModel.shippingAddresses.compactMap { $0.id }, id: \.self) { addressId in
+                    if let address = viewModel.shippingAddresses.first(where: { $0.id == addressId }) {
+                        AddressCard(
+                            address: address,
+                            isSelected: viewModel.selectedShippingAddressId == addressId,
+                            onSelect: {
+                                viewModel.selectShippingAddress(id: addressId)
+                            },
+                            onSetDefault: {
+                                viewModel.setAddressAsDefault(id: addressId)
+                            },
+                            onDelete: {
+                                showingDeleteConfirmation = addressId
+                            }
+                        )
+                    }
+                }
+                
+                addNewAddressButton
+            }
+            .padding(.horizontal)
+        }
+    }
+    
+    private var addNewAddressButton: some View {
+        Button(action: {
+            viewModel.shippingDetailsForm = ShippingDetailsForm()
+            viewModel.isAddingNewAddress = true
+            presentationMode.wrappedValue.dismiss()
+        }) {
+            HStack {
+                Image(systemName: "plus.circle.fill")
+                Text("Add New Address")
+            }
+            .padding()
+            .foregroundColor(.blue)
+            .frame(maxWidth: .infinity)
+            .overlay(
+                RoundedRectangle(cornerRadius: 8)
+                    .stroke(Color.blue, lineWidth: 1)
+            )
+        }
+        .padding()
     }
 }
 

@@ -167,8 +167,8 @@ struct ProfileView: View {
                     }
                 }
                 
-                if let addresses = user.shippingAddresses, !addresses.isEmpty {
-                    ForEach(addresses.prefix(2)) { address in
+                if let addresses = user.shippingDetails, !addresses.isEmpty {
+                    ForEach(addresses.prefix(2), id: \.id) { address in
                         VStack(alignment: .leading, spacing: 4) {
                             HStack {
                                 Text(address.fullName ?? "")
@@ -199,8 +199,8 @@ struct ProfileView: View {
                         .padding(.vertical, 4)
                     }
                     
-                    if (user.shippingAddresses?.count ?? 0) > 2 {
-                        Text("+ \((user.shippingAddresses?.count ?? 0) - 2) more addresses")
+                    if (user.shippingDetails?.count ?? 0) > 2 {
+                        Text("+ \((user.shippingDetails?.count ?? 0) - 2) more addresses")
                             .font(.caption)
                             .foregroundColor(.secondary)
                     }

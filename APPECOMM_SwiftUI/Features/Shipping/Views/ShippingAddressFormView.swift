@@ -139,16 +139,15 @@ struct ShippingAddressFormView: View {
     }
     
     private func saveAddress() {
-        let shippingForm = ShippingDetailsForm(
-            fullName: fullName,
-            address: address,
-            city: city,
-            state: state,
-            postalCode: postalCode,
-            country: country,
-            phoneNumber: phoneNumber,
-            isDefaultAddress: isDefault
-        )
+        var shippingForm = ShippingDetailsForm()
+        shippingForm.fullName = fullName
+        shippingForm.address = address
+        shippingForm.city = city
+        shippingForm.state = state
+        shippingForm.postalCode = postalCode
+        shippingForm.country = country
+        shippingForm.phoneNumber = phoneNumber
+        shippingForm.isDefaultAddress = isDefault
         
         if isNewAddress {
             viewModel.createShippingAddress(form: shippingForm)

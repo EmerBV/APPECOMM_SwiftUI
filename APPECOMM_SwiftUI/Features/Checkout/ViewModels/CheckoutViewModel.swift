@@ -264,13 +264,15 @@ class CheckoutViewModel: ObservableObject {
         
         // Create shipping details request object from form
         let shippingDetailsRequest = ShippingDetailsRequest(
+            id: nil,
             address: shippingDetailsForm.address,
             city: shippingDetailsForm.city,
             state: shippingDetailsForm.state,
             postalCode: shippingDetailsForm.postalCode,
             country: shippingDetailsForm.country,
             phoneNumber: shippingDetailsForm.phoneNumber,
-            fullName: shippingDetailsForm.fullName
+            fullName: shippingDetailsForm.fullName,
+            isDefault: true
         )
         
         // Call API to save shipping details
@@ -698,9 +700,17 @@ class CheckoutViewModel: ObservableObject {
                 
                 // Actualizar las banderas isDefault en todas las direcciones
                 self.shippingAddresses = self.shippingAddresses.map { address in
-                    var updatedAddress = address
-                    updatedAddress.isDefault = (address.id == id)
-                    return updatedAddress
+                    ShippingDetails(
+                        id: address.id,
+                        address: address.address,
+                        city: address.city,
+                        state: address.state,
+                        postalCode: address.postalCode,
+                        country: address.country,
+                        phoneNumber: address.phoneNumber,
+                        fullName: address.fullName,
+                        isDefault: (address.id == id)
+                    )
                 }
                 
                 Logger.info("Set address \(id) as default")
@@ -715,7 +725,7 @@ class CheckoutViewModel: ObservableObject {
         
         let shippingRepository = DependencyInjector.shared.resolve(ShippingRepositoryProtocol.self)
         
-        shippingRepository.deleteShippingAddress(userId: <#Int#>, addressId: id)
+        shippingRepository.deleteShippingAddress(userId: getCurrentUserId() ?? 0, addressId: id)
             .receive(on: DispatchQueue.main)
             .sink { [weak self] completion in
                 self?.isLoading = false

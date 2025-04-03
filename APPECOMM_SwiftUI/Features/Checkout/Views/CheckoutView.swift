@@ -285,7 +285,7 @@ struct OrderReviewItemRow: View {
 }
 
 struct ShippingDetailsSection: View {
-    let details: ShippingDetailsResponse
+    let details: ShippingDetails
     
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
@@ -295,13 +295,13 @@ struct ShippingDetailsSection: View {
                     .fontWeight(.semibold)
             }
             
-            Text(details.address)
+            Text(details.address ?? "")
                 .font(.subheadline)
             
-            Text("\(details.city), \(details.state ?? "") \(details.postalCode)")
+            Text("\(details.city ?? ""), \(details.state ?? "") \(details.postalCode ?? "")")
                 .font(.subheadline)
             
-            Text(details.country)
+            Text(details.country ?? "")
                 .font(.subheadline)
             
             if let phoneNumber = details.phoneNumber {

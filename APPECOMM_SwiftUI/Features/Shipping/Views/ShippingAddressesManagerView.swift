@@ -127,19 +127,21 @@ struct ShippingAddressesManagerView: View {
     
     private var addressListView: some View {
         List {
-            ForEach(viewModel.addresses, id: \.id) { address in
-                AddressListItem(
-                    address: address,
-                    onSetDefault: {
-                        viewModel.setDefaultShippingAddress(userId: userId, addressId: address.id)
-                    },
-                    onEdit: {
-                        editingAddress = address
-                    },
-                    onDelete: {
-                        showingDeleteConfirmation = address.id
-                    }
-                )
+            ForEach(viewModel.addresses.compactMap { $0.id }, id: \.self) { addressId in
+                if let address = viewModel.addresses.first(where: { $0.id == addressId }) {
+                    AddressListItem(
+                        address: address,
+                        onSetDefault: {
+                            viewModel.setDefaultShippingAddress(userId: userId, addressId: addressId)
+                        },
+                        onEdit: {
+                            editingAddress = address
+                        },
+                        onDelete: {
+                            showingDeleteConfirmation = addressId
+                        }
+                    )
+                }
             }
         }
         .listStyle(InsetGroupedListStyle())
@@ -203,7 +205,7 @@ struct AddressListItem: View {
                 }
                 
                 // Botón de establecer como predeterminada
-                if !address.isDefault {
+                if address.isDefault != true {
                     Button(action: onSetDefault) {
                         Text("Set as Default")
                             .font(.footnote)

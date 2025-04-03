@@ -10,7 +10,7 @@ import Foundation
 enum ShippingDetailsState {
     case initial
     case loading
-    case loaded(ShippingDetailsResponse)
+    case loaded(ShippingDetails)
     case error(String)
     case empty
 }

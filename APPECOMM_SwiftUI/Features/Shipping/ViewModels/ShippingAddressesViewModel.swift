@@ -99,11 +99,10 @@ class ShippingAddressesViewModel: ObservableObject {
                 )
                 
                 // Si esta es la dirección predeterminada, desmarcar la anterior
-                if newAddress.isDefault {
+                if newAddress.isDefault == true {
                     self.addresses = self.addresses.map { address in
-                        var updatedAddress = address
-                        if address.id != newAddress.id && address.isDefault {
-                            updatedAddress = ShippingDetails(
+                        if address.id != newAddress.id && address.isDefault == true {
+                            return ShippingDetails(
                                 id: address.id,
                                 address: address.address,
                                 city: address.city,
@@ -115,7 +114,7 @@ class ShippingAddressesViewModel: ObservableObject {
                                 isDefault: false
                             )
                         }
-                        return updatedAddress
+                        return address
                     }
                 }
                 
@@ -128,7 +127,7 @@ class ShippingAddressesViewModel: ObservableObject {
                 }
                 
                 // Si es la dirección predeterminada, seleccionarla
-                if newAddress.isDefault {
+                if newAddress.isDefault == true {
                     self.selectedAddress = newAddress
                 }
                 
@@ -176,11 +175,10 @@ class ShippingAddressesViewModel: ObservableObject {
                 )
                 
                 // Si esta es la dirección predeterminada, desmarcar la anterior
-                if updatedAddress.isDefault {
+                if updatedAddress.isDefault == true {
                     self.addresses = self.addresses.map { address in
-                        var modifiedAddress = address
-                        if address.id != updatedAddress.id && address.isDefault {
-                            modifiedAddress = ShippingDetails(
+                        if address.id != updatedAddress.id && address.isDefault == true {
+                            return ShippingDetails(
                                 id: address.id,
                                 address: address.address,
                                 city: address.city,
@@ -192,7 +190,7 @@ class ShippingAddressesViewModel: ObservableObject {
                                 isDefault: false
                             )
                         }
-                        return modifiedAddress
+                        return address
                     }
                 }
                 
@@ -207,7 +205,7 @@ class ShippingAddressesViewModel: ObservableObject {
                 }
                 
                 // Si se ha marcado como predeterminada, seleccionarla
-                if updatedAddress.isDefault {
+                if updatedAddress.isDefault == true {
                     self.selectedAddress = updatedAddress
                 }
                 
@@ -287,9 +285,17 @@ class ShippingAddressesViewModel: ObservableObject {
                 
                 // Actualizar todos los flags isDefault en las direcciones
                 self.addresses = self.addresses.map { address in
-                    var updatedAddress = address
-                    updatedAddress.isDefault = (address.id == addressId)
-                    return updatedAddress
+                    return ShippingDetails(
+                        id: address.id,
+                        address: address.address,
+                        city: address.city,
+                        state: address.state,
+                        postalCode: address.postalCode,
+                        country: address.country,
+                        phoneNumber: address.phoneNumber,
+                        fullName: address.fullName,
+                        isDefault: (address.id == addressId)
+                    )
                 }
                 
                 // Actualizar la dirección seleccionada
