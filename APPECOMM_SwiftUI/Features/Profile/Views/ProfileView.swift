@@ -10,6 +10,7 @@ import SwiftUI
 struct ProfileView: View {
     @ObservedObject var viewModel: ProfileViewModel
     @State private var showingLogoutConfirmation = false
+    @State private var showingAddressManager = false
     
     var body: some View {
         NavigationStack {
@@ -46,6 +47,11 @@ struct ProfileView: View {
                             viewModel.isEditingProfile = true
                         }
                     }
+                }
+            }
+            .sheet(isPresented: $showingAddressManager) {
+                if let userId = viewModel.user?.id {
+                    ShippingAddressesManagerView(userId: userId)
                 }
             }
         }
@@ -149,18 +155,59 @@ struct ProfileView: View {
             
             // Shipping Information
             Section(header: Text("shipping_information".localized)) {
-                if let shipping = user.shippingDetails, shipping.address != nil {
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text(shipping.address ?? "")
-                        Text("\(shipping.city ?? ""), \(shipping.postalCode ?? "")")
-                        Text(shipping.country ?? "")
-                        Text(shipping.phoneNumber ?? "")
+                Button(action: {
+                    showingAddressManager = true
+                }) {
+                    HStack {
+                        Text("Manage Shipping Addresses")
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .font(.caption)
+                            .foregroundColor(.gray)
                     }
-                    .padding(.vertical, 8)
+                }
+                
+                if let addresses = user.shippingAddresses, !addresses.isEmpty {
+                    ForEach(addresses.prefix(2)) { address in
+                        VStack(alignment: .leading, spacing: 4) {
+                            HStack {
+                                Text(address.fullName ?? "")
+                                    .font(.subheadline)
+                                    .fontWeight(.semibold)
+                                
+                                if address.isDefault {
+                                    Text("Default")
+                                        .font(.caption)
+                                        .fontWeight(.semibold)
+                                        .padding(.horizontal, 6)
+                                        .padding(.vertical, 2)
+                                        .background(Color.blue.opacity(0.2))
+                                        .foregroundColor(.blue)
+                                        .cornerRadius(4)
+                                }
+                                
+                                Spacer()
+                            }
+                            
+                            Text(address.address)
+                                .font(.caption)
+                            Text("\(address.city), \(address.state ?? "") \(address.postalCode)")
+                                .font(.caption)
+                            Text(address.country)
+                                .font(.caption)
+                        }
+                        .padding(.vertical, 4)
+                    }
+                    
+                    if (user.shippingAddresses?.count ?? 0) > 2 {
+                        Text("+ \((user.shippingAddresses?.count ?? 0) - 2) more addresses")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
                 } else {
-                    NavigationLink(destination: Text("add_shipping_address".localized)) {
-                        Text("add_shipping_address".localized)
-                    }
+                    Text("No shipping addresses")
+                        .foregroundColor(.secondary)
+                        .padding(.vertical, 8)
                 }
             }
             
@@ -225,32 +272,5 @@ struct ProfileView: View {
         let outputFormatter = DateFormatter()
         outputFormatter.dateFormat = "MMM d, yyyy"
         return outputFormatter.string(from: date)
-    }
-}
-
-struct OrderStatusBadge: View {
-    let status: String
-    
-    private var statusColor: Color {
-        switch status.lowercased() {
-        case "pending": return .orange
-        case "processing": return .blue
-        case "paid": return .yellow
-        case "shipped": return .purple
-        case "delivered": return .green
-        case "cancelled": return .red
-        default: return .gray
-        }
-    }
-    
-    var body: some View {
-        Text(status.capitalized)
-            .font(.caption)
-            .fontWeight(.semibold)
-            .padding(.horizontal, 8)
-            .padding(.vertical, 4)
-            .background(statusColor)
-            .foregroundColor(.white)
-            .cornerRadius(4)
     }
 }

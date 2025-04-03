@@ -10,6 +10,7 @@ import SwiftUI
 struct ShippingInfoView: View {
     @ObservedObject var viewModel: CheckoutViewModel
     @FocusState private var focusedField: ShippingField?
+    @State private var showingAddressSelector = false
     
     enum ShippingField {
         case fullName
@@ -30,13 +31,13 @@ struct ShippingInfoView: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.horizontal)
                 
-                // Content: existing details or form
+                // Content: address selector, existing details, or form
                 VStack(alignment: .leading, spacing: 16) {
-                    if viewModel.hasExistingShippingDetails && !viewModel.isEditingShippingDetails {
-                        // Show existing details
-                        existingShippingDetailsView
+                    if !viewModel.shippingAddresses.isEmpty && !viewModel.isAddingNewAddress {
+                        // Mostrar selección de dirección
+                        existingAddressesView
                     } else {
-                        // Show form
+                        // Mostrar formulario
                         shippingFormView
                     }
                     
@@ -47,10 +48,14 @@ struct ShippingInfoView: View {
                     PrimaryButton(
                         title: "Continue to Payment",
                         isLoading: viewModel.isLoading,
-                        isEnabled: viewModel.hasExistingShippingDetails || viewModel.shippingDetailsForm.isValid
+                        isEnabled: viewModel.hasExistingShippingDetails || viewModel.selectedAddress != nil || viewModel.shippingDetailsForm.isValid
                     ) {
                         focusedField = nil
-                        viewModel.proceedToNextStep()
+                        if viewModel.isAddingNewAddress {
+                            viewModel.createNewShippingAddress()
+                        } else {
+                            viewModel.proceedToNextStep()
+                        }
                     }
                     .padding(.top, 16)
                 }
@@ -74,6 +79,9 @@ struct ShippingInfoView: View {
                 }
             }
         }
+        .sheet(isPresented: $showingAddressSelector) {
+            ShippingAddressSelectorView(viewModel: viewModel)
+        }
         .alert(isPresented: Binding<Bool>(
             get: { viewModel.errorMessage != nil },
             set: { if !$0 { viewModel.errorMessage = nil } }
@@ -84,49 +92,55 @@ struct ShippingInfoView: View {
                 dismissButton: .default(Text("OK"))
             )
         }
+        .onAppear {
+            // Cargar direcciones de envío al aparecer la vista
+            if viewModel.shippingAddresses.isEmpty {
+                viewModel.loadShippingAddresses()
+            }
+        }
     }
     
-    // View for existing shipping details
-    private var existingShippingDetailsView: some View {
+    // MARK: - Content Views
+    
+    /// Vista para selección de direcciones existentes
+    private var existingAddressesView: some View {
         VStack(alignment: .leading, spacing: 12) {
-            // Header with edit button
+            // Cabecera con texto descriptivo y botón de selección
             HStack {
-                Text("Your Shipping Address")
+                Text("Shipping Address")
                     .font(.headline)
                 
                 Spacer()
                 
                 Button(action: {
-                    viewModel.isEditingShippingDetails = true
+                    showingAddressSelector = true
                 }) {
-                    HStack(spacing: 4) {
-                        Image(systemName: "pencil")
-                        Text("Edit")
-                    }
-                    .font(.subheadline)
-                    .foregroundColor(.blue)
+                    Text("Change")
+                        .font(.subheadline)
+                        .foregroundColor(.blue)
                 }
             }
             
-            // Address details
-            if let details = viewModel.existingShippingDetails {
+            // Mostrar la dirección seleccionada
+            if let selectedId = viewModel.selectedShippingAddressId,
+               let address = viewModel.shippingAddresses.first(where: { $0.id == selectedId }) {
                 VStack(alignment: .leading, spacing: 6) {
-                    if let fullName = details.fullName {
+                    if let fullName = address.fullName, !fullName.isEmpty {
                         Text(fullName)
                             .font(.subheadline)
                             .fontWeight(.semibold)
                     }
                     
-                    Text(details.address)
+                    Text(address.address)
                         .font(.subheadline)
                     
-                    Text("\(details.city), \(details.state ?? "") \(details.postalCode)")
+                    Text("\(address.city), \(address.state) \(address.postalCode)")
                         .font(.subheadline)
                     
-                    Text(details.country)
+                    Text(address.country)
                         .font(.subheadline)
                     
-                    if let phoneNumber = details.phoneNumber {
+                    if let phoneNumber = address.phoneNumber, !phoneNumber.isEmpty {
                         Text(phoneNumber)
                             .font(.subheadline)
                             .foregroundColor(.secondary)
@@ -136,13 +150,55 @@ struct ShippingInfoView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .background(Color(.systemGray6).opacity(0.5))
                 .cornerRadius(8)
+            } else {
+                // Mensaje si no hay dirección seleccionada
+                Text("No shipping address selected")
+                    .foregroundColor(.secondary)
+                    .padding()
+                    .frame(maxWidth: .infinity, alignment: .center)
+                    .background(Color(.systemGray6).opacity(0.5))
+                    .cornerRadius(8)
+            }
+            
+            // Botón para agregar nueva dirección
+            Button(action: {
+                viewModel.isAddingNewAddress = true
+            }) {
+                HStack {
+                    Image(systemName: "plus")
+                    Text("Add New Address")
+                }
+                .foregroundColor(.blue)
+                .padding(.vertical, 8)
             }
         }
     }
     
-    // Shipping details form
+    /// Vista de formulario para nueva dirección
     private var shippingFormView: some View {
         VStack(spacing: 16) {
+            // Header con botón para cancelar
+            if !viewModel.shippingAddresses.isEmpty {
+                HStack {
+                    Text("Add New Address")
+                        .font(.headline)
+                    
+                    Spacer()
+                    
+                    Button(action: {
+                        viewModel.isAddingNewAddress = false
+                    }) {
+                        Text("Cancel")
+                            .foregroundColor(.blue)
+                    }
+                }
+            } else {
+                Text("Add Shipping Address")
+                    .font(.headline)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            
+            // Campos del formulario
             CustomTextField(
                 title: "Full Name",
                 placeholder: "John Doe",
@@ -281,6 +337,14 @@ struct ShippingInfoView: View {
             .onSubmit {
                 focusedField = nil
             }
+            
+            // Opción para establecer como dirección predeterminada
+            Toggle("Set as default shipping address", isOn: Binding(
+                get: { viewModel.shippingDetailsForm.isDefaultAddress ?? false },
+                set: { viewModel.shippingDetailsForm.isDefaultAddress = $0 }
+            ))
+            .font(.subheadline)
+            .padding(.vertical, 8)
         }
     }
     

@@ -12,7 +12,7 @@ struct User: Identifiable, Codable, Equatable {
     let firstName: String
     let lastName: String
     let email: String
-    let shippingDetails: ShippingDetails?
+    let shippingDetails: [ShippingDetails]?
     let cart: CartSummary?
     let orders: [OrderSummary]?
     
@@ -58,6 +58,7 @@ struct ShippingDetailsRequest: Codable, Equatable {
     let country: String
     let phoneNumber: String?
     let fullName: String?
+    let isDefault: Bool?
     
     static func == (lhs: ShippingDetailsRequest, rhs: ShippingDetailsRequest) -> Bool {
         return lhs.address == rhs.address &&
@@ -66,7 +67,19 @@ struct ShippingDetailsRequest: Codable, Equatable {
         lhs.postalCode == rhs.postalCode &&
         lhs.country == rhs.country &&
         lhs.phoneNumber == rhs.phoneNumber &&
-        lhs.fullName == rhs.fullName
+        lhs.fullName == rhs.fullName &&
+        lhs.isDefault == rhs.isDefault
+    }
+    
+    enum CodingKeys: String, CodingKey {
+        case address
+        case city
+        case state
+        case postalCode = "postal_code"
+        case country
+        case phoneNumber = "phone_number"
+        case fullName = "full_name"
+        case isDefault = "is_default"
     }
 }
 
@@ -80,9 +93,25 @@ struct ShippingDetailsResponse: Codable, Equatable {
     let country: String
     let phoneNumber: String?
     let fullName: String?
+    let isDefault: Bool?
     
     static func == (lhs: ShippingDetailsResponse, rhs: ShippingDetailsResponse) -> Bool {
         return lhs.id == rhs.id
+    }
+    
+    // Método para convertir ShippingDetailsResponse a ShippingDetails
+    func toShippingDetails() -> ShippingDetails {
+        return ShippingDetails(
+            id: id,
+            address: address,
+            city: city,
+            state: state,
+            postalCode: postalCode,
+            country: country,
+            phoneNumber: phoneNumber,
+            fullName: fullName,
+            isDefault: isDefault ?? false
+        )
     }
 }
 

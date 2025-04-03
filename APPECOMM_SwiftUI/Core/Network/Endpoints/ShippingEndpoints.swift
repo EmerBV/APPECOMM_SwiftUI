@@ -10,29 +10,45 @@ import Foundation
 /// Endpoints para los detalles de envío
 enum ShippingEndpoints: APIEndpoint {
     case getShippingDetails(userId: Int)
-    case updateShippingDetails(details: ShippingDetailsRequest, userId: Int)
+    case getAllShippingAddresses(userId: Int)
+    case updateShippingDetails(addressId: Int, userId: Int)
+    case createShippingAddress(details: ShippingDetailsRequest, userId: Int)
+    case deleteShippingAddress(userId: Int, addressId: Int)
+    case setDefaultShippingAddress(userId: Int, addressId: Int)
     
     var path: String {
         switch self {
         case .getShippingDetails(let userId):
+            return "/shipping/\(userId)/default"
+        case .getAllShippingAddresses(let userId):
             return "/shipping/\(userId)"
-        case .updateShippingDetails:
-            return "/shipping/update"
+        case .updateShippingDetails(let addressId, let userId):
+            return "/shipping/update/\(userId)"
+        case .createShippingAddress:
+            return "/shipping/create"
+        case .deleteShippingAddress(let userId, let addressId):
+            return "/shipping/\(userId)/address/\(addressId)"
+        case .setDefaultShippingAddress(let userId, let addressId):
+            return "/shipping/\(userId)/address/\(addressId)/default"
         }
     }
     
     var method: String {
         switch self {
-        case .getShippingDetails:
+        case .getShippingDetails, .getAllShippingAddresses:
             return HTTPMethod.get.rawValue
-        case .updateShippingDetails:
+        case .updateShippingDetails, .createShippingAddress:
             return HTTPMethod.post.rawValue
+        case .deleteShippingAddress:
+            return HTTPMethod.delete.rawValue
+        case .setDefaultShippingAddress:
+            return HTTPMethod.put.rawValue
         }
     }
     
     var parameters: [String: Any]? {
         switch self {
-        case .updateShippingDetails(let details, let userId):
+        case .updateShippingDetails(let details, _), .createShippingAddress(let details, _):
             // Convertir details a parámetros JSON para el body
             let encoder = JSONEncoder()
             if let data = try? encoder.encode(details),
@@ -40,23 +56,23 @@ enum ShippingEndpoints: APIEndpoint {
                 return dict
             }
             return nil
-        case .getShippingDetails:
+        default:
             return nil
         }
     }
     
     var encoding: ParameterEncoding {
         switch self {
-        case .updateShippingDetails:
+        case .updateShippingDetails, .createShippingAddress, .setDefaultShippingAddress:
             return .json
-        case .getShippingDetails:
+        default:
             return .url
         }
     }
     
     var queryParameters: [String: Any]? {
         switch self {
-        case .updateShippingDetails(_, let userId):
+        case .updateShippingDetails(_, let userId), .createShippingAddress(_, let userId):
             return ["userId": userId]
         default:
             return nil

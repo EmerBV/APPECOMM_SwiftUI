@@ -65,6 +65,11 @@ class CheckoutViewModel: ObservableObject {
     @Published var hasExistingShippingDetails = false
     @Published var isEditingShippingDetails = false
     
+    @Published var shippingAddresses: [ShippingDetails] = [] // Lista de direcciones de envío
+    @Published var selectedShippingAddressId: Int? // ID de la dirección seleccionada
+    @Published var showingAddressSelector = false // Controla la visualización del selector de direcciones
+    @Published var isAddingNewAddress = false // Controla si el usuario está agregando una nueva dirección
+    
     // Payment specific properties
     @Published var paymentSheetViewModel: PaymentSheetViewModel?
     @Published var showPaymentSheet = false
@@ -524,47 +529,6 @@ class CheckoutViewModel: ObservableObject {
         return nil
     }
     
-    private func loadUserAddress() {
-        guard case let .loggedIn(user) = authRepository.authState.value else { return }
-        
-        isLoading = true
-        shippingService.getShippingDetails(userId: user.id)
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] (completion: Subscribers.Completion<NetworkError>) in
-                self?.isLoading = false
-                if case .failure(let error) = completion {
-                    self?.errorMessage = error.localizedDescription
-                    self?.showError = true
-                }
-            } receiveValue: { [weak self] (details: ShippingDetailsResponse?) in
-                if let details = details {
-                    // Convertir ShippingDetailsResponse a Address
-                    let address = ShippingDetails(
-                        id: details.id,
-                        address: details.address,
-                        city: details.city,
-                        state: details.state ?? "",
-                        postalCode: details.postalCode,
-                        country: details.country,
-                        phoneNumber: details.phoneNumber ?? "",
-                        fullName: details.fullName,
-                        isDefault: true
-                    )
-                    self?.selectedAddress = address
-                    
-                    // También actualizar el formulario con estos datos
-                    self?.shippingDetailsForm = ShippingDetailsForm(from: details)
-                    self?.hasExistingShippingDetails = true
-                    self?.isEditingShippingDetails = false
-                } else {
-                    self?.selectedAddress = nil
-                    self?.hasExistingShippingDetails = false
-                    self?.isEditingShippingDetails = true
-                }
-            }
-            .store(in: &cancellables)
-    }
-    
     // MARK: - Public Methods
     
     func calculateTotalAmount() -> Double {
@@ -573,5 +537,225 @@ class CheckoutViewModel: ObservableObject {
     
     func getCurrentOrder() -> Order? {
         return currentOrder
+    }
+    
+    // Cargar todas las direcciones de envío del usuario actual
+    func loadShippingAddresses() {
+        guard let userId = getCurrentUserId() else { return }
+        
+        isLoading = true
+        errorMessage = nil
+        
+        let shippingRepository = DependencyInjector.shared.resolve(ShippingRepositoryProtocol.self)
+        
+        shippingRepository.getAllShippingAddresses(userId: userId)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] completion in
+                self?.isLoading = false
+                
+                if case .failure(let error) = completion {
+                    Logger.error("Error loading shipping addresses: \(error)")
+                    self?.errorMessage = "Failed to load shipping addresses: \(error.localizedDescription)"
+                    self?.showError = true
+                }
+            } receiveValue: { [weak self] addresses in
+                guard let self = self else { return }
+                
+                // Convertir ShippingDetailsResponse a ShippingDetails
+                self.shippingAddresses = addresses.map { response in
+                    ShippingDetails(
+                        id: response.id,
+                        address: response.address,
+                        city: response.city,
+                        state: response.state ?? "",
+                        postalCode: response.postalCode,
+                        country: response.country,
+                        phoneNumber: response.phoneNumber ?? "",
+                        fullName: response.fullName ?? "",
+                        isDefault: response.isDefault ?? false
+                    )
+                }
+                
+                // Si no hay dirección seleccionada, seleccionar la predeterminada
+                if self.selectedShippingAddressId == nil {
+                    if let defaultAddress = self.shippingAddresses.first(where: { $0.isDefault }) {
+                        self.selectedShippingAddressId = defaultAddress.id
+                        self.selectedAddress = defaultAddress
+                    } else if !self.shippingAddresses.isEmpty {
+                        // Si no hay predeterminada, seleccionar la primera
+                        self.selectedShippingAddressId = self.shippingAddresses.first?.id
+                        self.selectedAddress = self.shippingAddresses.first
+                    } else {
+                        // No hay direcciones, mostrar formulario para agregar
+                        self.isAddingNewAddress = true
+                    }
+                }
+                
+                Logger.info("Loaded \(self.shippingAddresses.count) shipping addresses")
+            }
+            .store(in: &cancellables)
+    }
+    
+    // Seleccionar una dirección de envío
+    func selectShippingAddress(id: Int) {
+        guard let address = shippingAddresses.first(where: { $0.id == id }) else {
+            Logger.error("Selected address not found: \(id)")
+            return
+        }
+        
+        selectedShippingAddressId = id
+        selectedAddress = address
+        showingAddressSelector = false
+        
+        Logger.info("Selected shipping address: \(id)")
+    }
+    
+    // Crear una nueva dirección de envío
+    func createNewShippingAddress() {
+        guard let userId = getCurrentUserId() else {
+            errorMessage = "No user ID available"
+            showError = true
+            return
+        }
+        
+        validateShippingForm()
+        if !shippingDetailsForm.isValid {
+            errorMessage = "Please fill in all required fields correctly"
+            showError = true
+            return
+        }
+        
+        isLoading = true
+        errorMessage = nil
+        
+        let shippingRepository = DependencyInjector.shared.resolve(ShippingRepositoryProtocol.self)
+        
+        // Crear la nueva dirección
+        shippingRepository.createShippingAddress(userId: userId, details: shippingDetailsForm)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] completion in
+                self?.isLoading = false
+                
+                if case .failure(let error) = completion {
+                    Logger.error("Error creating shipping address: \(error)")
+                    self?.errorMessage = "Failed to create shipping address: \(error.localizedDescription)"
+                    self?.showError = true
+                }
+            } receiveValue: { [weak self] newAddress in
+                guard let self = self else { return }
+                
+                // Crear un objeto ShippingDetails a partir de la respuesta
+                let address = ShippingDetails(
+                    id: newAddress.id,
+                    address: newAddress.address,
+                    city: newAddress.city,
+                    state: newAddress.state ?? "",
+                    postalCode: newAddress.postalCode,
+                    country: newAddress.country,
+                    phoneNumber: newAddress.phoneNumber ?? "",
+                    fullName: newAddress.fullName ?? "",
+                    isDefault: newAddress.isDefault ?? false
+                )
+                
+                // Agregar la nueva dirección a la lista y seleccionarla
+                self.shippingAddresses.append(address)
+                self.selectedShippingAddressId = address.id
+                self.selectedAddress = address
+                
+                // Salir del modo de agregar dirección
+                self.isAddingNewAddress = false
+                
+                Logger.info("Created new shipping address with ID: \(address.id)")
+            }
+            .store(in: &cancellables)
+    }
+    
+    // Establecer una dirección como predeterminada
+    func setAddressAsDefault(id: Int) {
+        guard let userId = getCurrentUserId() else {
+            errorMessage = "No user ID available"
+            showError = true
+            return
+        }
+        
+        isLoading = true
+        errorMessage = nil
+        
+        let shippingRepository = DependencyInjector.shared.resolve(ShippingRepositoryProtocol.self)
+        
+        shippingRepository.setDefaultShippingAddress(userId: userId, addressId: id)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] completion in
+                self?.isLoading = false
+                
+                if case .failure(let error) = completion {
+                    Logger.error("Error setting default address: \(error)")
+                    self?.errorMessage = "Failed to set default address: \(error.localizedDescription)"
+                    self?.showError = true
+                }
+            } receiveValue: { [weak self] defaultAddress in
+                guard let self = self else { return }
+                
+                // Actualizar las banderas isDefault en todas las direcciones
+                self.shippingAddresses = self.shippingAddresses.map { address in
+                    var updatedAddress = address
+                    updatedAddress.isDefault = (address.id == id)
+                    return updatedAddress
+                }
+                
+                Logger.info("Set address \(id) as default")
+            }
+            .store(in: &cancellables)
+    }
+    
+    // Eliminar una dirección de envío
+    func deleteShippingAddress(id: Int) {
+        isLoading = true
+        errorMessage = nil
+        
+        let shippingRepository = DependencyInjector.shared.resolve(ShippingRepositoryProtocol.self)
+        
+        shippingRepository.deleteShippingAddress(addressId: id)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] completion in
+                self?.isLoading = false
+                
+                if case .failure(let error) = completion {
+                    Logger.error("Error deleting address: \(error)")
+                    self?.errorMessage = "Failed to delete address: \(error.localizedDescription)"
+                    self?.showError = true
+                }
+            } receiveValue: { [weak self] _ in
+                guard let self = self else { return }
+                
+                // Eliminar la dirección de la lista
+                self.shippingAddresses.removeAll { $0.id == id }
+                
+                // Si se eliminó la dirección seleccionada, seleccionar otra
+                if self.selectedShippingAddressId == id {
+                    if let defaultAddress = self.shippingAddresses.first(where: { $0.isDefault }) {
+                        self.selectedShippingAddressId = defaultAddress.id
+                        self.selectedAddress = defaultAddress
+                    } else if !self.shippingAddresses.isEmpty {
+                        self.selectedShippingAddressId = self.shippingAddresses.first?.id
+                        self.selectedAddress = self.shippingAddresses.first
+                    } else {
+                        self.selectedShippingAddressId = nil
+                        self.selectedAddress = nil
+                        self.isAddingNewAddress = true
+                    }
+                }
+                
+                Logger.info("Deleted shipping address \(id)")
+            }
+            .store(in: &cancellables)
+    }
+    
+    // Sobrescribir el método loadUserAddress para usar el nuevo sistema de múltiples direcciones
+    private func loadUserAddress() {
+        guard case let .loggedIn(user) = authRepository.authState.value else { return }
+        
+        // Cargar todas las direcciones y seleccionar la predeterminada
+        loadShippingAddresses()
     }
 }

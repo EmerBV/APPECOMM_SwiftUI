@@ -40,6 +40,7 @@ struct ShippingDetailsForm {
     var postalCode: String = ""
     var country: String = ""
     var phoneNumber: String = ""
+    var isDefaultAddress: Bool? = false // Nueva propiedad para marcar como predeterminada
     
     // Validation states
     var isFullNameValid: Bool = false
@@ -83,6 +84,7 @@ struct ShippingDetailsForm {
         self.postalCode = details.postalCode
         self.country = details.country
         self.phoneNumber = details.phoneNumber ?? ""
+        self.isDefaultAddress = details.isDefault
         
         // Set all fields as valid since they come from validated data
         self.isFullNameValid = !fullName.isEmpty
@@ -103,7 +105,8 @@ struct ShippingDetailsForm {
             postalCode: postalCode,
             country: country,
             phoneNumber: phoneNumber,
-            fullName: fullName
+            fullName: fullName,
+            isDefault: isDefaultAddress
         )
     }
     
@@ -121,7 +124,7 @@ struct ShippingDetailsForm {
         }
         
         // Para dirección
-        let addressResult = validator.validateName(address)
+        let addressResult = validator.validateAddress(address)
         switch addressResult {
         case .valid:
             isAddressValid = true
@@ -184,7 +187,8 @@ struct ShippingDetailsForm {
         case .invalid(let message):
             isPhoneNumberValid = false
             phoneNumberError = message
-        }    }
+        }
+    }
     
     /// Reset all fields to empty and invalidate them
     mutating func reset() {
@@ -195,6 +199,7 @@ struct ShippingDetailsForm {
         postalCode = ""
         country = ""
         phoneNumber = ""
+        isDefaultAddress = false
         
         isFullNameValid = false
         isAddressValid = false

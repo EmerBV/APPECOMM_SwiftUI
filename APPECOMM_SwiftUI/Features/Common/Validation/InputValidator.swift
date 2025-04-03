@@ -20,6 +20,7 @@ protocol InputValidatorProtocol {
     func validateFullName(_ fullName: String) -> ValidationResult
     func validatePhoneNumber(_ phoneNumber: String) -> ValidationResult
     func validatePostalCode(_ postalCode: String) -> ValidationResult
+    func validateAddress(_ address: String) -> ValidationResult
     func validateCreditCardNumber(_ cardNumber: String) -> ValidationResult
     func validateExpiryDate(_ expiryDate: String) -> ValidationResult
     func validateCVV(_ cvv: String) -> ValidationResult
@@ -65,49 +66,91 @@ struct InputValidator: InputValidatorProtocol {
         return .valid
     }
     
-    func validateFullName(_ fullName: String) -> ValidationResult {
-        let trimmedName = fullName.trimmingCharacters(in: .whitespacesAndNewlines)
+    func validateFullName(_ name: String) -> ValidationResult {
+        let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
         
         if trimmedName.isEmpty {
-            return .invalid(NSLocalizedString("error_fullname_empty", comment: "Error: Full name is empty"))
+            // Si está en el Localize
+            //return .invalid(NSLocalizedString("error_fullname_empty", comment: "Error: Full name is empty"))
+            return .invalid("Full name cannot be empty")
         }
         
-        let components = trimmedName.split(separator: " ")
-        if components.count < 2 {
-            return .invalid(NSLocalizedString("error_fullname_format", comment: "Error: Full name should include first and last name"))
+        // Verificar que tenga al menos dos partes (nombre y apellido)
+        let nameParts = trimmedName.components(separatedBy: " ").filter { !$0.isEmpty }
+        if nameParts.count < 2 {
+            return .invalid("Please enter both first and last name")
+        }
+        
+        // Verificar la longitud mínima de cada parte
+        for part in nameParts {
+            if part.count < 2 {
+                return .invalid("Each part of the name should be at least 2 characters")
+            }
         }
         
         return .valid
     }
     
     func validatePhoneNumber(_ phoneNumber: String) -> ValidationResult {
+        
         let trimmedPhone = phoneNumber.trimmingCharacters(in: .whitespacesAndNewlines)
         
-        if trimmedPhone.isEmpty {
-            return .invalid(NSLocalizedString("error_phone_empty", comment: "Error: Phone number is empty"))
+        // Eliminar caracteres no numéricos para la validación
+        let digitsOnly = trimmedPhone.components(separatedBy: CharacterSet.decimalDigits.inverted).joined()
+        
+        // Verificar longitud mínima (varía según el país)
+        if digitsOnly.count < 7 {
+            return .invalid("Phone number is too short")
+        }
+        
+        // Verificar longitud máxima
+        if digitsOnly.count > 15 {
+            return .invalid("Phone number is too long")
         }
         
         // Permite números, espacios, +, -, y paréntesis
-        let phoneRegex = "^[+]?[(]?[0-9]{1,4}[)]?[-\\s\\./0-9]*$"
-        let phonePredicate = NSPredicate(format: "SELF MATCHES %@", phoneRegex)
-        
-        if !phonePredicate.evaluate(with: trimmedPhone) {
-            return .invalid(NSLocalizedString("error_phone_invalid", comment: "Error: Phone number is invalid"))
-        }
+        // Si quiero permitir esto descomentar este bloque y comentar el bloque de arriba
+        /*
+         let phoneRegex = "^[+]?[(]?[0-9]{1,4}[)]?[-\\s\\./0-9]*$"
+         let phonePredicate = NSPredicate(format: "SELF MATCHES %@", phoneRegex)
+         
+         if !phonePredicate.evaluate(with: trimmedPhone) {
+         return .invalid(NSLocalizedString("error_phone_invalid", comment: "Error: Phone number is invalid"))
+         }
+         */
         
         return .valid
     }
     
     func validatePostalCode(_ postalCode: String) -> ValidationResult {
-        let trimmedCode = postalCode.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmedPostalCode = postalCode.trimmingCharacters(in: .whitespacesAndNewlines)
         
-        if trimmedCode.isEmpty {
-            return .invalid(NSLocalizedString("error_postalcode_empty", comment: "Error: Postal code is empty"))
+        if trimmedPostalCode.isEmpty {
+            return .invalid("Postal code cannot be empty")
         }
         
-        // Validación genérica para códigos postales: permite números, letras y espacios
-        if trimmedCode.count < 3 {
-            return .invalid(NSLocalizedString("error_postalcode_too_short", comment: "Error: Postal code is too short"))
+        // Validación básica - en una app real, se validaría según el país
+        if trimmedPostalCode.count < 3 || trimmedPostalCode.count > 10 {
+            return .invalid("Invalid postal code format")
+        }
+        
+        return .valid
+    }
+    
+    // Validar dirección completa
+    func validateAddress(_ address: String) -> ValidationResult {
+        let trimmedAddress = address.trimmingCharacters(in: .whitespacesAndNewlines)
+        
+        if trimmedAddress.isEmpty {
+            return .invalid("Address cannot be empty")
+        }
+        
+        if trimmedAddress.count < 5 {
+            return .invalid("Address is too short")
+        }
+        
+        if trimmedAddress.count > 100 {
+            return .invalid("Address is too long")
         }
         
         return .valid
