@@ -151,9 +151,11 @@ struct ShippingAddressFormView: View {
         )
         
         if isNewAddress {
+            // Para crear dirección, no pasamos ID (será null en la solicitud)
             viewModel.createShippingAddress(form: shippingForm)
-        } else if let addressId = addressToEdit?.id {
-            viewModel.updateShippingAddress(id: addressId, form: shippingForm)
+        } else if let addressToEdit = addressToEdit {
+            // Para actualizar, pasamos el ID existente
+            viewModel.updateShippingAddress(id: addressToEdit.id, form: shippingForm)
         }
         
         onSave()

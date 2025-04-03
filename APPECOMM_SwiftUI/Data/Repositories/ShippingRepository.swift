@@ -12,12 +12,12 @@ protocol ShippingRepositoryProtocol {
     var shippingDetailsState: CurrentValueSubject<ShippingDetailsState, Never> { get }
     var shippingAddressesState: CurrentValueSubject<ShippingAddressesState, Never> { get }
     
-    func getDefaultShippingAddress(userId: Int) -> AnyPublisher<ShippingDetailsResponse?, Error>
-    func getAllShippingAddresses(userId: Int) -> AnyPublisher<[ShippingDetailsResponse], Error>
-    func updateShippingAddress(userId: Int, details: ShippingDetailsRequest) -> AnyPublisher<ShippingDetailsResponse, Error>
-    func createShippingAddress(userId: Int, details: ShippingDetailsForm) -> AnyPublisher<ShippingDetailsResponse, Error>
-    func deleteShippingAddress(addressId: Int) -> AnyPublisher<Void, Error>
-    func setDefaultShippingAddress(userId: Int, addressId: Int) -> AnyPublisher<ShippingDetailsResponse, Error>
+    func getDefaultShippingAddress(userId: Int) -> AnyPublisher<ShippingDetails?, Error>
+    func getAllShippingAddresses(userId: Int) -> AnyPublisher<[ShippingDetails], Error>
+    func updateShippingAddress(userId: Int, details: ShippingDetailsRequest) -> AnyPublisher<ShippingDetails, Error>
+    func createShippingAddress(userId: Int, details: ShippingDetailsForm) -> AnyPublisher<ShippingDetails, Error>
+    func deleteShippingAddress(userId: Int, addressId: Int) -> AnyPublisher<Void, Error>
+    func setDefaultShippingAddress(userId: Int, addressId: Int) -> AnyPublisher<ShippingDetails, Error>
     
     func debugShippingState()
 }
@@ -33,7 +33,7 @@ final class ShippingRepository: ShippingRepositoryProtocol {
         self.shippingService = shippingService
     }
     
-    func getDefaultShippingAddress(userId: Int) -> AnyPublisher<ShippingDetailsResponse?, Error> {
+    func getDefaultShippingAddress(userId: Int) -> AnyPublisher<ShippingDetails?, Error> {
         Logger.info("ShippingRepository: Getting default shipping address for user: \(userId)")
         shippingDetailsState.send(.loading)
         
@@ -56,7 +56,7 @@ final class ShippingRepository: ShippingRepositoryProtocol {
             .eraseToAnyPublisher()
     }
     
-    func getAllShippingAddresses(userId: Int) -> AnyPublisher<[ShippingDetailsResponse], Error> {
+    func getAllShippingAddresses(userId: Int) -> AnyPublisher<[ShippingDetails], Error> {
         Logger.info("ShippingRepository: Getting all shipping addresses for user: \(userId)")
         shippingAddressesState.send(.loading)
         
@@ -79,9 +79,16 @@ final class ShippingRepository: ShippingRepositoryProtocol {
             .eraseToAnyPublisher()
     }
     
-    func updateShippingAddress(userId: Int, details: ShippingDetailsRequest) -> AnyPublisher<ShippingDetailsResponse, Error> {
-        Logger.info("ShippingRepository: Updating shipping address for user: \(userId)")
+    func updateShippingAddress(userId: Int, details: ShippingDetailsRequest) -> AnyPublisher<ShippingDetails, Error> {
+        Logger.info("ShippingRepository: Updating shipping address ID: \(details.id ?? 0) for user: \(userId)")
         shippingDetailsState.send(.loading)
+        
+        // Asegurarnos de que tenemos un ID para actualizar
+        guard details.id != nil else {
+            let error = NSError(domain: "ShippingRepository", code: 0, userInfo: [NSLocalizedDescriptionKey: "ID required for update"])
+            shippingDetailsState.send(.error(error.localizedDescription))
+            return Fail(error: error).eraseToAnyPublisher()
+        }
         
         return shippingService.updateShippingDetails(userId: userId, details: details)
             .handleEvents(receiveOutput: { [weak self] shippingDetails in
@@ -104,7 +111,7 @@ final class ShippingRepository: ShippingRepositoryProtocol {
             .eraseToAnyPublisher()
     }
     
-    func createShippingAddress(userId: Int, details: ShippingDetailsForm) -> AnyPublisher<ShippingDetailsResponse, Error> {
+    func createShippingAddress(userId: Int, details: ShippingDetailsForm) -> AnyPublisher<ShippingDetails, Error> {
         // Validate form data first
         var formCopy = details
         formCopy.validateAll()
@@ -116,8 +123,8 @@ final class ShippingRepository: ShippingRepositoryProtocol {
                 .eraseToAnyPublisher()
         }
         
-        // Convert form to API request
-        let request = formCopy.toRequest()
+        // Convert form to API request - para crear, ID debe ser nil
+        let request = formCopy.toRequest(id: nil)
         
         Logger.info("ShippingRepository: Creating new shipping address for user: \(userId)")
         shippingDetailsState.send(.loading)
@@ -141,10 +148,10 @@ final class ShippingRepository: ShippingRepositoryProtocol {
             .eraseToAnyPublisher()
     }
     
-    func deleteShippingAddress(addressId: Int) -> AnyPublisher<Void, Error> {
-        Logger.info("ShippingRepository: Deleting shipping address: \(addressId)")
+    func deleteShippingAddress(userId: Int, addressId: Int) -> AnyPublisher<Void, Error> {
+        Logger.info("ShippingRepository: Deleting shipping address: \(addressId) for user: \(userId)")
         
-        return shippingService.deleteShippingAddress(addressId: addressId)
+        return shippingService.deleteShippingAddress(userId: userId, addressId: addressId)
             .handleEvents(receiveOutput: { [weak self] _ in
                 Logger.info("ShippingRepository: Shipping address deleted successfully")
                 
@@ -169,7 +176,7 @@ final class ShippingRepository: ShippingRepositoryProtocol {
             .eraseToAnyPublisher()
     }
     
-    func setDefaultShippingAddress(userId: Int, addressId: Int) -> AnyPublisher<ShippingDetailsResponse, Error> {
+    func setDefaultShippingAddress(userId: Int, addressId: Int) -> AnyPublisher<ShippingDetails, Error> {
         Logger.info("ShippingRepository: Setting address \(addressId) as default for user: \(userId)")
         
         return shippingService.setDefaultShippingAddress(userId: userId, addressId: addressId)
@@ -184,7 +191,7 @@ final class ShippingRepository: ShippingRepositoryProtocol {
                         var updatedAddress = address
                         if address.id == addressId {
                             // This one is now the default
-                            updatedAddress = ShippingDetailsResponse(
+                            updatedAddress = ShippingDetails(
                                 id: address.id,
                                 address: address.address,
                                 city: address.city,
@@ -197,7 +204,7 @@ final class ShippingRepository: ShippingRepositoryProtocol {
                             )
                         } else if address.isDefault == true {
                             // Others are no longer default
-                            updatedAddress = ShippingDetailsResponse(
+                            updatedAddress = ShippingDetails(
                                 id: address.id,
                                 address: address.address,
                                 city: address.city,

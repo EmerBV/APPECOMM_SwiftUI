@@ -51,6 +51,7 @@ struct OrderSummary: Codable, Equatable, Identifiable {
 
 // DTO para enviar detalles de envío a la API
 struct ShippingDetailsRequest: Codable, Equatable {
+    let id: Int? // ID es opcional para nuevas direcciones, pero requerido para actualizaciones
     let address: String
     let city: String
     let state: String?
@@ -61,7 +62,8 @@ struct ShippingDetailsRequest: Codable, Equatable {
     let isDefault: Bool?
     
     static func == (lhs: ShippingDetailsRequest, rhs: ShippingDetailsRequest) -> Bool {
-        return lhs.address == rhs.address &&
+        return lhs.id == rhs.id &&
+        lhs.address == rhs.address &&
         lhs.city == rhs.city &&
         lhs.state == rhs.state &&
         lhs.postalCode == rhs.postalCode &&
@@ -72,6 +74,7 @@ struct ShippingDetailsRequest: Codable, Equatable {
     }
     
     enum CodingKeys: String, CodingKey {
+        case id
         case address
         case city
         case state
@@ -81,43 +84,5 @@ struct ShippingDetailsRequest: Codable, Equatable {
         case fullName = "full_name"
         case isDefault = "is_default"
     }
-}
-
-/// DTO para recibir detalles de envío desde la API
-struct ShippingDetailsResponse: Codable, Equatable {
-    let id: Int
-    let address: String
-    let city: String
-    let state: String?
-    let postalCode: String
-    let country: String
-    let phoneNumber: String?
-    let fullName: String?
-    let isDefault: Bool?
-    
-    static func == (lhs: ShippingDetailsResponse, rhs: ShippingDetailsResponse) -> Bool {
-        return lhs.id == rhs.id
-    }
-    
-    // Método para convertir ShippingDetailsResponse a ShippingDetails
-    func toShippingDetails() -> ShippingDetails {
-        return ShippingDetails(
-            id: id,
-            address: address,
-            city: city,
-            state: state,
-            postalCode: postalCode,
-            country: country,
-            phoneNumber: phoneNumber,
-            fullName: fullName,
-            isDefault: isDefault ?? false
-        )
-    }
-}
-
-/// Respuesta de la API que contiene los detalles de envío
-struct ApiShippingResponse: Codable {
-    let message: String
-    let data: ShippingDetailsResponse
 }
 

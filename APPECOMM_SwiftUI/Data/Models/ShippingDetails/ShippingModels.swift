@@ -76,7 +76,7 @@ struct ShippingDetailsForm {
     }
     
     /// Initialize with shipping details response
-    init(from details: ShippingDetailsResponse) {
+    init(from details: ShippingDetails) {
         self.fullName = details.fullName ?? ""
         self.address = details.address
         self.city = details.city
@@ -97,8 +97,9 @@ struct ShippingDetailsForm {
     }
     
     /// Convert to ShippingDetailsRequest for API calls
-    func toRequest() -> ShippingDetailsRequest {
+    func toRequest(id: Int? = nil) -> ShippingDetailsRequest {
         return ShippingDetailsRequest(
+            id: id, // Incluir ID si se proporciona (para actualizaciones)
             address: address,
             city: city,
             state: state,

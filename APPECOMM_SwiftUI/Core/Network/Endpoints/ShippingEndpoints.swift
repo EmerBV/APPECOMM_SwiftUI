@@ -11,7 +11,7 @@ import Foundation
 enum ShippingEndpoints: APIEndpoint {
     case getShippingDetails(userId: Int)
     case getAllShippingAddresses(userId: Int)
-    case updateShippingDetails(addressId: Int, userId: Int)
+    case updateShippingDetails(details: ShippingDetailsRequest, userId: Int)
     case createShippingAddress(details: ShippingDetailsRequest, userId: Int)
     case deleteShippingAddress(userId: Int, addressId: Int)
     case setDefaultShippingAddress(userId: Int, addressId: Int)
@@ -22,10 +22,11 @@ enum ShippingEndpoints: APIEndpoint {
             return "/shipping/\(userId)/default"
         case .getAllShippingAddresses(let userId):
             return "/shipping/\(userId)"
-        case .updateShippingDetails(let addressId, let userId):
-            return "/shipping/update/\(userId)"
+        case .updateShippingDetails:
+            return "/shipping/update"
         case .createShippingAddress:
-            return "/shipping/create"
+            // Aquí usamos el mismo endpoint que para actualizar, ya que el backend utiliza addOrUpdate
+            return "/shipping/update"
         case .deleteShippingAddress(let userId, let addressId):
             return "/shipping/\(userId)/address/\(addressId)"
         case .setDefaultShippingAddress(let userId, let addressId):

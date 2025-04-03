@@ -146,8 +146,8 @@ class ShippingAddressesViewModel: ObservableObject {
         isLoading = true
         errorMessage = nil
         
-        // Preparar la solicitud con los datos del formulario
-        let request = form.toRequest()
+        // Preparar la solicitud con los datos del formulario e ID
+        let request = form.toRequest(id: id)
         
         let shippingRepository = DependencyInjector.shared.resolve(ShippingRepositoryProtocol.self)
         
@@ -217,12 +217,17 @@ class ShippingAddressesViewModel: ObservableObject {
     }
     
     func deleteShippingAddress(id: Int) {
+        guard let userId = TokenManager.shared.getUserId() else {
+            errorMessage = "User not logged in"
+            return
+        }
+        
         isLoading = true
         errorMessage = nil
         
         let shippingRepository = DependencyInjector.shared.resolve(ShippingRepositoryProtocol.self)
         
-        shippingRepository.deleteShippingAddress(addressId: id)
+        shippingRepository.deleteShippingAddress(userId: userId, addressId: id)
             .receive(on: DispatchQueue.main)
             .sink { [weak self] completion in
                 self?.isLoading = false

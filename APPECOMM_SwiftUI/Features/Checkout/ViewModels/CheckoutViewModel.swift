@@ -61,7 +61,7 @@ class CheckoutViewModel: ObservableObject {
     @Published var currentOrder: Order?
     
     // Shipping details related properties
-    @Published var existingShippingDetails: ShippingDetailsResponse?
+    @Published var existingShippingDetails: ShippingDetails?
     @Published var hasExistingShippingDetails = false
     @Published var isEditingShippingDetails = false
     
@@ -235,7 +235,7 @@ class CheckoutViewModel: ObservableObject {
             .store(in: &cancellables)
     }
     
-    private func populateFormWithExistingDetails(_ details: ShippingDetailsResponse) {
+    private func populateFormWithExistingDetails(_ details: ShippingDetails) {
         shippingDetailsForm.fullName = details.fullName ?? ""
         shippingDetailsForm.address = details.address
         shippingDetailsForm.city = details.city

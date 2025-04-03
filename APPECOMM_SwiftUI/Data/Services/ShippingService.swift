@@ -9,12 +9,12 @@ import Foundation
 import Combine
 
 protocol ShippingServiceProtocol {
-    func getShippingDetails(userId: Int) -> AnyPublisher<ShippingDetailsResponse?, NetworkError>
-    func getAllShippingAddresses(userId: Int) -> AnyPublisher<[ShippingDetailsResponse], NetworkError>
-    func updateShippingDetails(userId: Int, details: ShippingDetailsRequest) -> AnyPublisher<ShippingDetailsResponse, NetworkError>
-    func createShippingAddress(userId: Int, details: ShippingDetailsRequest) -> AnyPublisher<ShippingDetailsResponse, NetworkError>
-    func deleteShippingAddress(addressId: Int) -> AnyPublisher<Void, NetworkError>
-    func setDefaultShippingAddress(userId: Int, addressId: Int) -> AnyPublisher<ShippingDetailsResponse, NetworkError>
+    func getShippingDetails(userId: Int) -> AnyPublisher<ShippingDetails?, NetworkError>
+    func getAllShippingAddresses(userId: Int) -> AnyPublisher<[ShippingDetails], NetworkError>
+    func updateShippingDetails(userId: Int, details: ShippingDetailsRequest) -> AnyPublisher<ShippingDetails, NetworkError>
+    func createShippingAddress(userId: Int, details: ShippingDetailsRequest) -> AnyPublisher<ShippingDetails, NetworkError>
+    func deleteShippingAddress(userId: Int, addressId: Int) -> AnyPublisher<Void, NetworkError>
+    func setDefaultShippingAddress(userId: Int, addressId: Int) -> AnyPublisher<ShippingDetails, NetworkError>
 }
 
 final class ShippingService: ShippingServiceProtocol {
@@ -24,17 +24,17 @@ final class ShippingService: ShippingServiceProtocol {
         self.networkDispatcher = networkDispatcher
     }
     
-    // Obtener una dirección específica (compatibilidad con código existente)
-    func getShippingDetails(userId: Int) -> AnyPublisher<ShippingDetailsResponse?, NetworkError> {
+    // Obtener la dirección predeterminada de un usuario
+    func getShippingDetails(userId: Int) -> AnyPublisher<ShippingDetails?, NetworkError> {
         let endpoint = ShippingEndpoints.getShippingDetails(userId: userId)
         Logger.info("Fetching default shipping details for user \(userId)")
         
-        return networkDispatcher.dispatch(ApiResponse<ShippingDetailsResponse>.self, endpoint)
-            .map { response -> ShippingDetailsResponse in
+        return networkDispatcher.dispatch(ApiResponse<ShippingDetails>.self, endpoint)
+            .map { response -> ShippingDetails in
                 Logger.info("Successfully received shipping details")
                 return response.data
             }
-            .catch { error -> AnyPublisher<ShippingDetailsResponse?, NetworkError> in
+            .catch { error -> AnyPublisher<ShippingDetails?, NetworkError> in
                 // If 404 (not found), return nil (no shipping details yet)
                 if case .notFound = error {
                     Logger.info("No shipping details found for user \(userId)")
@@ -50,16 +50,16 @@ final class ShippingService: ShippingServiceProtocol {
     }
     
     // Obtener todas las direcciones de un usuario
-    func getAllShippingAddresses(userId: Int) -> AnyPublisher<[ShippingDetailsResponse], NetworkError> {
+    func getAllShippingAddresses(userId: Int) -> AnyPublisher<[ShippingDetails], NetworkError> {
         let endpoint = ShippingEndpoints.getAllShippingAddresses(userId: userId)
         Logger.info("Fetching all shipping addresses for user \(userId)")
         
-        return networkDispatcher.dispatch(ApiResponse<[ShippingDetailsResponse]>.self, endpoint)
-            .map { response -> [ShippingDetailsResponse] in
+        return networkDispatcher.dispatch(ApiResponse<[ShippingDetails]>.self, endpoint)
+            .map { response -> [ShippingDetails] in
                 Logger.info("Successfully received \(response.data.count) shipping addresses")
                 return response.data
             }
-            .catch { error -> AnyPublisher<[ShippingDetailsResponse], NetworkError> in
+            .catch { error -> AnyPublisher<[ShippingDetails], NetworkError> in
                 // If 404 (not found), return empty array
                 if case .notFound = error {
                     Logger.info("No shipping addresses found for user \(userId)")
@@ -74,13 +74,22 @@ final class ShippingService: ShippingServiceProtocol {
             .eraseToAnyPublisher()
     }
     
-    // Actualizar una dirección existente
-    func updateShippingDetails(userId: Int, details: ShippingDetailsRequest) -> AnyPublisher<ShippingDetailsResponse, NetworkError> {
-        let endpoint = ShippingEndpoints.updateShippingDetails(details: details, userId: userId)
-        Logger.info("Updating shipping details for user \(userId)")
+    // Actualizar una dirección existente - requiere ID en el cuerpo de la solicitud
+    func updateShippingDetails(userId: Int, details: ShippingDetailsRequest) -> AnyPublisher<ShippingDetails, NetworkError> {
+        // Asegurarnos de que hay un ID para la actualización
+        guard details.id != nil else {
+            return Fail(error: NetworkError.badRequest(APIError(
+                message: "ID is required for updating shipping details",
+                code: "MISSING_ID",
+                details: nil
+            ))).eraseToAnyPublisher()
+        }
         
-        return networkDispatcher.dispatch(ApiResponse<ShippingDetailsResponse>.self, endpoint)
-            .map { response -> ShippingDetailsResponse in
+        let endpoint = ShippingEndpoints.updateShippingDetails(details: details, userId: userId)
+        Logger.info("Updating shipping details for user \(userId), address ID: \(details.id ?? 0)")
+        
+        return networkDispatcher.dispatch(ApiResponse<ShippingDetails>.self, endpoint)
+            .map { response -> ShippingDetails in
                 Logger.info("Successfully updated shipping details")
                 return response.data
             }
@@ -92,13 +101,15 @@ final class ShippingService: ShippingServiceProtocol {
             .eraseToAnyPublisher()
     }
     
-    // Crear una nueva dirección
-    func createShippingAddress(userId: Int, details: ShippingDetailsRequest) -> AnyPublisher<ShippingDetailsResponse, NetworkError> {
+    // Crear una nueva dirección - no incluye ID en el cuerpo
+    func createShippingAddress(userId: Int, details: ShippingDetailsRequest) -> AnyPublisher<ShippingDetails, NetworkError> {
+        // Utilizamos el mismo endpoint que updateShippingDetails pero sin ID
+        // (o con ID nulo para la API addOrUpdate)
         let endpoint = ShippingEndpoints.createShippingAddress(details: details, userId: userId)
         Logger.info("Creating new shipping address for user \(userId)")
         
-        return networkDispatcher.dispatch(ApiResponse<ShippingDetailsResponse>.self, endpoint)
-            .map { response -> ShippingDetailsResponse in
+        return networkDispatcher.dispatch(ApiResponse<ShippingDetails>.self, endpoint)
+            .map { response -> ShippingDetails in
                 Logger.info("Successfully created shipping address")
                 return response.data
             }
@@ -111,9 +122,9 @@ final class ShippingService: ShippingServiceProtocol {
     }
     
     // Eliminar una dirección
-    func deleteShippingAddress(addressId: Int) -> AnyPublisher<Void, NetworkError> {
-        let endpoint = ShippingEndpoints.deleteShippingAddress(addressId: addressId)
-        Logger.info("Deleting shipping address \(addressId)")
+    func deleteShippingAddress(userId: Int, addressId: Int) -> AnyPublisher<Void, NetworkError> {
+        let endpoint = ShippingEndpoints.deleteShippingAddress(userId: userId, addressId: addressId)
+        Logger.info("Deleting shipping address \(addressId) for user \(userId)")
         
         return networkDispatcher.dispatch(ApiResponse<EmptyResponse>.self, endpoint)
             .map { _ -> Void in
@@ -129,12 +140,12 @@ final class ShippingService: ShippingServiceProtocol {
     }
     
     // Establecer una dirección como predeterminada
-    func setDefaultShippingAddress(userId: Int, addressId: Int) -> AnyPublisher<ShippingDetailsResponse, NetworkError> {
+    func setDefaultShippingAddress(userId: Int, addressId: Int) -> AnyPublisher<ShippingDetails, NetworkError> {
         let endpoint = ShippingEndpoints.setDefaultShippingAddress(userId: userId, addressId: addressId)
         Logger.info("Setting address \(addressId) as default for user \(userId)")
         
-        return networkDispatcher.dispatch(ApiResponse<ShippingDetailsResponse>.self, endpoint)
-            .map { response -> ShippingDetailsResponse in
+        return networkDispatcher.dispatch(ApiResponse<ShippingDetails>.self, endpoint)
+            .map { response -> ShippingDetails in
                 Logger.info("Successfully set default shipping address")
                 return response.data
             }

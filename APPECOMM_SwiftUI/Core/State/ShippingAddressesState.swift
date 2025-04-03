@@ -10,11 +10,11 @@ import Foundation
 enum ShippingAddressesState {
     case initial
     case loading
-    case loaded([ShippingDetailsResponse])
+    case loaded([ShippingDetails])
     case error(String)
     case empty
     
-    var addresses: [ShippingDetailsResponse]? {
+    var addresses: [ShippingDetails]? {
         if case .loaded(let addresses) = self {
             return addresses
         }
@@ -40,7 +40,7 @@ enum ShippingAddressesState {
         return false
     }
     
-    var defaultAddress: ShippingDetailsResponse? {
+    var defaultAddress: ShippingDetails? {
         if case .loaded(let addresses) = self {
             return addresses.first(where: { $0.isDefault == true })
         }
