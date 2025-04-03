@@ -578,7 +578,7 @@ class CheckoutViewModel: ObservableObject {
                 
                 // Si no hay dirección seleccionada, seleccionar la predeterminada
                 if self.selectedShippingAddressId == nil {
-                    if let defaultAddress = self.shippingAddresses.first(where: { $0.isDefault }) {
+                    if let defaultAddress = self.shippingAddresses.first(where: { $0.isDefault ?? false }) {
                         self.selectedShippingAddressId = defaultAddress.id
                         self.selectedAddress = defaultAddress
                     } else if !self.shippingAddresses.isEmpty {
