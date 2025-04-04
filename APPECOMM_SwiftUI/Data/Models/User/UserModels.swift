@@ -14,7 +14,7 @@ struct User: Identifiable, Codable, Equatable {
     let email: String
     let shippingDetails: [ShippingDetails]?
     let cart: CartSummary?
-    let orders: [OrderSummary]?
+    let orders: [Order]?
     
     var fullName: String {
         return "\(firstName) \(lastName)"
@@ -41,6 +41,7 @@ struct CartSummary: Codable, Equatable {
     }
 }
 
+/*
 struct OrderSummary: Codable, Equatable, Identifiable {
     let id: Int
     let orderDate: String
@@ -48,6 +49,7 @@ struct OrderSummary: Codable, Equatable, Identifiable {
     let totalAmount: Decimal
     let items: [OrderItem]
 }
+ */
 
 // DTO para enviar detalles de envío a la API
 struct ShippingDetailsRequest: Codable {

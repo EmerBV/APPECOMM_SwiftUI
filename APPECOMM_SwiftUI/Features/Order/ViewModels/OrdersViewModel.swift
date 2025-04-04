@@ -12,8 +12,8 @@ class OrdersViewModel: ObservableObject {
     @Published var user: User?
     @Published var isLoading = false
     @Published var errorMessage: String?
-    @Published var pendingOrders: [OrderSummary] = []
-    @Published var completedOrders: [OrderSummary] = []
+    @Published var pendingOrders: [Order] = []
+    @Published var completedOrders: [Order] = []
     
     private let authRepository: AuthRepositoryProtocol
     private let paymentService: PaymentServiceProtocol
@@ -60,7 +60,7 @@ class OrdersViewModel: ObservableObject {
             .store(in: &cancellables)
     }
     
-    private func separateOrders(_ orders: [OrderSummary]?) {
+    private func separateOrders(_ orders: [Order]?) {
         guard let orders = orders else {
             pendingOrders = []
             completedOrders = []

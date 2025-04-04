@@ -49,7 +49,7 @@ struct OrdersListView: View {
     }
     
     struct OrderSummaryRow: View {
-        let order: OrderSummary
+        let order: Order
         
         var body: some View {
             VStack(alignment: .leading, spacing: 8) {
