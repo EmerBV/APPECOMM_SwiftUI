@@ -9,224 +9,217 @@ import SwiftUI
 
 struct ShippingAddressesManagerView: View {
     let userId: Int
-    @StateObject private var viewModel = ShippingAddressesViewModel()
-    @StateObject private var newAddressViewModel: ShippingAddressViewModel
-    @StateObject private var editAddressViewModel: ShippingAddressViewModel
-    @State private var isAddingNewAddress = false
+    @Environment(\.dismiss) private var dismiss
+    @StateObject private var viewModel: ShippingAddressesViewModel
+    @State private var showingAddressForm = false
     @State private var editingAddress: ShippingDetails? = nil
-    @State private var showingDeleteConfirmation: Int? = nil
-    @Environment(\.presentationMode) var presentationMode
+    @State private var showingDeleteConfirmation = false
+    @State private var addressToDelete: Int? = nil
     
     init(userId: Int) {
         self.userId = userId
-        let shippingRepository = DependencyInjector.shared.resolve(ShippingRepositoryProtocol.self)
-        _newAddressViewModel = StateObject(wrappedValue: ShippingAddressViewModel(shippingRepository: shippingRepository, userId: userId))
-        _editAddressViewModel = StateObject(wrappedValue: ShippingAddressViewModel(shippingRepository: shippingRepository, userId: userId))
+        // Inicializamos el ViewModel usando el DependencyInjector existente
+        _viewModel = StateObject(wrappedValue: DependencyInjector.shared.resolve(ShippingAddressesViewModel.self))
     }
     
     var body: some View {
-        NavigationView {
+        NavigationStack {
             ZStack {
-                contentView
-                
                 if viewModel.isLoading {
                     LoadingView()
+                } else if viewModel.addresses.isEmpty {
+                    emptyStateView
+                } else {
+                    addressesList
                 }
-            }
-            .navigationTitle("Shipping Addresses")
-            .navigationBarItems(
-                leading: Button("Close") {
-                    presentationMode.wrappedValue.dismiss()
-                },
-                trailing: Button("Add") {
-                    isAddingNewAddress = true
-                }
-            )
-            .sheet(isPresented: $isAddingNewAddress) {
-                NavigationView {
-                    ShippingAddressFormView(
-                        viewModel: newAddressViewModel,
-                        addressId: nil
-                    )
-                }
-            }
-            .sheet(item: $editingAddress) { address in
-                NavigationView {
-                    ShippingAddressFormView(
-                        viewModel: editAddressViewModel,
-                        addressId: address.id
-                    )
-                    .onAppear {
-                        if let addressId = address.id {
-                            editAddressViewModel.loadAddressDetails(addressId: addressId)
-                        }
+                
+                // Error toast if needed
+                if let errorMessage = viewModel.errorMessage {
+                    ErrorToast(message: errorMessage) {
+                        viewModel.errorMessage = nil
                     }
                 }
             }
-            .alert(item: $showingDeleteConfirmation) { addressId in
-                Alert(
-                    title: Text("Delete Address"),
-                    message: Text("Are you sure you want to delete this address?"),
-                    primaryButton: .destructive(Text("Delete")) {
-                        viewModel.deleteShippingAddress(id: addressId)
-                    },
-                    secondaryButton: .cancel()
+            .navigationTitle("Shipping Addresses")
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button("Close") {
+                        dismiss()
+                    }
+                }
+                
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button(action: {
+                        editingAddress = nil
+                        showingAddressForm = true
+                    }) {
+                        Image(systemName: "plus")
+                    }
+                }
+            }
+            .sheet(isPresented: $showingAddressForm) {
+                // Usar la vista de formulario existente
+                ShippingAddressFormView(
+                    userId: userId,
+                    address: editingAddress,
+                    onSave: { _ in
+                        // Recargar la lista después de guardar
+                        viewModel.loadAddresses(userId: userId)
+                        showingAddressForm = false
+                    }
                 )
             }
-            .alert(isPresented: Binding<Bool>(
-                get: { viewModel.errorMessage != nil },
-                set: { if !$0 { viewModel.errorMessage = nil } }
-            )) {
-                Alert(
-                    title: Text("Error"),
-                    message: Text(viewModel.errorMessage ?? "An unknown error occurred"),
-                    dismissButton: .default(Text("OK"))
-                )
+            .refreshable {
+                // Recargar direcciones de forma asíncrona
+                await refreshAddresses()
+            }
+            .alert("Delete Address", isPresented: $showingDeleteConfirmation) {
+                Button("Delete", role: .destructive) {
+                    if let addressId = addressToDelete {
+                        deleteAddress(addressId: addressId)
+                    }
+                }
+                Button("Cancel", role: .cancel) { }
+            } message: {
+                Text("Are you sure you want to delete this address?")
             }
             .onAppear {
-                viewModel.loadShippingAddresses(userId: userId)
+                viewModel.loadAddresses(userId: userId)
             }
         }
     }
     
-    @ViewBuilder
-    private var contentView: some View {
-        if viewModel.addresses.isEmpty {
-            emptyAddressesView
-        } else {
-            addressListView
-        }
-    }
-    
-    private var emptyAddressesView: some View {
+    private var emptyStateView: some View {
         VStack(spacing: 20) {
-            Image(systemName: "house.circle")
-                .font(.system(size: 70))
+            Image(systemName: "mappin.slash")
+                .font(.system(size: 64))
                 .foregroundColor(.gray)
             
-            Text("No Shipping Addresses")
-                .font(.title3)
+            Text("No Addresses Yet")
+                .font(.title2)
                 .fontWeight(.semibold)
             
             Text("Add your first shipping address to make checkout faster.")
-                .font(.subheadline)
-                .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
+                .foregroundColor(.secondary)
                 .padding(.horizontal, 40)
             
             Button(action: {
-                isAddingNewAddress = true
+                editingAddress = nil
+                showingAddressForm = true
             }) {
-                Text("Add Address")
-                    .fontWeight(.semibold)
+                Label("Add Address", systemImage: "plus")
                     .padding()
-                    .frame(width: 200)
-                    .background(Color.blue)
                     .foregroundColor(.white)
+                    .background(Color.accentColor)
                     .cornerRadius(10)
             }
-            .padding(.top, 20)
+            .padding(.top, 10)
         }
         .padding()
     }
     
-    private var addressListView: some View {
+    private var addressesList: some View {
         List {
-            ForEach(viewModel.addresses.compactMap { $0.id }, id: \.self) { addressId in
-                if let address = viewModel.addresses.first(where: { $0.id == addressId }) {
-                    AddressListItem(
-                        address: address,
-                        onSetDefault: {
-                            viewModel.setDefaultShippingAddress(userId: userId, addressId: addressId)
-                        },
-                        onEdit: {
-                            editingAddress = address
-                        },
-                        onDelete: {
-                            showingDeleteConfirmation = addressId
-                        }
-                    )
-                }
+            ForEach(viewModel.addresses, id: \.id) { address in
+                AddressListItem(
+                    address: address,
+                    isEditing: { editingAddress = address; showingAddressForm = true },
+                    isDeleting: { addressToDelete = address.id; showingDeleteConfirmation = true },
+                    isSettingDefault: { setDefaultAddress(addressId: address.id ?? 0) }
+                )
+                // Importante: Aquí no hay .onTapGesture que provoque cambios en el estado predeterminado
             }
         }
-        .listStyle(InsetGroupedListStyle())
+        .listStyle(.insetGrouped)
+    }
+    
+    // Métodos auxiliares para operaciones asincrónicas
+    private func refreshAddresses() async {
+        viewModel.loadAddresses(userId: userId)
+        // Esperar brevemente para simular operación asíncrona
+        try? await Task.sleep(nanoseconds: 500_000_000)
+    }
+    
+    private func setDefaultAddress(addressId: Int) {
+        viewModel.setDefaultAddress(userId: userId, addressId: addressId)
+    }
+    
+    private func deleteAddress(addressId: Int) {
+        viewModel.deleteAddress(userId: userId, addressId: addressId)
     }
 }
 
+// Actualización del componente de fila de dirección
 struct AddressListItem: View {
     let address: ShippingDetails
-    let onSetDefault: () -> Void
-    let onEdit: () -> Void
-    let onDelete: () -> Void
+    let isEditing: () -> Void
+    let isDeleting: () -> Void
+    let isSettingDefault: () -> Void
     
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            // Cabecera con nombre y badge de predeterminado
             HStack {
-                Text(address.fullName ?? "")
-                    .font(.headline)
-                
-                Spacer()
-                
-                if address.isDefault ?? false {
-                    Text("Default")
-                        .font(.caption)
-                        .fontWeight(.semibold)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 2)
-                        .background(Color.blue.opacity(0.2))
-                        .foregroundColor(.blue)
-                        .cornerRadius(4)
-                }
-            }
-            
-            // Dirección
-            Group {
-                Text(address.address ?? "")
-                    .font(.subheadline)
-                
-                Text("\(address.city ?? ""), \(address.state ?? "") \(address.postalCode ?? "")")
-                    .font(.subheadline)
-                
-                Text(address.country ?? "")
-                    .font(.subheadline)
-                
-                if let phone = address.phoneNumber, !phone.isEmpty {
-                    Text(phone)
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
-                }
-            }
-            
-            // Botones de acción
-            HStack(spacing: 20) {
-                Spacer()
-                
-                // Botón de editar
-                Button(action: onEdit) {
-                    Text("Edit")
-                        .font(.footnote)
-                        .foregroundColor(.blue)
-                }
-                
-                // Botón de establecer como predeterminada
-                if address.isDefault != true {
-                    Button(action: onSetDefault) {
-                        Text("Set as Default")
-                            .font(.footnote)
-                            .foregroundColor(.green)
+                VStack(alignment: .leading) {
+                    Text(address.fullName ?? "")
+                        .font(.headline)
+                    
+                    if let isDefault = address.isDefault, isDefault {
+                        Text("Default Address")
+                            .font(.caption)
+                            .foregroundColor(.blue)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 2)
+                            .background(
+                                RoundedRectangle(cornerRadius: 4)
+                                    .fill(Color.blue.opacity(0.1))
+                            )
                     }
                 }
                 
-                // Botón de eliminar
-                Button(action: onDelete) {
-                    Text("Delete")
-                        .font(.footnote)
-                        .foregroundColor(.red)
+                Spacer()
+                
+                // Menú de opciones para acciones explícitas
+                Menu {
+                    Button(action: isEditing) {
+                        Label("Edit", systemImage: "pencil")
+                    }
+                    
+                    if !(address.isDefault ?? false) {
+                        Button(action: isSettingDefault) {
+                            Label("Set as Default", systemImage: "checkmark.circle")
+                        }
+                    }
+                    
+                    Button(role: .destructive, action: isDeleting) {
+                        Label("Delete", systemImage: "trash")
+                    }
+                } label: {
+                    Image(systemName: "ellipsis.circle")
+                        .font(.title3)
+                        .foregroundColor(.gray)
                 }
             }
-            .padding(.top, 4)
+            
+            Divider()
+            
+            Group {
+                Text(address.address ?? "")
+                Text("\(address.city ?? ""), \(address.state ?? "") \(address.postalCode ?? "")")
+                Text(address.country ?? "")
+                
+                if let phone = address.phoneNumber {
+                    Text(phone)
+                        .foregroundColor(.secondary)
+                }
+            }
+            .font(.subheadline)
         }
-        .padding(.vertical, 8)
+        .padding(.vertical, 4)
+        .contentShape(Rectangle())
+        .onTapGesture {
+            // Al tocar la celda simplemente se edita, no se establece como predeterminada
+            isEditing()
+        }
     }
 }

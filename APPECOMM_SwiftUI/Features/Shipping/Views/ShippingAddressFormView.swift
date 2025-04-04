@@ -6,232 +6,382 @@
 //
 
 import SwiftUI
+import Combine
 
 struct ShippingAddressFormView: View {
-    // Ambiente y presentación
+    let userId: Int
+    var address: ShippingDetails?
+    let onSave: (ShippingDetails) -> Void
+    
     @Environment(\.dismiss) private var dismiss
-    @ObservedObject var viewModel: ShippingAddressViewModel
-    let addressId: Int?
-    let isNewAddress: Bool
+    @StateObject private var viewModel: ShippingAddressFormViewModel
     
-    // Estado local
-    @State private var isLoading = false
-    @State private var showAlert = false
-    @State private var alertMessage = ""
-    
-    init(viewModel: ShippingAddressViewModel, addressId: Int? = nil) {
-        self.viewModel = viewModel
-        self.addressId = addressId
-        self.isNewAddress = addressId == nil
+    init(userId: Int, address: ShippingDetails? = nil, onSave: @escaping (ShippingDetails) -> Void) {
+        self.userId = userId
+        self.address = address
+        self.onSave = onSave
+        
+        // Inicializar el ViewModel a través de la inyección de dependencias
+        let dependencies = DependencyInjector.shared
+        let shippingRepository = dependencies.resolve(ShippingRepositoryProtocol.self)
+        let validator = dependencies.resolve(InputValidatorProtocol.self)
+        
+        _viewModel = StateObject(wrappedValue: ShippingAddressFormViewModel(
+            shippingRepository: shippingRepository,
+            validator: validator
+        ))
     }
     
     var body: some View {
         NavigationStack {
             Form {
-                // Datos personales
-                Section(header: Text("Información Personal")) {
+                // Sección de información de contacto
+                Section(header: Text("Contact Information")) {
                     CustomTextField(
-                        title: "Nombre Completo",
-                        placeholder: "Ingrese su nombre",
+                        title: "Full Name",
+                        placeholder: "John Doe",
                         type: .regular,
                         state: viewModel.form.isFullNameValid ? .valid : .normal,
-                        text: Binding(
-                            get: { viewModel.form.fullName },
-                            set: {
-                                viewModel.form.fullName = $0
+                        text: $viewModel.form.fullName,
+                        onEditingChanged: { isEditing in
+                            if !isEditing {
                                 viewModel.validateField(.fullName)
                             }
-                        )
+                        }
                     )
+                    .keyboardType(.namePhonePad)
                     
                     CustomTextField(
-                        title: "Teléfono",
+                        title: "Phone Number",
                         placeholder: "+1 (555) 123-4567",
-                        type: .phone,
+                        type: .regular,
                         state: viewModel.form.isPhoneNumberValid ? .valid : .normal,
-                        text: Binding(
-                            get: { viewModel.form.phoneNumber },
-                            set: {
-                                viewModel.form.phoneNumber = $0
+                        text: $viewModel.form.phoneNumber,
+                        onEditingChanged: { isEditing in
+                            if !isEditing {
                                 viewModel.validateField(.phoneNumber)
                             }
-                        )
+                        }
                     )
                     .keyboardType(.phonePad)
                 }
                 
-                // Dirección
-                Section(header: Text("Dirección de Envío")) {
+                // Sección de dirección
+                Section(header: Text("Address")) {
                     CustomTextField(
-                        title: "Dirección",
-                        placeholder: "Ej: Calle Principal 123",
+                        title: "Street Address",
+                        placeholder: "123 Main St",
                         type: .regular,
                         state: viewModel.form.isAddressValid ? .valid : .normal,
-                        text: Binding(
-                            get: { viewModel.form.address },
-                            set: {
-                                viewModel.form.address = $0
+                        text: $viewModel.form.address,
+                        onEditingChanged: { isEditing in
+                            if !isEditing {
                                 viewModel.validateField(.address)
                             }
-                        )
+                        }
                     )
                     
                     CustomTextField(
-                        title: "Ciudad",
-                        placeholder: "Ej: Madrid",
+                        title: "City",
+                        placeholder: "New York",
                         type: .regular,
                         state: viewModel.form.isCityValid ? .valid : .normal,
-                        text: Binding(
-                            get: { viewModel.form.city },
-                            set: {
-                                viewModel.form.city = $0
+                        text: $viewModel.form.city,
+                        onEditingChanged: { isEditing in
+                            if !isEditing {
                                 viewModel.validateField(.city)
                             }
-                        )
+                        }
                     )
                     
-                    HStack {
-                        CustomTextField(
-                            title: "Estado/Provincia",
-                            placeholder: "Ej: Madrid",
-                            type: .regular,
-                            state: viewModel.form.isStateValid ? .valid : .normal,
-                            text: Binding(
-                                get: { viewModel.form.state },
-                                set: {
-                                    viewModel.form.state = $0
-                                    viewModel.validateField(.state)
-                                }
-                            )
-                        )
-                        
-                        CustomTextField(
-                            title: "Código Postal",
-                            placeholder: "Ej: 28001",
-                            type: .regular,
-                            state: viewModel.form.isPostalCodeValid ? .valid : .normal,
-                            text: Binding(
-                                get: { viewModel.form.postalCode },
-                                set: {
-                                    viewModel.form.postalCode = $0
-                                    viewModel.validateField(.postalCode)
-                                }
-                            )
-                        )
-                        .keyboardType(.numberPad)
-                    }
+                    CustomTextField(
+                        title: "State/Province",
+                        placeholder: "NY",
+                        type: .regular,
+                        state: viewModel.form.isStateValid ? .valid : .normal,
+                        text: $viewModel.form.state,
+                        onEditingChanged: { isEditing in
+                            if !isEditing {
+                                viewModel.validateField(.state)
+                            }
+                        }
+                    )
                     
                     CustomTextField(
-                        title: "País",
-                        placeholder: "Ej: España",
+                        title: "Postal Code",
+                        placeholder: "10001",
+                        type: .regular,
+                        state: viewModel.form.isPostalCodeValid ? .valid : .normal,
+                        text: $viewModel.form.postalCode,
+                        onEditingChanged: { isEditing in
+                            if !isEditing {
+                                viewModel.validateField(.postalCode)
+                            }
+                        }
+                    )
+                    .keyboardType(.numberPad)
+                    
+                    CustomTextField(
+                        title: "Country",
+                        placeholder: "United States",
                         type: .regular,
                         state: viewModel.form.isCountryValid ? .valid : .normal,
-                        text: Binding(
-                            get: { viewModel.form.country },
-                            set: {
-                                viewModel.form.country = $0
+                        text: $viewModel.form.country,
+                        onEditingChanged: { isEditing in
+                            if !isEditing {
                                 viewModel.validateField(.country)
                             }
-                        )
+                        }
                     )
                 }
                 
-                // Opciones adicionales
+                // Switch para establecer como dirección predeterminada
                 Section {
-                    Toggle("Establecer como dirección predeterminada", isOn: Binding(
+                    Toggle(isOn: Binding(
                         get: { viewModel.form.isDefaultAddress ?? false },
                         set: { viewModel.form.isDefaultAddress = $0 }
-                    ))
+                    )) {
+                        Text("Set as Default Address")
+                    }
+                    .accessibilityLabel("Set as Default Address")
                 }
                 
                 // Botón de guardado
                 Section {
                     Button(action: saveAddress) {
-                        HStack {
-                            Text(isNewAddress ? "Añadir Dirección" : "Actualizar Dirección")
-                                .fontWeight(.semibold)
-                            
-                            if isLoading {
-                                Spacer()
-                                ProgressView()
-                            }
+                        if viewModel.isLoading {
+                            ProgressView()
+                                .progressViewStyle(CircularProgressViewStyle())
+                                .frame(maxWidth: .infinity)
+                        } else {
+                            Text("Save Address")
+                                .frame(maxWidth: .infinity)
+                                .foregroundColor(.white)
+                                .padding(.vertical, 10)
                         }
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 8)
                     }
-                    .disabled(!viewModel.form.isValid || isLoading)
+                    .disabled(!viewModel.isValid || viewModel.isLoading)
+                    .listRowInsets(EdgeInsets())
+                    .background(
+                        RoundedRectangle(cornerRadius: 8)
+                            .fill(viewModel.isValid && !viewModel.isLoading ? Color.blue : Color.gray.opacity(0.5))
+                    )
                 }
             }
-            .navigationTitle(isNewAddress ? "Nueva Dirección" : "Editar Dirección")
+            .navigationTitle(address == nil ? "Add Address" : "Edit Address")
+            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Cancelar") {
+                    Button("Cancel") {
                         dismiss()
                     }
                 }
             }
             .onAppear {
-                loadAddressDetails()
-            }
-            .alert(isPresented: $showAlert) {
-                Alert(
-                    title: Text("Aviso"),
-                    message: Text(alertMessage),
-                    dismissButton: .default(Text("Aceptar")) {
-                        if !alertMessage.contains("Error") {
-                            dismiss()
-                        }
-                    }
-                )
+                if let existingAddress = address {
+                    viewModel.populateForm(with: existingAddress)
+                }
             }
             .overlay {
                 if viewModel.isLoading {
-                    LoadingView()
+                    LoadingOverlay()
+                }
+            }
+            .alert("Error", isPresented: $viewModel.showingError) {
+                Button("OK", role: .cancel) { }
+            } message: {
+                Text(viewModel.errorMessage ?? "An error occurred")
+            }
+            
+            .overlay(alignment: .bottom) {
+                if viewModel.showingSuccess {
+                    SuccessToast(
+                        message: viewModel.successMessage ?? "Address saved successfully!",
+                        onDismiss: {
+                            viewModel.showingSuccess = false
+                        }
+                    )
+                    .onAppear {
+                        // Auto-ocultar después de 2 segundos
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                            viewModel.showingSuccess = false
+                        }
+                    }
                 }
             }
         }
-    }
-    
-    private func loadAddressDetails() {
-        guard let addressId = addressId, !isNewAddress else {
-            // Es una nueva dirección, no hay datos que cargar
-            viewModel.resetForm()
-            return
-        }
-        
-        // Forzar una carga fresca desde el servidor en lugar de usar datos en caché
-        viewModel.loadAddressDetails(addressId: addressId, forceRefresh: true)
     }
     
     private func saveAddress() {
-        isLoading = true
-        
-        if isNewAddress {
-            viewModel.createAddress { result in
-                isLoading = false
-                
-                switch result {
-                case .success:
-                    alertMessage = "Dirección añadida correctamente"
-                    showAlert = true
-                case .failure(let error):
-                    alertMessage = "Error: \(error.localizedDescription)"
-                    showAlert = true
-                }
-            }
-        } else {
-            viewModel.updateAddress(addressId: addressId!) { result in
-                isLoading = false
-                
-                switch result {
-                case .success:
-                    alertMessage = "Dirección actualizada correctamente"
-                    showAlert = true
-                case .failure(let error):
-                    alertMessage = "Error: \(error.localizedDescription)"
-                    showAlert = true
+        Task {
+            if await viewModel.saveAddress(userId: userId, existingAddressId: address?.id) {
+                // Si el guardado fue exitoso, obtenemos la dirección guardada
+                if let savedAddress = viewModel.savedAddress {
+                    onSave(savedAddress)
+                    dismiss()
                 }
             }
         }
     }
 }
+
+// MARK: - ViewModel
+
+class ShippingAddressFormViewModel: ObservableObject {
+    @Published var form = ShippingDetailsForm()
+    @Published var isLoading = false
+    @Published var showingError = false
+    @Published var errorMessage: String?
+    @Published var showingSuccess = false
+    @Published var successMessage: String?
+    @Published var savedAddress: ShippingDetails?
+    
+    private let shippingRepository: ShippingRepositoryProtocol
+    private let validator: InputValidatorProtocol
+    private var cancellables = Set<AnyCancellable>()
+    
+    // Campos a validar
+    enum FieldType {
+        case fullName, phoneNumber, address, city, state, postalCode, country
+    }
+    
+    init(shippingRepository: ShippingRepositoryProtocol, validator: InputValidatorProtocol) {
+        self.shippingRepository = shippingRepository
+        self.validator = validator
+    }
+    
+    var isValid: Bool {
+        return form.isFullNameValid &&
+        form.isAddressValid &&
+        form.isCityValid &&
+        form.isStateValid &&
+        form.isPostalCodeValid &&
+        form.isCountryValid &&
+        form.isPhoneNumberValid
+    }
+    
+    func populateForm(with address: ShippingDetails) {
+        // Crear un ShippingDetailsForm a partir de ShippingDetails
+        form = ShippingDetailsForm(from: address)
+        
+        // Validar todos los campos después de la carga
+        validateAllFields()
+    }
+    
+    func validateField(_ field: FieldType) {
+        switch field {
+        case .fullName:
+            let result = validator.validateFullName(form.fullName)
+            // Corregido: Verifica si el resultado es válido usando el patrón de casos
+            if case .valid = result {
+                form.isFullNameValid = true
+            } else {
+                form.isFullNameValid = false
+            }
+        case .phoneNumber:
+            let result = validator.validatePhoneNumber(form.phoneNumber)
+            if case .valid = result {
+                form.isPhoneNumberValid = true
+            } else {
+                form.isPhoneNumberValid = false
+            }
+        case .address:
+            let result = validator.validateAddress(form.address)
+            if case .valid = result {
+                form.isAddressValid = true
+            } else {
+                form.isAddressValid = false
+            }
+        case .city:
+            let result = validator.validateName(form.city)
+            if case .valid = result {
+                form.isCityValid = true
+            } else {
+                form.isCityValid = false
+            }
+        case .state:
+            let result = validator.validateName(form.state)
+            if case .valid = result {
+                form.isStateValid = true
+            } else {
+                form.isStateValid = false
+            }
+        case .postalCode:
+            let result = validator.validatePostalCode(form.postalCode)
+            if case .valid = result {
+                form.isPostalCodeValid = true
+            } else {
+                form.isPostalCodeValid = false
+            }
+        case .country:
+            let result = validator.validateName(form.country)
+            if case .valid = result {
+                form.isCountryValid = true
+            } else {
+                form.isCountryValid = false
+            }
+        }
+    }
+    
+    func validateAllFields() {
+        validateField(.fullName)
+        validateField(.phoneNumber)
+        validateField(.address)
+        validateField(.city)
+        validateField(.state)
+        validateField(.postalCode)
+        validateField(.country)
+    }
+    
+    @MainActor
+    func saveAddress(userId: Int, existingAddressId: Int?) async -> Bool {
+        validateAllFields()
+        
+        guard isValid else {
+            errorMessage = "Please fill in all required fields correctly"
+            showingError = true
+            return false
+        }
+        
+        isLoading = true
+        errorMessage = nil
+        
+        do {
+            let result: ShippingDetails?
+            
+            if let existingAddress = existingAddressId {
+                // Update existing address
+                let request = form.toRequest(id: existingAddress)
+                result = try await shippingRepository.updateShippingAddress(userId: userId, details: request)
+                    .async()
+                
+                // Mostrar mensaje de éxito para actualización
+                successMessage = "Address updated successfully"
+            } else {
+                // Create new address
+                result = try await shippingRepository.createShippingAddress(userId: userId, details: form)
+                    .async()
+                
+                // Mostrar mensaje de éxito para creación
+                successMessage = "Address added successfully"
+            }
+            
+            if let address = result {
+                isLoading = false
+                savedAddress = address
+                showingSuccess = true
+                
+                return true
+            }
+        } catch {
+            isLoading = false
+            errorMessage = error.localizedDescription
+            showingError = true
+        }
+        
+        isLoading = false
+        return false
+    }
+}
+
+
