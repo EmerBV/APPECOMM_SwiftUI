@@ -109,4 +109,4 @@ class CoreDataManager {
             return nil
         }
     }
-} 
+}
