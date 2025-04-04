@@ -67,5 +67,11 @@ final class ViewModelAssembly: Assembly {
                 paymentService: paymentService
             )
         }.inObjectScope(.container) // Singleton para mantener estado consistente
+        
+        // Shipping Addresses ViewModel
+        container.register(ShippingAddressesViewModel.self) { r in
+            let shippingRepository = r.resolve(ShippingRepositoryProtocol.self)!
+            return ShippingAddressesViewModel(shippingRepository: shippingRepository)
+        }.inObjectScope(.container)
     }
 }
