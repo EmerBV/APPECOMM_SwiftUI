@@ -11,14 +11,32 @@ struct ShippingAddressesManagerView: View {
     let userId: Int
     @Environment(\.dismiss) private var dismiss
     @StateObject private var viewModel: ShippingAddressesViewModel
-    @State private var showingAddressForm = false
-    @State private var editingAddress: ShippingDetails? = nil
+    @State private var sheetMode: SheetMode = .none
     @State private var showingDeleteConfirmation = false
     @State private var addressToDelete: Int? = nil
+    @State private var isSheetPresented = false
+    @State private var selectedAddress: ShippingDetails? = nil
+    
+    // Enumeración para controlar el modo de la hoja modal
+    enum SheetMode: Identifiable {
+        case none
+        case add
+        case edit(addressId: Int)
+        
+        var id: String {
+            switch self {
+            case .none:
+                return "none"
+            case .add:
+                return "add"
+            case .edit(let addressId):
+                return "edit_\(addressId)"
+            }
+        }
+    }
     
     init(userId: Int) {
         self.userId = userId
-        // Inicializamos el ViewModel usando el DependencyInjector existente
         _viewModel = StateObject(wrappedValue: DependencyInjector.shared.resolve(ShippingAddressesViewModel.self))
     }
     
@@ -33,7 +51,6 @@ struct ShippingAddressesManagerView: View {
                     addressesList
                 }
                 
-                // Error toast if needed
                 if let errorMessage = viewModel.errorMessage {
                     ErrorToast(message: errorMessage) {
                         viewModel.errorMessage = nil
@@ -50,27 +67,21 @@ struct ShippingAddressesManagerView: View {
                 
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button(action: {
-                        editingAddress = nil
-                        showingAddressForm = true
+                        Logger.debug("Add button tapped")
+                        selectedAddress = nil
+                        isSheetPresented = true
                     }) {
                         Image(systemName: "plus")
                     }
                 }
             }
-            .sheet(isPresented: $showingAddressForm) {
-                // Usar la vista de formulario existente
-                ShippingAddressFormView(
-                    userId: userId,
-                    address: editingAddress,
-                    onSave: { _ in
-                        // Recargar la lista después de guardar
-                        viewModel.loadAddresses(userId: userId)
-                        showingAddressForm = false
-                    }
-                )
+            .sheet(isPresented: $isSheetPresented, onDismiss: {
+                // Recargar direcciones al cerrar el formulario
+                viewModel.loadAddresses(userId: userId)
+            }) {
+                AddressFormSheet(userId: userId, address: selectedAddress)
             }
             .refreshable {
-                // Recargar direcciones de forma asíncrona
                 await refreshAddresses()
             }
             .alert("Delete Address", isPresented: $showingDeleteConfirmation) {
@@ -105,8 +116,9 @@ struct ShippingAddressesManagerView: View {
                 .padding(.horizontal, 40)
             
             Button(action: {
-                editingAddress = nil
-                showingAddressForm = true
+                Logger.debug("Add new address from empty state")
+                selectedAddress = nil
+                isSheetPresented = true
             }) {
                 Label("Add Address", systemImage: "plus")
                     .padding()
@@ -124,20 +136,27 @@ struct ShippingAddressesManagerView: View {
             ForEach(viewModel.addresses, id: \.id) { address in
                 AddressListItem(
                     address: address,
-                    isEditing: { editingAddress = address; showingAddressForm = true },
-                    isDeleting: { addressToDelete = address.id; showingDeleteConfirmation = true },
-                    isSettingDefault: { setDefaultAddress(addressId: address.id ?? 0) }
+                    isEditing: {
+                        guard let addressId = address.id else { return }
+                        Logger.debug("Edit address: \(addressId)")
+                        selectedAddress = address
+                        isSheetPresented = true
+                    },
+                    isDeleting: {
+                        addressToDelete = address.id
+                        showingDeleteConfirmation = true
+                    },
+                    isSettingDefault: {
+                        setDefaultAddress(addressId: address.id ?? 0)
+                    }
                 )
-                // Importante: Aquí no hay .onTapGesture que provoque cambios en el estado predeterminado
             }
         }
         .listStyle(.insetGrouped)
     }
     
-    // Métodos auxiliares para operaciones asincrónicas
     private func refreshAddresses() async {
         viewModel.loadAddresses(userId: userId)
-        // Esperar brevemente para simular operación asíncrona
         try? await Task.sleep(nanoseconds: 500_000_000)
     }
     
@@ -150,7 +169,20 @@ struct ShippingAddressesManagerView: View {
     }
 }
 
-// Actualización del componente de fila de dirección
+// Vista contenedor para el formulario que maneja la extracción de dirección
+struct AddressFormSheet: View {
+    let userId: Int
+    let address: ShippingDetails?
+    
+    var body: some View {
+        ShippingAddressFormView(
+            userId: userId,
+            address: address,
+            onSave: { _ in }
+        )
+    }
+}
+
 struct AddressListItem: View {
     let address: ShippingDetails
     let isEditing: () -> Void
@@ -179,7 +211,6 @@ struct AddressListItem: View {
                 
                 Spacer()
                 
-                // Menú de opciones para acciones explícitas
                 Menu {
                     Button(action: isEditing) {
                         Label("Edit", systemImage: "pencil")
@@ -218,7 +249,6 @@ struct AddressListItem: View {
         .padding(.vertical, 4)
         .contentShape(Rectangle())
         .onTapGesture {
-            // Al tocar la celda simplemente se edita, no se establece como predeterminada
             isEditing()
         }
     }

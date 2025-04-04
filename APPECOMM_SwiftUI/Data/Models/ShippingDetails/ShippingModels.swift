@@ -40,7 +40,7 @@ struct ShippingDetailsForm {
     var postalCode: String = ""
     var country: String = ""
     var phoneNumber: String = ""
-    var isDefaultAddress: Bool? = false // Nueva propiedad para marcar como predeterminada
+    var isDefaultAddress: Bool? = false
     
     // Validation states
     var isFullNameValid: Bool = false
