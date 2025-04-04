@@ -58,6 +58,7 @@ struct ShippingAddressesManagerView: View {
                 }
             }
             .navigationTitle("Shipping Addresses")
+            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button("Close") {
