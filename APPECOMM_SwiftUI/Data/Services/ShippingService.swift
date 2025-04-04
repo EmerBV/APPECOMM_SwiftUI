@@ -15,6 +15,7 @@ protocol ShippingServiceProtocol {
     func createShippingAddress(userId: Int, details: ShippingDetailsRequest) -> AnyPublisher<ShippingDetails, NetworkError>
     func deleteShippingAddress(userId: Int, addressId: Int) -> AnyPublisher<Void, NetworkError>
     func setDefaultShippingAddress(userId: Int, addressId: Int) -> AnyPublisher<ShippingDetails, NetworkError>
+    func getShippingDetailsById(userId: Int, addressId: Int) -> AnyPublisher<ShippingDetails, NetworkError>
 }
 
 final class ShippingService: ShippingServiceProtocol {
@@ -154,6 +155,23 @@ final class ShippingService: ShippingServiceProtocol {
                     Logger.error("Failed to set default shipping address: \(error)")
                 }
             })
+            .eraseToAnyPublisher()
+    }
+    
+    func getShippingDetailsById(userId: Int, addressId: Int) -> AnyPublisher<ShippingDetails, NetworkError> {
+        let endpoint = ShippingEndpoints.getShippingDetailsById(userId: userId, addressId: addressId)
+        Logger.info("Fetching shipping details for address \(addressId) (user \(userId))")
+        
+        return networkDispatcher.dispatch(ApiResponse<ShippingDetails>.self, endpoint)
+            .map { response -> ShippingDetails in
+                Logger.info("Successfully received shipping details")
+                return response.data
+            }
+            .catch { error -> AnyPublisher<ShippingDetails, NetworkError> in
+                // For errors, propagate the error
+                Logger.error("Error fetching shipping details: \(error)")
+                return Fail(error: error).eraseToAnyPublisher()
+            }
             .eraseToAnyPublisher()
     }
 }

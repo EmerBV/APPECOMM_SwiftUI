@@ -15,6 +15,7 @@ enum ShippingEndpoints: APIEndpoint {
     case createShippingAddress(details: ShippingDetailsRequest, userId: Int)
     case deleteShippingAddress(userId: Int, addressId: Int)
     case setDefaultShippingAddress(userId: Int, addressId: Int)
+    case getShippingDetailsById(userId: Int, addressId: Int)
     
     var path: String {
         switch self {
@@ -31,12 +32,14 @@ enum ShippingEndpoints: APIEndpoint {
             return "/shipping/\(userId)/address/\(addressId)"
         case .setDefaultShippingAddress(let userId, let addressId):
             return "/shipping/\(userId)/address/\(addressId)/default"
+        case .getShippingDetailsById(let userId, let addressId):
+            return "/shipping/\(userId)/address/\(addressId)"
         }
     }
     
     var method: String {
         switch self {
-        case .getShippingDetails, .getAllShippingAddresses:
+        case .getShippingDetails, .getAllShippingAddresses, .getShippingDetailsById:
             return HTTPMethod.get.rawValue
         case .updateShippingDetails, .createShippingAddress:
             return HTTPMethod.post.rawValue

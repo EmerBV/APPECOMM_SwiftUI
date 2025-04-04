@@ -18,6 +18,7 @@ protocol ShippingRepositoryProtocol {
     func createShippingAddress(userId: Int, details: ShippingDetailsForm) -> AnyPublisher<ShippingDetails, Error>
     func deleteShippingAddress(userId: Int, addressId: Int) -> AnyPublisher<Void, Error>
     func setDefaultShippingAddress(userId: Int, addressId: Int) -> AnyPublisher<ShippingDetails, Error>
+    func getShippingAddressById(userId: Int, addressId: Int) -> AnyPublisher<ShippingDetails, Error>
     
     func debugShippingState()
 }
@@ -170,6 +171,21 @@ final class ShippingRepository: ShippingRepositoryProtocol {
                     // Send error to both states for UI handling
                     self?.shippingDetailsState.send(.error(error.localizedDescription))
                     self?.shippingAddressesState.send(.error(error.localizedDescription))
+                }
+            })
+            .mapError { $0 }
+            .eraseToAnyPublisher()
+    }
+    
+    func getShippingAddressById(userId: Int, addressId: Int) -> AnyPublisher<ShippingDetails, Error> {
+        Logger.info("ShippingRepository: Getting shipping address \(addressId) for user: \(userId)")
+        
+        return shippingService.getShippingDetailsById(userId: userId, addressId: addressId)
+            .handleEvents(receiveOutput: { shippingDetails in
+                Logger.info("ShippingRepository: Received shipping address \(addressId)")
+            }, receiveCompletion: { completion in
+                if case .failure(let error) = completion {
+                    Logger.error("ShippingRepository: Failed to get shipping address: \(error)")
                 }
             })
             .mapError { $0 }

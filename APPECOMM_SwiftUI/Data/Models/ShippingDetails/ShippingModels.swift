@@ -23,11 +23,11 @@ struct ShippingDetails: Codable, Equatable, Identifiable {
         case address
         case city
         case state
-        case postalCode = "postal_code"
+        case postalCode = "postalCode"
         case country
-        case phoneNumber = "phone_number"
-        case fullName = "full_name"
-        case isDefault = "is_default"
+        case phoneNumber = "phoneNumber"
+        case fullName = "fullName"
+        case isDefault = "isDefault"
     }
 }
 

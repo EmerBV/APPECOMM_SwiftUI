@@ -10,10 +10,19 @@ import SwiftUI
 struct ShippingAddressesManagerView: View {
     let userId: Int
     @StateObject private var viewModel = ShippingAddressesViewModel()
+    @StateObject private var newAddressViewModel: ShippingAddressViewModel
+    @StateObject private var editAddressViewModel: ShippingAddressViewModel
     @State private var isAddingNewAddress = false
     @State private var editingAddress: ShippingDetails? = nil
     @State private var showingDeleteConfirmation: Int? = nil
     @Environment(\.presentationMode) var presentationMode
+    
+    init(userId: Int) {
+        self.userId = userId
+        let shippingRepository = DependencyInjector.shared.resolve(ShippingRepositoryProtocol.self)
+        _newAddressViewModel = StateObject(wrappedValue: ShippingAddressViewModel(shippingRepository: shippingRepository, userId: userId))
+        _editAddressViewModel = StateObject(wrappedValue: ShippingAddressViewModel(shippingRepository: shippingRepository, userId: userId))
+    }
     
     var body: some View {
         NavigationView {
@@ -34,29 +43,25 @@ struct ShippingAddressesManagerView: View {
                 }
             )
             .sheet(isPresented: $isAddingNewAddress) {
-                ShippingAddressFormView(
-                    viewModel: viewModel,
-                    isNewAddress: true,
-                    onSave: {
-                        isAddingNewAddress = false
-                    },
-                    onCancel: {
-                        isAddingNewAddress = false
-                    }
-                )
+                NavigationView {
+                    ShippingAddressFormView(
+                        viewModel: newAddressViewModel,
+                        addressId: nil
+                    )
+                }
             }
             .sheet(item: $editingAddress) { address in
-                ShippingAddressFormView(
-                    viewModel: viewModel,
-                    isNewAddress: false,
-                    addressToEdit: address,
-                    onSave: {
-                        editingAddress = nil
-                    },
-                    onCancel: {
-                        editingAddress = nil
+                NavigationView {
+                    ShippingAddressFormView(
+                        viewModel: editAddressViewModel,
+                        addressId: address.id
+                    )
+                    .onAppear {
+                        if let addressId = address.id {
+                            editAddressViewModel.loadAddressDetails(addressId: addressId)
+                        }
                     }
-                )
+                }
             }
             .alert(item: $showingDeleteConfirmation) { addressId in
                 Alert(
