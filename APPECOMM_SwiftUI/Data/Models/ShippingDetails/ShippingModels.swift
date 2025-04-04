@@ -40,7 +40,7 @@ struct ShippingDetailsForm {
     var postalCode: String = ""
     var country: String = ""
     var phoneNumber: String = ""
-    var isDefaultAddress: Bool? = false
+    var isDefaultAddress: Bool? = false // Nueva propiedad para marcar como predeterminada
     
     // Validation states
     var isFullNameValid: Bool = false
@@ -61,13 +61,13 @@ struct ShippingDetailsForm {
     var phoneNumberError: String?
     
     var isValid: Bool {
-        return !fullName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
-        !address.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
-        !city.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
-        !state.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
-        !postalCode.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
-        !country.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
-        !phoneNumber.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        return isFullNameValid &&
+        isAddressValid &&
+        isCityValid &&
+        isStateValid &&
+        isPostalCodeValid &&
+        isCountryValid &&
+        isPhoneNumberValid
     }
     
     /// Initialize with default empty values
@@ -113,81 +113,118 @@ struct ShippingDetailsForm {
     
     /// Validate all fields
     mutating func validateAll(validator: InputValidatorProtocol = InputValidator()) {
-        // Para nombre completo
-        let nameResult = validator.validateFullName(fullName)
-        switch nameResult {
-        case .valid:
-            isFullNameValid = true
-            fullNameError = nil
-        case .invalid(let message):
+        // Para cada campo, asegurarse de que se valide correctamente
+        
+        // Validar nombre completo si no está vacío
+        if !fullName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            let nameResult = validator.validateFullName(fullName)
+            switch nameResult {
+            case .valid:
+                isFullNameValid = true
+                fullNameError = nil
+            case .invalid(let message):
+                isFullNameValid = false
+                fullNameError = message
+            }
+        } else {
             isFullNameValid = false
-            fullNameError = message
+            fullNameError = "Full name is required"
         }
         
-        // Para dirección
-        let addressResult = validator.validateAddress(address)
-        switch addressResult {
-        case .valid:
-            isAddressValid = true
-            addressError = nil
-        case .invalid(let message):
+        // Validar dirección si no está vacía
+        if !address.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            let addressResult = validator.validateAddress(address)
+            switch addressResult {
+            case .valid:
+                isAddressValid = true
+                addressError = nil
+            case .invalid(let message):
+                isAddressValid = false
+                addressError = message
+            }
+        } else {
             isAddressValid = false
-            addressError = message
+            addressError = "Address is required"
         }
         
-        // Para ciudad
-        let cityResult = validator.validateName(city)
-        switch cityResult {
-        case .valid:
-            isCityValid = true
-            cityError = nil
-        case .invalid(let message):
+        // Validar ciudad si no está vacía
+        if !city.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            let cityResult = validator.validateName(city)
+            switch cityResult {
+            case .valid:
+                isCityValid = true
+                cityError = nil
+            case .invalid(let message):
+                isCityValid = false
+                cityError = message
+            }
+        } else {
             isCityValid = false
-            cityError = message
+            cityError = "City is required"
         }
         
-        // Para estado
-        let stateResult = validator.validateName(state)
-        switch stateResult {
-        case .valid:
-            isStateValid = true
-            stateError = nil
-        case .invalid(let message):
+        // Validar estado si no está vacío
+        if !state.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            let stateResult = validator.validateName(state)
+            switch stateResult {
+            case .valid:
+                isStateValid = true
+                stateError = nil
+            case .invalid(let message):
+                isStateValid = false
+                stateError = message
+            }
+        } else {
             isStateValid = false
-            stateError = message
+            stateError = "State is required"
         }
         
-        // Para código postal
-        let postalCodeResult = validator.validatePostalCode(postalCode)
-        switch postalCodeResult {
-        case .valid:
-            isPostalCodeValid = true
-            postalCodeError = nil
-        case .invalid(let message):
+        // Validar código postal si no está vacío
+        if !postalCode.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            let postalCodeResult = validator.validatePostalCode(postalCode)
+            switch postalCodeResult {
+            case .valid:
+                isPostalCodeValid = true
+                postalCodeError = nil
+            case .invalid(let message):
+                isPostalCodeValid = false
+                postalCodeError = message
+            }
+        } else {
             isPostalCodeValid = false
-            postalCodeError = message
+            postalCodeError = "Postal code is required"
         }
         
-        // Para país
-        let countryResult = validator.validateName(country)
-        switch countryResult {
-        case .valid:
-            isCountryValid = true
-            countryError = nil
-        case .invalid(let message):
+        // Validar país si no está vacío
+        if !country.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            let countryResult = validator.validateName(country)
+            switch countryResult {
+            case .valid:
+                isCountryValid = true
+                countryError = nil
+            case .invalid(let message):
+                isCountryValid = false
+                countryError = message
+            }
+        } else {
             isCountryValid = false
-            countryError = message
+            countryError = "Country is required"
         }
         
-        // Para número de teléfono
-        let phoneResult = validator.validatePhoneNumber(phoneNumber)
-        switch phoneResult {
-        case .valid:
-            isPhoneNumberValid = true
-            phoneNumberError = nil
-        case .invalid(let message):
+        // Validar número de teléfono si no está vacío
+        if !phoneNumber.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            let phoneResult = validator.validatePhoneNumber(phoneNumber)
+            switch phoneResult {
+            case .valid:
+                isPhoneNumberValid = true
+                phoneNumberError = nil
+            case .invalid(let message):
+                isPhoneNumberValid = false
+                phoneNumberError = message
+            }
+        } else {
             isPhoneNumberValid = false
-            phoneNumberError = message
+            phoneNumberError = "Phone number is required"
         }
     }
     

@@ -53,8 +53,22 @@ struct ShippingInfoView: View {
                         focusedField = nil
                         if viewModel.isAddingNewAddress {
                             viewModel.createNewShippingAddress()
-                        } else {
+                        } else if viewModel.selectedAddress != nil {
+                            // Si ya hay una dirección seleccionada, simplemente avanzamos
                             viewModel.proceedToNextStep()
+                        } else if viewModel.hasExistingShippingDetails && viewModel.existingShippingDetails != nil {
+                            // Si hay dirección existente pero no seleccionada, usamos esa
+                            viewModel.selectedAddress = viewModel.existingShippingDetails
+                            viewModel.proceedToNextStep()
+                        } else {
+                            // En otro caso, validamos y guardamos
+                            viewModel.validateShippingForm()
+                            if viewModel.shippingDetailsForm.isValid {
+                                viewModel.saveShippingDetails()
+                            } else {
+                                viewModel.errorMessage = "Please fill in all required fields correctly"
+                                viewModel.showError = true
+                            }
                         }
                     }
                     .padding(.top, 16)

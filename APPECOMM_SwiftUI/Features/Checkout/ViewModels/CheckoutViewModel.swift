@@ -251,6 +251,55 @@ class CheckoutViewModel: ObservableObject {
     func validateShippingForm() {
         // Validar todos los campos del formulario
         shippingDetailsForm.validateAll(validator: validator)
+        
+        // Validación explícita campo por campo para mayor control
+        shippingDetailsForm.isFullNameValid = !shippingDetailsForm.fullName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        if !shippingDetailsForm.isFullNameValid {
+            shippingDetailsForm.fullNameError = "Full name is required"
+        }
+        
+        shippingDetailsForm.isAddressValid = !shippingDetailsForm.address.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        if !shippingDetailsForm.isAddressValid {
+            shippingDetailsForm.addressError = "Address is required"
+        }
+        
+        shippingDetailsForm.isCityValid = !shippingDetailsForm.city.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        if !shippingDetailsForm.isCityValid {
+            shippingDetailsForm.cityError = "City is required"
+        }
+        
+        shippingDetailsForm.isStateValid = !shippingDetailsForm.state.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        if !shippingDetailsForm.isStateValid {
+            shippingDetailsForm.stateError = "State is required"
+        }
+        
+        shippingDetailsForm.isPostalCodeValid = !shippingDetailsForm.postalCode.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        if !shippingDetailsForm.isPostalCodeValid {
+            shippingDetailsForm.postalCodeError = "Postal code is required"
+        }
+        
+        shippingDetailsForm.isCountryValid = !shippingDetailsForm.country.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        if !shippingDetailsForm.isCountryValid {
+            shippingDetailsForm.countryError = "Country is required"
+        }
+        
+        shippingDetailsForm.isPhoneNumberValid = !shippingDetailsForm.phoneNumber.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        if !shippingDetailsForm.isPhoneNumberValid {
+            shippingDetailsForm.phoneNumberError = "Phone number is required"
+        }
+        
+        // Loguear el resultado de la validación para debugging
+        Logger.debug("Shipping form validation result: \(shippingDetailsForm.isValid)")
+        if !shippingDetailsForm.isValid {
+            Logger.debug("Form validation errors:")
+            if !shippingDetailsForm.isFullNameValid { Logger.debug("- Full name: \(shippingDetailsForm.fullNameError ?? "invalid")") }
+            if !shippingDetailsForm.isAddressValid { Logger.debug("- Address: \(shippingDetailsForm.addressError ?? "invalid")") }
+            if !shippingDetailsForm.isCityValid { Logger.debug("- City: \(shippingDetailsForm.cityError ?? "invalid")") }
+            if !shippingDetailsForm.isStateValid { Logger.debug("- State: \(shippingDetailsForm.stateError ?? "invalid")") }
+            if !shippingDetailsForm.isPostalCodeValid { Logger.debug("- Postal code: \(shippingDetailsForm.postalCodeError ?? "invalid")") }
+            if !shippingDetailsForm.isCountryValid { Logger.debug("- Country: \(shippingDetailsForm.countryError ?? "invalid")") }
+            if !shippingDetailsForm.isPhoneNumberValid { Logger.debug("- Phone number: \(shippingDetailsForm.phoneNumberError ?? "invalid")") }
+        }
     }
     
     func saveShippingDetails() {
@@ -263,8 +312,9 @@ class CheckoutViewModel: ObservableObject {
         self.errorMessage = nil
         
         // Create shipping details request object from form
+        // Si estamos editando una dirección existente, pasamos su ID
         let shippingDetailsRequest = ShippingDetailsRequest(
-            id: nil,
+            id: isEditingShippingDetails ? existingShippingDetails?.id : nil,
             address: shippingDetailsForm.address,
             city: shippingDetailsForm.city,
             state: shippingDetailsForm.state,
@@ -481,13 +531,34 @@ class CheckoutViewModel: ObservableObject {
         switch currentStep {
         case .shippingInfo:
             validateShippingForm()
-            if shippingDetailsForm.isValid {
+            if isAddingNewAddress {
+                // Si estamos agregando una nueva dirección, llamar al método para crear
+                if shippingDetailsForm.isValid {
+                    createNewShippingAddress()
+                } else {
+                    errorMessage = "Por favor, completa todos los campos de envío correctamente"
+                    showError = true
+                }
+            } else if let selectedAddress = selectedAddress {
+                // Si ya hay una dirección seleccionada, podemos continuar sin guardar
+                self.selectedShippingAddressId = selectedAddress.id
+                currentStep = .paymentMethod
+            } else if hasExistingShippingDetails && existingShippingDetails != nil {
+                // Si tenemos detalles existentes pero no hay dirección seleccionada, utilizamos esos
+                self.selectedAddress = existingShippingDetails
+                currentStep = .paymentMethod
+            } else if shippingDetailsForm.isValid {
+                // De lo contrario, si el formulario es válido, guardamos los detalles
                 saveShippingDetails()
             } else {
-                errorMessage = "Por favor, completa todos los campos de envío correctamente"
+                errorMessage = "Por favor, completa todos los campos de envío correctamente o selecciona una dirección"
                 showError = true
             }
         case .paymentMethod:
+            if selectedAddress == nil && existingShippingDetails != nil {
+                selectedAddress = existingShippingDetails
+            }
+            
             if selectedAddress == nil {
                 errorMessage = "Por favor, selecciona una dirección de envío"
                 showError = true
@@ -632,8 +703,29 @@ class CheckoutViewModel: ObservableObject {
         
         let shippingRepository = DependencyInjector.shared.resolve(ShippingRepositoryProtocol.self)
         
+        // Crear la nueva dirección - Asegúrate de que el ID sea nil para crear una nueva
+        var newAddress = ShippingDetailsForm()
+        newAddress.fullName = shippingDetailsForm.fullName
+        newAddress.address = shippingDetailsForm.address
+        newAddress.city = shippingDetailsForm.city
+        newAddress.state = shippingDetailsForm.state
+        newAddress.postalCode = shippingDetailsForm.postalCode
+        newAddress.country = shippingDetailsForm.country
+        newAddress.phoneNumber = shippingDetailsForm.phoneNumber
+        newAddress.isDefaultAddress = shippingDetailsForm.isDefaultAddress
+        
+        // Validar nuevamente para asegurarnos
+        newAddress.validateAll()
+        
+        if !newAddress.isValid {
+            isLoading = false
+            errorMessage = "Please fill in all required fields correctly"
+            showError = true
+            return
+        }
+        
         // Crear la nueva dirección
-        shippingRepository.createShippingAddress(userId: userId, details: shippingDetailsForm)
+        shippingRepository.createShippingAddress(userId: userId, details: newAddress)
             .receive(on: DispatchQueue.main)
             .sink { [weak self] completion in
                 self?.isLoading = false
@@ -667,7 +759,10 @@ class CheckoutViewModel: ObservableObject {
                 // Salir del modo de agregar dirección
                 self.isAddingNewAddress = false
                 
-                Logger.info("Created new shipping address with ID: \(address.id)")
+                // Continuar con el proceso de checkout
+                self.currentStep = .paymentMethod
+                
+                Logger.info("Created new shipping address with ID: \(address.id ?? 0)")
             }
             .store(in: &cancellables)
     }
@@ -770,17 +865,49 @@ class CheckoutViewModel: ObservableObject {
     }
     
     private func createShippingDetailsRequest() -> ShippingDetailsRequest {
-        return ShippingDetailsRequest(
-            id: selectedAddress?.id,
-            address: selectedAddress?.address ?? "",
-            city: selectedAddress?.city ?? "",
-            state: selectedAddress?.state ?? "",
-            postalCode: selectedAddress?.postalCode ?? "",
-            country: selectedAddress?.country ?? "",
-            phoneNumber: selectedAddress?.phoneNumber ?? "",
-            fullName: selectedAddress?.fullName ?? "",
-            isDefault: selectedAddress?.isDefault ?? false
-        )
+        // Este es un método mejorado para crear una solicitud de detalles de envío
+        // con un manejo más robusto del ID
+        
+        if isEditingShippingDetails {
+            // Si estamos editando una dirección existente, usamos su ID
+            return ShippingDetailsRequest(
+                id: existingShippingDetails?.id,
+                address: shippingDetailsForm.address,
+                city: shippingDetailsForm.city,
+                state: shippingDetailsForm.state,
+                postalCode: shippingDetailsForm.postalCode,
+                country: shippingDetailsForm.country,
+                phoneNumber: shippingDetailsForm.phoneNumber,
+                fullName: shippingDetailsForm.fullName,
+                isDefault: shippingDetailsForm.isDefaultAddress ?? false
+            )
+        } else if let selectedAddr = selectedAddress {
+            // Si ya hay una dirección seleccionada, usamos ese ID
+            return ShippingDetailsRequest(
+                id: selectedAddr.id,
+                address: selectedAddr.address ?? "",
+                city: selectedAddr.city ?? "",
+                state: selectedAddr.state ?? "",
+                postalCode: selectedAddr.postalCode ?? "",
+                country: selectedAddr.country ?? "",
+                phoneNumber: selectedAddr.phoneNumber ?? "",
+                fullName: selectedAddr.fullName ?? "",
+                isDefault: selectedAddr.isDefault ?? false
+            )
+        } else {
+            // Si estamos creando una nueva dirección, el ID debe ser nil
+            return ShippingDetailsRequest(
+                id: nil,
+                address: shippingDetailsForm.address,
+                city: shippingDetailsForm.city,
+                state: shippingDetailsForm.state,
+                postalCode: shippingDetailsForm.postalCode,
+                country: shippingDetailsForm.country,
+                phoneNumber: shippingDetailsForm.phoneNumber,
+                fullName: shippingDetailsForm.fullName,
+                isDefault: shippingDetailsForm.isDefaultAddress ?? false
+            )
+        }
     }
     
     private func updateDefaultAddress(_ address: ShippingDetails) {
@@ -805,6 +932,99 @@ class CheckoutViewModel: ObservableObject {
             return false
         }
         return isDefault
+    }
+    
+    // Método auxiliar para garantizar que siempre haya una dirección seleccionada
+    func ensureShippingAddressSelected() {
+        // Si no hay dirección seleccionada pero hay una predeterminada,
+        // seleccionamos automáticamente la predeterminada
+        if selectedAddress == nil {
+            if let defaultAddress = shippingAddresses.first(where: { $0.isDefault ?? false }) {
+                selectedAddress = defaultAddress
+                selectedShippingAddressId = defaultAddress.id
+            } else if !shippingAddresses.isEmpty {
+                // Si no hay dirección predeterminada, seleccionamos la primera
+                selectedAddress = shippingAddresses.first
+                selectedShippingAddressId = shippingAddresses.first?.id
+            } else if existingShippingDetails != nil {
+                // Si no hay direcciones pero hay detalles existentes, los usamos
+                selectedAddress = existingShippingDetails
+            }
+        }
+    }
+    
+    // Método para actualizar una dirección existente
+    func updateExistingShippingAddress() {
+        guard let userId = getCurrentUserId() else {
+            errorMessage = "No user ID available"
+            showError = true
+            return
+        }
+        
+        guard let addressId = selectedAddress?.id else {
+            errorMessage = "No address ID available for update"
+            showError = true
+            return
+        }
+        
+        isLoading = true
+        errorMessage = nil
+        
+        // Crear request con el ID correcto
+        let request = ShippingDetailsRequest(
+            id: addressId,
+            address: shippingDetailsForm.address,
+            city: shippingDetailsForm.city,
+            state: shippingDetailsForm.state,
+            postalCode: shippingDetailsForm.postalCode,
+            country: shippingDetailsForm.country,
+            phoneNumber: shippingDetailsForm.phoneNumber,
+            fullName: shippingDetailsForm.fullName,
+            isDefault: shippingDetailsForm.isDefaultAddress ?? false
+        )
+        
+        let shippingRepository = DependencyInjector.shared.resolve(ShippingRepositoryProtocol.self)
+        
+        shippingRepository.updateShippingAddress(userId: userId, details: request)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] completion in
+                self?.isLoading = false
+                
+                if case .failure(let error) = completion {
+                    Logger.error("Error updating shipping address: \(error)")
+                    self?.errorMessage = "Failed to update shipping address: \(error.localizedDescription)"
+                    self?.showError = true
+                }
+            } receiveValue: { [weak self] updatedAddress in
+                guard let self = self else { return }
+                
+                // Actualizar la dirección seleccionada
+                let address = ShippingDetails(
+                    id: updatedAddress.id,
+                    address: updatedAddress.address,
+                    city: updatedAddress.city,
+                    state: updatedAddress.state ?? "",
+                    postalCode: updatedAddress.postalCode,
+                    country: updatedAddress.country,
+                    phoneNumber: updatedAddress.phoneNumber ?? "",
+                    fullName: updatedAddress.fullName ?? "",
+                    isDefault: updatedAddress.isDefault ?? false
+                )
+                
+                self.selectedAddress = address
+                self.selectedShippingAddressId = address.id
+                
+                // Actualizar la lista de direcciones
+                if let index = self.shippingAddresses.firstIndex(where: { $0.id == address.id }) {
+                    self.shippingAddresses[index] = address
+                }
+                
+                // Continuar con el proceso de checkout
+                self.currentStep = .paymentMethod
+                
+                Logger.info("Updated shipping address with ID: \(address.id ?? 0)")
+            }
+            .store(in: &cancellables)
     }
     
 }

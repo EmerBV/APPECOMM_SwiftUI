@@ -77,46 +77,67 @@ final class ShippingService: ShippingServiceProtocol {
     
     // Actualizar una dirección existente - requiere ID en el cuerpo de la solicitud
     func updateShippingDetails(userId: Int, details: ShippingDetailsRequest) -> AnyPublisher<ShippingDetails, NetworkError> {
-        // Asegurarnos de que hay un ID para la actualización
-        guard details.id != nil else {
-            return Fail(error: NetworkError.badRequest(APIError(
-                message: "ID is required for updating shipping details",
-                code: "MISSING_ID",
-                details: nil
-            ))).eraseToAnyPublisher()
+        // Determinar si estamos creando o actualizando basado en si hay un ID
+        let isUpdate = details.id != nil
+        
+        // Log para depuración
+        if isUpdate {
+            Logger.info("ShippingService: Updating shipping details for user \(userId), address ID: \(details.id!)")
+        } else {
+            Logger.info("ShippingService: Creating new shipping details for user \(userId)")
         }
         
-        let endpoint = ShippingEndpoints.updateShippingDetails(details: details, userId: userId)
-        Logger.info("Updating shipping details for user \(userId), address ID: \(details.id ?? 0)")
+        // Elegir el endpoint adecuado según si estamos creando o actualizando
+        let endpoint = isUpdate
+        ? ShippingEndpoints.updateShippingDetails(details: details, userId: userId)
+        : ShippingEndpoints.createShippingAddress(details: details, userId: userId)
         
         return networkDispatcher.dispatch(ApiResponse<ShippingDetails>.self, endpoint)
             .map { response -> ShippingDetails in
-                Logger.info("Successfully updated shipping details")
+                if isUpdate {
+                    Logger.info("ShippingService: Successfully updated shipping details")
+                } else {
+                    Logger.info("ShippingService: Successfully created shipping details")
+                }
                 return response.data
             }
             .handleEvents(receiveCompletion: { completion in
                 if case .failure(let error) = completion {
-                    Logger.error("Failed to update shipping details: \(error)")
+                    Logger.error("ShippingService: Failed to \(isUpdate ? "update" : "create") shipping details: \(error)")
                 }
             })
             .eraseToAnyPublisher()
     }
     
-    // Crear una nueva dirección - no incluye ID en el cuerpo
+    // Método alternativo para crear una dirección sin preocuparse por el ID
     func createShippingAddress(userId: Int, details: ShippingDetailsRequest) -> AnyPublisher<ShippingDetails, NetworkError> {
-        // Utilizamos el mismo endpoint que updateShippingDetails pero sin ID
-        // (o con ID nulo para la API addOrUpdate)
-        let endpoint = ShippingEndpoints.createShippingAddress(details: details, userId: userId)
-        Logger.info("Creating new shipping address for user \(userId)")
+        // Asegurar que no se proporciona un ID para la creación
+        var requestCopy = details
+        let encoder = JSONEncoder()
+        let decoder = JSONDecoder()
+        
+        if let data = try? encoder.encode(details),
+           var dict = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
+            // Eliminar el ID explícitamente para asegurarnos de que estamos creando
+            dict.removeValue(forKey: "id")
+            
+            if let cleanData = try? JSONSerialization.data(withJSONObject: dict),
+               let cleanRequest = try? decoder.decode(ShippingDetailsRequest.self, from: cleanData) {
+                requestCopy = cleanRequest
+            }
+        }
+        
+        let endpoint = ShippingEndpoints.createShippingAddress(details: requestCopy, userId: userId)
+        Logger.info("ShippingService: Creating new shipping address for user \(userId)")
         
         return networkDispatcher.dispatch(ApiResponse<ShippingDetails>.self, endpoint)
             .map { response -> ShippingDetails in
-                Logger.info("Successfully created shipping address")
+                Logger.info("ShippingService: Successfully created shipping address")
                 return response.data
             }
             .handleEvents(receiveCompletion: { completion in
                 if case .failure(let error) = completion {
-                    Logger.error("Failed to create shipping address: \(error)")
+                    Logger.error("ShippingService: Failed to create shipping address: \(error)")
                 }
             })
             .eraseToAnyPublisher()

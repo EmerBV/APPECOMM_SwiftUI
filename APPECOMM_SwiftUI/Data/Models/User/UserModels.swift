@@ -41,16 +41,6 @@ struct CartSummary: Codable, Equatable {
     }
 }
 
-/*
-struct OrderSummary: Codable, Equatable, Identifiable {
-    let id: Int
-    let orderDate: String
-    let status: String
-    let totalAmount: Decimal
-    let items: [OrderItem]
-}
- */
-
 // DTO para enviar detalles de envío a la API
 struct ShippingDetailsRequest: Codable {
     let id: Int?
