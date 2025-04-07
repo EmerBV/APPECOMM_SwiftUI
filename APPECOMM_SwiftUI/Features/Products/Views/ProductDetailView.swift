@@ -161,7 +161,7 @@ struct ProductImageCarousel: View {
                                 ProgressView()
                             }
                             .onFailure { error in
-                                print("Error loading image: \(error)")
+                                Logger.error("Error loading image: \(error)")
                             }
                             .resizable()
                             .aspectRatio(contentMode: .fit)
@@ -593,7 +593,7 @@ struct ZoomableImageView: View {
                     ProgressView()
                 }
                 .onFailure { error in
-                    print("Error loading image: \(error)")
+                    Logger.error("Error loading image: \(error)")
                 }
                 .resizable()
                 .aspectRatio(contentMode: .fit)

@@ -27,13 +27,18 @@ final class ProductService: ProductServiceProtocol {
         let endpoint = ProductEndpoints.getAllProducts
         
         // Registrar inicio de la petición
-        print("ProductService: Fetching all products")
+        Logger.debug("ProductService: Fetching all products")
         
         return networkDispatcher.dispatch(ApiResponse<[Product]>.self, endpoint)
             .map { response -> [Product] in
-                print("ProductService: Successfully decoded response with \(response.data.count) products")
+                Logger.info("ProductService: Successfully decoded response with \(response.data.count) products")
                 return response.data
             }
+            .handleEvents(receiveCompletion: { completion in
+                if case .failure(let error) = completion {
+                    Logger.error("ProductService: Failed to get all products: \(error)")
+                }
+            })
             .eraseToAnyPublisher()
     }
     
@@ -42,8 +47,14 @@ final class ProductService: ProductServiceProtocol {
         
         return networkDispatcher.dispatch(ApiResponse<Product>.self, endpoint)
             .map { response -> Product in
+                Logger.info("ProductService: Successfully get product by id: \(response.data.name)")
                 return response.data
             }
+            .handleEvents(receiveCompletion: { completion in
+                if case .failure(let error) = completion {
+                    Logger.error("ProductService: Failed to get product by id: \(error)")
+                }
+            })
             .eraseToAnyPublisher()
     }
     
@@ -52,8 +63,14 @@ final class ProductService: ProductServiceProtocol {
         
         return networkDispatcher.dispatch(ApiResponse<[Product]>.self, endpoint)
             .map { response -> [Product] in
+                Logger.info("ProductService: Successfully get product by category")
                 return response.data
             }
+            .handleEvents(receiveCompletion: { completion in
+                if case .failure(let error) = completion {
+                    Logger.error("ProductService: Failed to get products by category: \(error)")
+                }
+            })
             .eraseToAnyPublisher()
     }
     
@@ -62,21 +79,31 @@ final class ProductService: ProductServiceProtocol {
         
         return networkDispatcher.dispatch(ApiResponse<[Product]>.self, endpoint)
             .map { response -> [Product] in
+                Logger.info("ProductService: Successfully get products by brand")
                 return response.data
             }
+            .handleEvents(receiveCompletion: { completion in
+                if case .failure(let error) = completion {
+                    Logger.error("ProductService: Failed to get products by brand: \(error)")
+                }
+            })
             .eraseToAnyPublisher()
     }
     
     func getAllCategories() -> AnyPublisher<[Category], NetworkError> {
         let endpoint = ProductEndpoints.getAllCategories
-        
-        print("ProductService: Fetching all categories")
+        Logger.debug("ProductService: Fetching all categories")
         
         return networkDispatcher.dispatch(ApiResponse<[Category]>.self, endpoint)
             .map { response -> [Category] in
-                print("ProductService: Successfully decoded response with \(response.data.count) categories")
+                Logger.info("ProductService: Successfully decoded response with \(response.data.count) categories")
                 return response.data
             }
+            .handleEvents(receiveCompletion: { completion in
+                if case .failure(let error) = completion {
+                    Logger.error("ProductService: Failed to get all categories: \(error)")
+                }
+            })
             .eraseToAnyPublisher()
     }
 }

@@ -61,12 +61,12 @@ final class CheckoutService: CheckoutServiceProtocol {
         
         return networkDispatcher.dispatch(ApiResponse<[Order]>.self, endpoint)
             .map { response -> [Order] in
-                Logger.info("OrderService: Successfully fetched orders: \(response.message)")
+                Logger.info("CheckoutService: Successfully fetched orders: \(response.message)")
                 return response.data
             }
             .handleEvents(receiveCompletion: { completion in
                 if case .failure(let error) = completion {
-                    Logger.error("OrderService: Failed to get orders: \(error)")
+                    Logger.error("CheckoutService: Failed to get orders: \(error)")
                 }
             })
             .eraseToAnyPublisher()

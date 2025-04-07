@@ -28,23 +28,23 @@ final class ShippingService: ShippingServiceProtocol {
     // Obtener la dirección predeterminada de un usuario
     func getShippingDetails(userId: Int) -> AnyPublisher<ShippingDetails?, NetworkError> {
         let endpoint = ShippingEndpoints.getShippingDetails(userId: userId)
-        Logger.info("Fetching default shipping details for user \(userId)")
+        Logger.info("ShippingService: Fetching default shipping details for user \(userId)")
         
         return networkDispatcher.dispatch(ApiResponse<ShippingDetails>.self, endpoint)
             .map { response -> ShippingDetails in
-                Logger.info("Successfully received shipping details")
+                Logger.info("ShippingService: Successfully received shipping details")
                 return response.data
             }
             .catch { error -> AnyPublisher<ShippingDetails?, NetworkError> in
                 // If 404 (not found), return nil (no shipping details yet)
                 if case .notFound = error {
-                    Logger.info("No shipping details found for user \(userId)")
+                    Logger.info("ShippingService: No shipping details found for user \(userId)")
                     return Just(nil)
                         .setFailureType(to: NetworkError.self)
                         .eraseToAnyPublisher()
                 }
                 // For other errors, propagate the error
-                Logger.error("Error fetching shipping details: \(error)")
+                Logger.error("ShippingService: Error fetching shipping details: \(error)")
                 return Fail(error: error).eraseToAnyPublisher()
             }
             .eraseToAnyPublisher()
@@ -63,13 +63,13 @@ final class ShippingService: ShippingServiceProtocol {
             .catch { error -> AnyPublisher<[ShippingDetails], NetworkError> in
                 // If 404 (not found), return empty array
                 if case .notFound = error {
-                    Logger.info("No shipping addresses found for user \(userId)")
+                    Logger.info("ShippingService: No shipping addresses found for user \(userId)")
                     return Just([])
                         .setFailureType(to: NetworkError.self)
                         .eraseToAnyPublisher()
                 }
                 // For other errors, propagate the error
-                Logger.error("Error fetching shipping addresses: \(error)")
+                Logger.error("ShippingService: Error fetching shipping addresses: \(error)")
                 return Fail(error: error).eraseToAnyPublisher()
             }
             .eraseToAnyPublisher()
@@ -146,16 +146,16 @@ final class ShippingService: ShippingServiceProtocol {
     // Eliminar una dirección
     func deleteShippingAddress(userId: Int, addressId: Int) -> AnyPublisher<Void, NetworkError> {
         let endpoint = ShippingEndpoints.deleteShippingAddress(userId: userId, addressId: addressId)
-        Logger.info("Deleting shipping address \(addressId) for user \(userId)")
+        Logger.info("ShippingService: Deleting shipping address \(addressId) for user \(userId)")
         
         return networkDispatcher.dispatch(ApiResponse<EmptyResponse>.self, endpoint)
             .map { _ -> Void in
-                Logger.info("Successfully deleted shipping address")
+                Logger.info("ShippingService: Successfully deleted shipping address")
                 return ()
             }
             .handleEvents(receiveCompletion: { completion in
                 if case .failure(let error) = completion {
-                    Logger.error("Failed to delete shipping address: \(error)")
+                    Logger.error("ShippingService: Failed to delete shipping address: \(error)")
                 }
             })
             .eraseToAnyPublisher()
@@ -164,16 +164,16 @@ final class ShippingService: ShippingServiceProtocol {
     // Establecer una dirección como predeterminada
     func setDefaultShippingAddress(userId: Int, addressId: Int) -> AnyPublisher<ShippingDetails, NetworkError> {
         let endpoint = ShippingEndpoints.setDefaultShippingAddress(userId: userId, addressId: addressId)
-        Logger.info("Setting address \(addressId) as default for user \(userId)")
+        Logger.info("ShippingService: Setting address \(addressId) as default for user \(userId)")
         
         return networkDispatcher.dispatch(ApiResponse<ShippingDetails>.self, endpoint)
             .map { response -> ShippingDetails in
-                Logger.info("Successfully set default shipping address")
+                Logger.info("ShippingService: Successfully set default shipping address")
                 return response.data
             }
             .handleEvents(receiveCompletion: { completion in
                 if case .failure(let error) = completion {
-                    Logger.error("Failed to set default shipping address: \(error)")
+                    Logger.error("ShippingService: Failed to set default shipping address: \(error)")
                 }
             })
             .eraseToAnyPublisher()
@@ -181,16 +181,16 @@ final class ShippingService: ShippingServiceProtocol {
     
     func getShippingDetailsById(userId: Int, addressId: Int) -> AnyPublisher<ShippingDetails, NetworkError> {
         let endpoint = ShippingEndpoints.getShippingDetailsById(userId: userId, addressId: addressId)
-        Logger.info("Fetching shipping details for address \(addressId) (user \(userId))")
+        Logger.info("ShippingService: Fetching shipping details for address \(addressId) (user \(userId))")
         
         return networkDispatcher.dispatch(ApiResponse<ShippingDetails>.self, endpoint)
             .map { response -> ShippingDetails in
-                Logger.info("Successfully received shipping details")
+                Logger.info("ShippingService: Successfully received shipping details")
                 return response.data
             }
             .catch { error -> AnyPublisher<ShippingDetails, NetworkError> in
                 // For errors, propagate the error
-                Logger.error("Error fetching shipping details: \(error)")
+                Logger.error("ShippingService: Error fetching shipping details: \(error)")
                 return Fail(error: error).eraseToAnyPublisher()
             }
             .eraseToAnyPublisher()

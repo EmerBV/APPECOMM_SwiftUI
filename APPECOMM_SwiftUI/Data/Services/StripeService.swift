@@ -1,3 +1,10 @@
+//
+//  StripeService.swift
+//  APPECOMM_SwiftUI
+//
+//  Created by Emerson Balahan Varona on 1/4/25.
+//
+
 import Foundation
 import Combine
 import Stripe
@@ -25,7 +32,7 @@ final class StripeService: StripeServiceProtocol {
         self.stripeConfig = config
         StripeAPI.defaultPublishableKey = config.publicKey
         self.apiClient = STPAPIClient(publishableKey: config.publicKey)
-        Logger.info("Stripe initialized with public key: \(config.publicKey)")
+        Logger.info("StripeService: Stripe initialized with public key: \(config.publicKey)")
     }
     
     func isStripeInitialized() -> Bool {
@@ -54,7 +61,7 @@ final class StripeService: StripeServiceProtocol {
                 // Crear el método de pago con Stripe
                 self.apiClient?.createPaymentMethod(with: paymentMethodParams) { paymentMethod, error in
                     if let error = error {
-                        Logger.error("Error creating payment method: \(error.localizedDescription)")
+                        Logger.error("StripeService: Error creating payment method: \(error.localizedDescription)")
                         promise(.failure(.paymentMethodCreationFailed))
                         return
                     }
@@ -64,7 +71,7 @@ final class StripeService: StripeServiceProtocol {
                         return
                     }
                     
-                    Logger.info("Payment method created: \(paymentMethod.stripeId)")
+                    Logger.info("StripeService: Payment method created: \(paymentMethod.stripeId)")
                     promise(.success(paymentMethod.stripeId))
                 }
             } catch {
@@ -123,7 +130,7 @@ final class StripeService: StripeServiceProtocol {
                 promise(.success(true))
             case .failed:
                 if let error = error {
-                    Logger.error("Payment failed: \(error.localizedDescription)")
+                    Logger.error("StripeService: Payment failed: \(error.localizedDescription)")
                     promise(.failure(.paymentFailed))
                 } else {
                     promise(.failure(.paymentFailed))
@@ -203,7 +210,7 @@ final class StripeService: StripeServiceProtocol {
         // Realizar la solicitud
         URLSession.shared.dataTask(with: request) { data, response, error in
             if let error = error {
-                Logger.error("Network error: \(error.localizedDescription)")
+                Logger.error("StripeService: Network error: \(error.localizedDescription)")
                 completion(.failure(.paymentIntentCreationFailed))
                 return
             }
@@ -222,7 +229,7 @@ final class StripeService: StripeServiceProtocol {
                     completion(.failure(.paymentIntentCreationFailed))
                 }
             } catch {
-                Logger.error("JSON parsing error: \(error.localizedDescription)")
+                Logger.error("StripeService: JSON parsing error: \(error.localizedDescription)")
                 completion(.failure(.paymentIntentCreationFailed))
             }
         }.resume()

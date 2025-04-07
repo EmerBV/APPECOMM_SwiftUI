@@ -1,3 +1,10 @@
+//
+//  CoreDataManager.swift
+//  APPECOMM_SwiftUI
+//
+//  Created by Emerson Balahan Varona on 20/3/25.
+//
+
 import CoreData
 import Foundation
 
@@ -10,8 +17,8 @@ class CoreDataManager {
         let container = NSPersistentContainer(name: "APPECOMM_SwiftUI")
         container.loadPersistentStores { description, error in
             if let error = error {
-                Logger.error("Core Data failed to load: \(error.localizedDescription)")
-                fatalError("Core Data failed to load: \(error.localizedDescription)")
+                Logger.error("CoreDataManager: Core Data failed to load: \(error.localizedDescription)")
+                fatalError("CoreDataManager: Core Data failed to load: \(error.localizedDescription)")
             }
         }
         return container
@@ -26,7 +33,7 @@ class CoreDataManager {
             do {
                 try context.save()
             } catch {
-                Logger.error("Error saving context: \(error)")
+                Logger.error("CoreDataManager: Error saving context: \(error)")
             }
         }
     }
@@ -70,7 +77,7 @@ class CoreDataManager {
                 )
             }
         } catch {
-            Logger.error("Error fetching products: \(error)")
+            Logger.error("CoreDataManager: Error fetching products: \(error)")
             return []
         }
     }
@@ -105,7 +112,7 @@ class CoreDataManager {
                 orders: nil
             )
         } catch {
-            Logger.error("Error fetching user: \(error)")
+            Logger.error("CoreDataManager: Error fetching user: \(error)")
             return nil
         }
     }

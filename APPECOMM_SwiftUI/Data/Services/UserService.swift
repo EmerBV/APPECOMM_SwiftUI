@@ -22,16 +22,16 @@ final class UserService: UserServiceProtocol {
     
     func getUserProfile(userId: Int) -> AnyPublisher<User, NetworkError> {
         let endpoint = UserEndpoints.getUserProfile(userId: userId)
-        print("UserService: Fetching user profile for userId: \(userId)")
+        Logger.debug("UserService: Fetching user profile for userId: \(userId)")
         
         return networkDispatcher.dispatch(ApiResponse<User>.self, endpoint)
             .map { response -> User in
-                print("UserService: Successfully retrieved user profile")
+                Logger.info("UserService: Successfully retrieved user profile")
                 return response.data
             }
             .handleEvents(receiveCompletion: { completion in
                 if case .failure(let error) = completion {
-                    print("UserService: Failed to get user profile: \(error)")
+                    Logger.error("UserService: Failed to get user profile: \(error)")
                 }
             })
             .eraseToAnyPublisher()
@@ -39,16 +39,16 @@ final class UserService: UserServiceProtocol {
     
     func updateUserProfile(userId: Int, firstName: String, lastName: String) -> AnyPublisher<User, NetworkError> {
         let endpoint = UserEndpoints.updateUserProfile(userId: userId, firstName: firstName, lastName: lastName)
-        print("UserService: Updating user profile for userId: \(userId)")
+        Logger.debug("UserService: Updating user profile for userId: \(userId)")
         
         return networkDispatcher.dispatch(ApiResponse<User>.self, endpoint)
             .map { response -> User in
-                print("UserService: Successfully updated user profile")
+                Logger.info("UserService: Successfully updated user profile")
                 return response.data
             }
             .handleEvents(receiveCompletion: { completion in
                 if case .failure(let error) = completion {
-                    print("UserService: Failed to update user profile: \(error)")
+                    Logger.error("UserService: Failed to update user profile: \(error)")
                 }
             })
             .eraseToAnyPublisher()
