@@ -47,6 +47,16 @@ final class RepositoryAssembly: Assembly {
             return CartRepository(cartService: cartService)
         }.inObjectScope(.container)
         
+        // Checkout Repository (with consolidated order management)
+        container.register(CheckoutRepositoryProtocol.self) { r in
+            let checkoutService = r.resolve(CheckoutServiceProtocol.self)!
+            let paymentService = r.resolve(PaymentServiceProtocol.self)!
+            return CheckoutRepository(
+                checkoutService: checkoutService,
+                paymentService: paymentService
+            )
+        }.inObjectScope(.container)
+        
         // Shipping Repository
         container.register(ShippingRepositoryProtocol.self) { r in
             let shippingService = r.resolve(ShippingServiceProtocol.self)!

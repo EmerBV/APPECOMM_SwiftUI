@@ -73,5 +73,26 @@ final class ViewModelAssembly: Assembly {
             let shippingRepository = r.resolve(ShippingRepositoryProtocol.self)!
             return ShippingAddressesViewModel(shippingRepository: shippingRepository)
         }.inObjectScope(.container)
+        
+        // Checkout ViewModel
+        container.register(CheckoutViewModel.self) { resolver in
+            let cart = resolver.resolve(Cart.self)
+            let checkoutService = resolver.resolve(CheckoutServiceProtocol.self)!
+            let paymentService = resolver.resolve(PaymentServiceProtocol.self)!
+            let authRepository = resolver.resolve(AuthRepositoryProtocol.self)!
+            let validator = resolver.resolve(InputValidatorProtocol.self)!
+            let shippingService = resolver.resolve(ShippingServiceProtocol.self)!
+            let stripeService = resolver.resolve(StripeServiceProtocol.self)!
+            
+            return CheckoutViewModel(
+                cart: cart,
+                checkoutService: checkoutService,
+                paymentService: paymentService,
+                authRepository: authRepository,
+                validator: validator,
+                shippingService: shippingService,
+                stripeService: stripeService
+            )
+        }
     }
 }

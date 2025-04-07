@@ -24,8 +24,8 @@ struct Order: Identifiable, Codable, Equatable {
         case userId
         case orderDate
         case totalAmount
-        case status = "orderStatus"
-        case items = "orderItems"
+        case status
+        case items
         case shippingDetailsId = "shipping_details_id"
         case paymentMethod
         case paymentIntentId
@@ -77,6 +77,11 @@ struct OrderItem: Identifiable, Codable, Equatable {
         lhs.variantId == rhs.variantId &&
         lhs.quantity == rhs.quantity
     }
+}
+
+// MARK: - Order Status Request
+struct OrderStatusRequest: Codable {
+    let status: String
 }
 
 struct OrderSummaryCheckout {

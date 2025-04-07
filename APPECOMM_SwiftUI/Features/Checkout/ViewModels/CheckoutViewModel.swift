@@ -367,7 +367,7 @@ class CheckoutViewModel: ObservableObject {
     
     // MARK: - Order Creation
     func processPayment() {
-        guard let address = selectedAddress else {
+        guard let selectedAddress = selectedAddress else {
             errorMessage = "Por favor, selecciona una dirección de envío"
             showError = true
             return
@@ -375,45 +375,41 @@ class CheckoutViewModel: ObservableObject {
         
         isLoading = true
         
-        // Crear los items de la orden con solo los campos necesarios
-        let orderItems = cartItems.map { item in
-            OrderItem(
-                id: nil,
-                productId: item.product.id,
-                productName: "", // No necesario para el backend
-                productBrand: "", // No necesario para el backend
-                variantId: nil,
-                variantName: nil,
-                quantity: item.quantity,
-                price: 0, // No necesario para el backend
-                totalPrice: 0 // No necesario para el backend
-            )
+        // First ensure we have a valid address ID
+        guard let shippingDetailsId = selectedAddress.id else {
+            isLoading = false
+            errorMessage = "La dirección de envío no tiene un ID válido"
+            showError = true
+            return
         }
         
-        // Crear la orden con solo los campos necesarios
-        let orderToCreate = Order(
-            id: 0, // El ID será asignado por el backend
-            userId: getCurrentUserId() ?? 0,
-            orderDate: "", // No necesario para el backend
-            totalAmount: 0, // No necesario para el backend
-            status: "", // No necesario para el backend
-            items: orderItems
-        )
+        guard let userId = getCurrentUserId() else {
+            isLoading = false
+            errorMessage = "No hay un usuario autenticado"
+            showError = true
+            return
+        }
         
-        // Primero crear la orden en el backend
-        checkoutService.createOrder(orderToCreate)
+        // Create order with shipping details ID
+        createOrderWithShippingDetails(userId: userId, shippingDetailsId: shippingDetailsId)
+    }
+    
+    private func createOrderWithShippingDetails(userId: Int, shippingDetailsId: Int) {
+        // Create the order with user ID and shipping details ID
+        checkoutService.createOrder(userId: userId, shippingDetailsId: shippingDetailsId)
             .receive(on: DispatchQueue.main)
             .sink { [weak self] completion in
                 if case .failure(let error) = completion {
                     self?.isLoading = false
                     self?.errorMessage = error.localizedDescription
                     self?.showError = true
+                    Logger.error("Failed to create order: \(error)")
                 }
             } receiveValue: { [weak self] createdOrder in
                 guard let self = self else { return }
                 self.order = createdOrder
                 
-                // Una vez creada la orden, proceder con el pago
+                // Once order is created, proceed with payment
                 switch self.selectedPaymentMethod {
                 case .creditCard:
                     self.prepareStripePayment(for: createdOrder)

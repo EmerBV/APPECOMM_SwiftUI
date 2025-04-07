@@ -8,7 +8,7 @@
 import Foundation
 
 enum CheckoutEndpoints: APIEndpoint {
-    case createOrder(Order)
+    case createOrder(userId: Int, shippingDetailsId: Int)
     case getOrderById(orderId: Int)
     case getUserOrders(userId: Int)
     case updateOrderStatus(orderId: Int, status: String)
@@ -39,15 +39,6 @@ enum CheckoutEndpoints: APIEndpoint {
     
     var parameters: [String: Any]? {
         switch self {
-        case .createOrder(let order):
-            return [
-                "items": order.items.map { item in
-                    [
-                        "productId": item.productId,
-                        "quantity": item.quantity
-                    ]
-                }
-            ]
         case .updateOrderStatus(_, let status):
             return ["status": status]
         default:
@@ -57,8 +48,11 @@ enum CheckoutEndpoints: APIEndpoint {
     
     var queryParameters: [String: Any]? {
         switch self {
-        case .createOrder(let order):
-            return ["userId": order.userId]
+        case .createOrder(let userId, let shippingDetailsId):
+            return [
+                "userId": userId,
+                "shippingDetailsId": shippingDetailsId
+            ]
         default:
             return nil
         }
@@ -66,7 +60,9 @@ enum CheckoutEndpoints: APIEndpoint {
     
     var encoding: ParameterEncoding {
         switch self {
-        case .createOrder, .updateOrderStatus:
+        case .createOrder:
+            return .url
+        case .updateOrderStatus:
             return .json
         default:
             return .url
