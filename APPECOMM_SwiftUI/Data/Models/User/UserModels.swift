@@ -53,16 +53,15 @@ struct ShippingDetailsRequest: Codable {
     let fullName: String
     let isDefault: Bool
     
-    // Asegúrate de que los coding keys coincidan con los nombres en el backend
     enum CodingKeys: String, CodingKey {
         case id
         case address
         case city
         case state
-        case postalCode = "postalCode" // Confirma que este es el nombre exacto en el backend
+        case postalCode = "postalCode"
         case country
-        case phoneNumber = "phoneNumber" // Confirma que este es el nombre exacto en el backend
-        case fullName = "fullName" // Confirma que este es el nombre exacto en el backend
+        case phoneNumber = "phoneNumber"
+        case fullName = "fullName"
         case isDefault = "isDefault"
     }
 }

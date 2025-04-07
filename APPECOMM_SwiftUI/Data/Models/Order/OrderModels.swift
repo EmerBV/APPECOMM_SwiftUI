@@ -15,14 +15,20 @@ struct Order: Identifiable, Codable, Equatable {
     let totalAmount: Decimal
     let status: String
     let items: [OrderItem]
+    let shippingDetailsId: Int?
+    let paymentMethod: String?
+    let paymentIntentId: String?
     
     enum CodingKeys: String, CodingKey {
-        case id
+        case id = "orderId"
         case userId
         case orderDate
         case totalAmount
-        case status
-        case items
+        case status = "orderStatus"
+        case items = "orderItems"
+        case shippingDetailsId = "shipping_details_id"
+        case paymentMethod
+        case paymentIntentId
     }
     
     static func == (lhs: Order, rhs: Order) -> Bool {
