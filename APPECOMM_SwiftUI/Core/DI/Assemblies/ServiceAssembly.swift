@@ -52,10 +52,10 @@ final class ServiceAssembly: Assembly {
             return ShippingService(networkDispatcher: networkDispatcher)
         }.inObjectScope(.container)
         
-        // Order Service
-        container.register(OrderServiceProtocol.self) { r in
+        // Checkout Service
+        container.register(CheckoutServiceProtocol.self) { r in
             let networkDispatcher = r.resolve(NetworkDispatcherProtocol.self)!
-            return OrderService(networkDispatcher: networkDispatcher)
+            return CheckoutService(networkDispatcher: networkDispatcher)
         }.inObjectScope(.container)
     }
 }

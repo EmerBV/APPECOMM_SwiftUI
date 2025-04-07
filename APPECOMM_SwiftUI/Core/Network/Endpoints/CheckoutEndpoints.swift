@@ -1,18 +1,28 @@
+//
+//  CheckoutEndpoints.swift
+//  APPECOMM_SwiftUI
+//
+//  Created by Emerson Balahan Varona on 28/3/25.
+//
+
 import Foundation
 
 enum CheckoutEndpoints: APIEndpoint {
     case createOrder(Order)
-    case getOrder(id: Int)
-    case updateOrderStatus(id: Int, status: String)
+    case getOrderById(orderId: Int)
+    case getUserOrders(userId: Int)
+    case updateOrderStatus(orderId: Int, status: String)
     
     var path: String {
         switch self {
         case .createOrder:
             return "orders/user/place-order"
-        case .getOrder(let id):
-            return "orders/\(id)"
-        case .updateOrderStatus(let id, _):
-            return "orders/\(id)/status"
+        case .getOrderById(let orderId):
+            return "orders/\(orderId)/order"
+        case .getUserOrders(let userId):
+            return "orders/user/\(userId)/order"
+        case .updateOrderStatus(let orderId, _):
+            return "orders/\(orderId)/status"
         }
     }
     
@@ -20,7 +30,7 @@ enum CheckoutEndpoints: APIEndpoint {
         switch self {
         case .createOrder:
             return HTTPMethod.post.rawValue
-        case .getOrder:
+        case .getOrderById, .getUserOrders:
             return HTTPMethod.get.rawValue
         case .updateOrderStatus:
             return HTTPMethod.put.rawValue

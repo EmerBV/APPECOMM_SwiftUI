@@ -24,18 +24,18 @@ final class OrderRepository: OrderRepositoryProtocol {
     var orderListState: CurrentValueSubject<OrderListState, Never> = CurrentValueSubject(.initial)
     var orderDetailState: CurrentValueSubject<OrderDetailState, Never> = CurrentValueSubject(.initial)
     
-    private let orderService: OrderServiceProtocol
+    private let checkoutService: CheckoutServiceProtocol
     private var cancellables = Set<AnyCancellable>()
     
-    init(orderService: OrderServiceProtocol) {
-        self.orderService = orderService
+    init(checkoutService: CheckoutServiceProtocol) {
+        self.checkoutService = checkoutService
     }
     
     func getUserOrders(userId: Int) -> AnyPublisher<[Order], Error> {
         Logger.info("OrderRepository: Getting orders for user: \(userId)")
         orderListState.send(.loading)
         
-        return orderService.getUserOrders(userId: userId)
+        return checkoutService.getOrder(id: userId)
             .handleEvents(receiveOutput: { [weak self] orders in
                 Logger.info("OrderRepository: Received \(orders.count) orders")
                 if orders.isEmpty {
@@ -57,7 +57,7 @@ final class OrderRepository: OrderRepositoryProtocol {
         Logger.info("OrderRepository: Getting order details for ID: \(id)")
         orderDetailState.send(.loading)
         
-        return orderService.getOrderById(id: id)
+        return checkoutService.getOrderById(orderId: id)
             .handleEvents(receiveOutput: { [weak self] order in
                 Logger.info("OrderRepository: Received order details for ID: \(order.id)")
                 self?.orderDetailState.send(.loaded(order))
@@ -75,7 +75,7 @@ final class OrderRepository: OrderRepositoryProtocol {
         Logger.info("OrderRepository: Updating order status - ID: \(id), Status: \(status)")
         orderDetailState.send(.loading)
         
-        return orderService.updateOrderStatus(id: id, status: status)
+        return checkoutService.updateOrderStatus(id: id, status: status)
             .handleEvents(receiveOutput: { [weak self] order in
                 Logger.info("OrderRepository: Order status updated successfully: \(order.id)")
                 self?.orderDetailState.send(.loaded(order))
@@ -101,7 +101,7 @@ final class OrderRepository: OrderRepositoryProtocol {
     func refreshOrders(userId: Int) -> AnyPublisher<[Order], Error> {
         Logger.info("OrderRepository: Refreshing orders for user: \(userId)")
         
-        return orderService.getUserOrders(userId: userId)
+        return checkoutService.getOrder(id: userId)
             .handleEvents(receiveOutput: { [weak self] orders in
                 Logger.info("OrderRepository: Orders refreshed: \(orders.count) orders")
                 if orders.isEmpty {

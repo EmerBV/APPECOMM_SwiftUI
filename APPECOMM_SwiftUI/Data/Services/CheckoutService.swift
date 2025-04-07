@@ -11,9 +11,9 @@ import Combine
 
 protocol CheckoutServiceProtocol {
     func createOrder(_ order: Order) -> AnyPublisher<Order, NetworkError>
-    func getOrder(id: Int) -> AnyPublisher<Order, NetworkError>
+    func getOrderById(id: Int) -> AnyPublisher<Order, NetworkError>
+    func getUserOrders(userId: Int) -> AnyPublisher<[Order], NetworkError>
     func updateOrderStatus(id: Int, status: String) -> AnyPublisher<Order, NetworkError>
-    func getOrderById(orderId: Int) -> AnyPublisher<Order, NetworkError>
 }
 
 final class CheckoutService: CheckoutServiceProtocol {
@@ -44,8 +44,8 @@ final class CheckoutService: CheckoutServiceProtocol {
             .eraseToAnyPublisher()
     }
     
-    func getOrder(id: Int) -> AnyPublisher<Order, NetworkError> {
-        let endpoint = CheckoutEndpoints.getOrder(id: id)
+    func getOrderById(id: Int) -> AnyPublisher<Order, NetworkError> {
+        let endpoint = CheckoutEndpoints.getOrderById(orderId: id)
         
         return networkDispatcher.dispatch(ApiResponse<Order>.self, endpoint)
             .map { response -> Order in
@@ -60,8 +60,24 @@ final class CheckoutService: CheckoutServiceProtocol {
             .eraseToAnyPublisher()
     }
     
+    func getUserOrders(userId: Int) -> AnyPublisher<[Order], NetworkError> {
+        let endpoint = CheckoutEndpoints.getUserOrders(userId: userId)
+        
+        return networkDispatcher.dispatch(ApiResponse<[Order]>.self, endpoint)
+            .map { response -> [Order] in
+                Logger.info("OrderService: Successfully fetch Orders: \(response.message)")
+                return response.data
+            }
+            .handleEvents(receiveCompletion: { completion in
+                if case .failure(let error) = completion {
+                    Logger.error("OrderService: Failed to get Orders: \(error)")
+                }
+            })
+            .eraseToAnyPublisher()
+    }
+    
     func updateOrderStatus(id: Int, status: String) -> AnyPublisher<Order, NetworkError> {
-        let endpoint = CheckoutEndpoints.updateOrderStatus(id: id, status: status)
+        let endpoint = CheckoutEndpoints.updateOrderStatus(orderId: id, status: status)
         
         return networkDispatcher.dispatch(ApiResponse<Order>.self, endpoint)
             .map { response -> Order in
@@ -71,22 +87,6 @@ final class CheckoutService: CheckoutServiceProtocol {
             .handleEvents(receiveCompletion: { completion in
                 if case .failure(let error) = completion {
                     Logger.error("CheckoutService: Failed to update user order: \(error)")
-                }
-            })
-            .eraseToAnyPublisher()
-    }
-    
-    func getOrderById(orderId: Int) -> AnyPublisher<Order, NetworkError> {
-        let endpoint = CheckoutEndpoints.getOrder(id: orderId)
-        
-        return networkDispatcher.dispatch(ApiResponse<Order>.self, endpoint)
-            .map { response -> Order in
-                Logger.info("CheckoutService: Order retrieved successfully: \(response.data.id)")
-                return response.data
-            }
-            .handleEvents(receiveCompletion: { completion in
-                if case .failure(let error) = completion {
-                    Logger.error("CheckoutService: Failed to get user order: \(error)")
                 }
             })
             .eraseToAnyPublisher()
