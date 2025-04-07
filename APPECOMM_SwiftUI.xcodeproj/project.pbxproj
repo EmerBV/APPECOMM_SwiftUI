@@ -24,22 +24,9 @@
 		1D70007F2D89AABF00A348EC /* APPECOMM_SwiftUI.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = APPECOMM_SwiftUI.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
-/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		1D83B6542D9DB3A000FB493C /* Exceptions for "APPECOMM_SwiftUI" folder in "APPECOMM_SwiftUI" target */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			membershipExceptions = (
-				"APPECOMM-SwiftUI-Info.plist",
-			);
-			target = 1D70007E2D89AABF00A348EC /* APPECOMM_SwiftUI */;
-		};
-/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
-
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		1D7000812D89AABF00A348EC /* APPECOMM_SwiftUI */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-				1D83B6542D9DB3A000FB493C /* Exceptions for "APPECOMM_SwiftUI" folder in "APPECOMM_SwiftUI" target */,
-			);
 			path = APPECOMM_SwiftUI;
 			sourceTree = "<group>";
 		};
