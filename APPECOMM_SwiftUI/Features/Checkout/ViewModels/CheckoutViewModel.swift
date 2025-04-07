@@ -1034,4 +1034,37 @@ class CheckoutViewModel: ObservableObject {
             .store(in: &cancellables)
     }
     
+    /// Restablece el estado del checkout para cuando el usuario cancela el proceso
+    func resetCheckoutState() {
+        // Restablecer el estado del flujo de checkout
+        currentStep = .shippingInfo
+        
+        // Limpiar mensajes de error o éxito
+        errorMessage = nil
+        successMessage = nil
+        
+        // Restablecer formularios si es necesario
+        if !hasExistingShippingDetails {
+            shippingDetailsForm = ShippingDetailsForm()
+        }
+        
+        // Limpiar selecciones
+        isAddingNewAddress = false
+        
+        // Cancelar cualquier operación en progreso
+        isLoading = false
+        
+        // Limpiar estado de pago
+        showPaymentSheet = false
+        paymentSheetViewModel = nil
+        
+        // Si hay una orden en proceso, consideremos cancelarla en el backend
+        if let orderId = order?.id {
+            updateOrderStatus(orderId: orderId, status: "cancelled")
+            order = nil
+        }
+        
+        Logger.info("Checkout state reset due to user cancellation")
+    }
+    
 }

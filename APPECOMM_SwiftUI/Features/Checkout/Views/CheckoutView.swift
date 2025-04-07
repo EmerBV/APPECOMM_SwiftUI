@@ -400,6 +400,12 @@ struct CheckoutView: View {
         .onAppear {
             setupNotificationObservers()
         }
+        // Observar cuando NavigationCoordinator indica que hay que cerrar esta vista
+        .onChange(of: navigationCoordinator.shouldDismissCurrent) { shouldDismiss in
+            if shouldDismiss {
+                dismiss()
+            }
+        }
     }
     
     private func setupNotificationObservers() {
@@ -420,6 +426,8 @@ struct CheckoutContentView: View {
     @Binding var showingPaymentForm: Bool
     @Binding var selectedOrder: Order?
     @Binding var shouldDismiss: Bool
+    @Environment(\.dismiss) private var dismiss
+    @State private var showCancelConfirmation = false
     
     var body: some View {
         contentView
@@ -432,6 +440,9 @@ struct CheckoutContentView: View {
                             Image(systemName: "chevron.left")
                                 .foregroundColor(.blue)
                         }
+                    } else if viewModel.currentStep == .shippingInfo {
+                        // Solo mostramos el botón cancelar en la vista de envío
+                        // (El botón ya está implementado en ShippingInfoView)
                     }
                 }
                 
