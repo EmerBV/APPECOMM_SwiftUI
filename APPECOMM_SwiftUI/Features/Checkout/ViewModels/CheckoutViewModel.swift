@@ -551,14 +551,25 @@ class CheckoutViewModel: ObservableObject {
                 showError = true
             }
         case .paymentMethod:
-            if selectedAddress == nil && existingShippingDetails != nil {
-                selectedAddress = existingShippingDetails
-            }
-            
+            // Asegurarse de que hay una dirección seleccionada
             if selectedAddress == nil {
-                errorMessage = "Por favor, selecciona una dirección de envío"
-                showError = true
-                return
+                if let existingDetails = existingShippingDetails {
+                    selectedAddress = existingDetails
+                } else if !shippingAddresses.isEmpty {
+                    // Si no hay dirección seleccionada pero hay direcciones disponibles,
+                    // seleccionar la predeterminada o la primera
+                    if let defaultAddress = shippingAddresses.first(where: { $0.isDefault ?? false }) {
+                        selectedAddress = defaultAddress
+                        selectedShippingAddressId = defaultAddress.id
+                    } else {
+                        selectedAddress = shippingAddresses.first
+                        selectedShippingAddressId = shippingAddresses.first?.id
+                    }
+                } else {
+                    errorMessage = "Por favor, selecciona una dirección de envío"
+                    showError = true
+                    return
+                }
             }
             currentStep = .review
         case .review:

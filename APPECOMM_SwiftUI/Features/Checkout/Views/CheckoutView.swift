@@ -581,7 +581,12 @@ struct OrderReviewView: View {
                     Text("Shipping Information")
                         .font(.headline)
                     
-                    if viewModel.hasExistingShippingDetails, let details = viewModel.existingShippingDetails {
+                    if let selectedAddress = viewModel.selectedAddress {
+                        ShippingDetailsSection(details: selectedAddress)
+                    } else if let selectedId = viewModel.selectedShippingAddressId,
+                              let address = viewModel.shippingAddresses.first(where: { $0.id == selectedId }) {
+                        ShippingDetailsSection(details: address)
+                    } else if viewModel.hasExistingShippingDetails, let details = viewModel.existingShippingDetails {
                         ShippingDetailsSection(details: details)
                     } else {
                         ShippingFormSummary(form: viewModel.shippingDetailsForm)
@@ -662,6 +667,11 @@ struct OrderReviewView: View {
             .padding()
         }
         .navigationTitle("Review Order")
+        .onAppear {
+            // Asegurarse de que los detalles de envío estén cargados
+            viewModel.loadExistingShippingDetails()
+            viewModel.ensureShippingAddressSelected()
+        }
     }
 }
 
