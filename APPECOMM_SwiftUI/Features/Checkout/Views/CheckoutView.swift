@@ -458,7 +458,7 @@ struct CheckoutContentView: View {
             }
             .overlay {
                 if viewModel.isLoading {
-                    LoadingOverlay()
+                    LoadingView()
                 }
             }
             .overlay {

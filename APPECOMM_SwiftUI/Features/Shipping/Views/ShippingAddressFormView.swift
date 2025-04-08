@@ -188,7 +188,7 @@ struct ShippingAddressFormView: View {
             }
             .overlay {
                 if viewModel.isLoading {
-                    LoadingOverlay()
+                    LoadingView()
                 }
             }
             .alert("Error", isPresented: $viewModel.showingError) {

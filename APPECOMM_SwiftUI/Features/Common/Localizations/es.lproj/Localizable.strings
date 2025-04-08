@@ -211,3 +211,6 @@
 // Success Messages
 "success" = "Éxito";
 "products_updated" = "Se han cargado %d productos";
+
+// Components
+"loading" = "Cargando...";

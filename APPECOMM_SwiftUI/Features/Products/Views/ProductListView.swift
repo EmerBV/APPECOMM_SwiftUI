@@ -44,7 +44,7 @@ struct ProductListView: View {
                 }
                 
                 if viewModel.isLoading {
-                    LoadingOverlay()
+                    LoadingView()
                 }
                 
                 if let errorMessage = viewModel.errorMessage {
