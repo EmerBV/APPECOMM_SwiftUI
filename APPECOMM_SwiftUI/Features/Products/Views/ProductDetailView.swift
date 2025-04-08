@@ -105,11 +105,13 @@ struct ProductDetailView: View {
             }
             
             // Success message
+            /*
             if showAddedToCartMessage {
                 SuccessToast(message: "added_to_cart".localized) {
                     showAddedToCartMessage = false
                 }
             }
+             */
         }
         .navigationBarTitleDisplayMode(.inline)
         .navigationTitle(product.name)
@@ -131,12 +133,18 @@ struct ProductDetailView: View {
                 }
             }
         }
+        .toast(
+            isPresented: $showAddedToCartMessage,
+            message: viewModel.cartSuccessMessage ?? "added_to_cart".localized,
+            type: .fullscreen
+        )
     }
     
     private func addToCart() {
         let variantId = selectedVariant?.id
         viewModel.addToCart(productId: product.id, quantity: quantity, variantId: variantId)
     }
+    
 }
 
 // MARK: - Product Image Carousel
