@@ -16,7 +16,11 @@ struct OrdersListView: View {
                 Section(header: Text("Pedidos pendientes de pago")) {
                     if !viewModel.pendingOrders.isEmpty {
                         ForEach(viewModel.pendingOrders) { order in
-                            OrderSummaryRow(order: order)
+                            NavigationLink(
+                                destination: OrderDetailView(orderId: order.id)
+                            ) {
+                                OrderSummaryRow(order: order)
+                            }
                         }
                     } else {
                         Text("No hay pedidos pendientes")
@@ -27,7 +31,11 @@ struct OrdersListView: View {
                 Section(header: Text("Historial de pedidos")) {
                     if !viewModel.completedOrders.isEmpty {
                         ForEach(viewModel.completedOrders) { order in
-                            OrderSummaryRow(order: order)
+                            NavigationLink(
+                                destination: OrderDetailView(orderId: order.id)
+                            ) {
+                                OrderSummaryRow(order: order)
+                            }
                         }
                     } else {
                         Text("No hay pedidos en el historial")
