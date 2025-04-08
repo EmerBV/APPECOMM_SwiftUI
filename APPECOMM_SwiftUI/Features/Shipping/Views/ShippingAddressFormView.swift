@@ -186,11 +186,17 @@ struct ShippingAddressFormView: View {
                     }
                 }
             }
-            .overlay {
-                if viewModel.isLoading {
-                    LoadingView()
-                }
-            }
+            
+            .circularLoading(
+                isLoading: viewModel.isLoading,
+                message: "loading".localized,
+                strokeColor: .blue,
+                backgroundColor: .gray.opacity(0.1),
+                showBackdrop: true,
+                containerSize: 80,
+                logoSize: 50
+            )
+            
             .alert("Error", isPresented: $viewModel.showingError) {
                 Button("OK", role: .cancel) { }
             } message: {

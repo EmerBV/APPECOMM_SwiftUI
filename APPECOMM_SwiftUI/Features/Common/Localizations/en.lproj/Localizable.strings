@@ -219,4 +219,4 @@
 "products_updated" = "%d products have been loaded";
 
 // Components
-"loading" = "Loading...";
+"loading" = "Loading";

@@ -90,11 +90,25 @@ private struct HomeContentView: View {
         .refreshable {
             await viewModel.loadData()
         }
+        
+        /*
         .overlay {
             if viewModel.isLoading {
                 LoadingView()
             }
         }
+         */
+        
+        .circularLoading(
+            isLoading: viewModel.isLoading,
+            message: "loading".localized,
+            strokeColor: .blue,
+            backgroundColor: .gray.opacity(0.1),
+            showBackdrop: true,
+            containerSize: 80,
+            logoSize: 50
+        )
+        
         .overlay {
             if let error = viewModel.errorMessage {
                 ErrorToast(message: error) {

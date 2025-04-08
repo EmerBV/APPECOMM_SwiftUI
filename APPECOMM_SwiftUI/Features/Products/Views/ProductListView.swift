@@ -43,9 +43,11 @@ struct ProductListView: View {
                     }
                 }
                 
+                /*
                 if viewModel.isLoading {
                     LoadingView()
                 }
+                 */
                 
                 if let errorMessage = viewModel.errorMessage {
                     ErrorToast(message: errorMessage) {
@@ -60,6 +62,17 @@ struct ProductListView: View {
                     RefreshButton(action: { viewModel.loadProducts(forceRefresh: true) })
                 }
             }
+            
+            .circularLoading(
+                isLoading: viewModel.isLoading,
+                message: "loading".localized,
+                strokeColor: .blue,
+                backgroundColor: .gray.opacity(0.1),
+                showBackdrop: true,
+                containerSize: 80,
+                logoSize: 50
+            )
+            
             .task {
                 await viewModel.loadProducts()
             }

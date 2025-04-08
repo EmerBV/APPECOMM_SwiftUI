@@ -70,7 +70,14 @@ struct CartView: View {
     @ViewBuilder
     private var contentView: some View {
         if viewModel.isLoading {
-            LoadingView()
+            CircularLoadingView(
+                message: "loading".localized,
+                strokeColor: .blue,
+                backgroundColor: .gray.opacity(0.1),
+                showBackdrop: true,
+                containerSize: 80,
+                logoSize: 50
+            )
         } else if let cart = viewModel.cart, !cart.items.isEmpty {
             CartContentView(cart: cart, viewModel: viewModel, isShowingCheckout: $isShowingCheckout)
         } else {

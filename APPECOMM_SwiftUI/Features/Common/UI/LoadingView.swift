@@ -26,13 +26,13 @@ struct LoadingView: View {
             
             // Dejar este código por si en el futuro queremos encapsular el loading dentro de un rectángulo
             /*
-            .background(
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(Color(UIColor.systemBackground))
-                    .shadow(radius: 10)
-            )
+             .background(
+             RoundedRectangle(cornerRadius: 12)
+             .fill(Color(UIColor.systemBackground))
+             .shadow(radius: 10)
+             )
              */
-          
+            
         }
         .ignoresSafeArea()
     }

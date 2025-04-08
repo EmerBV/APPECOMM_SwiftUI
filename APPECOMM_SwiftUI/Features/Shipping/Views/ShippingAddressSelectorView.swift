@@ -27,8 +27,21 @@ struct ShippingAddressSelectorView: View {
                 secondaryButton: .cancel()
             )
         }
+        
+        /*
         .overlay(
             viewModel.isLoading ? LoadingView() : nil
+        )
+         */
+        
+        .circularLoading(
+            isLoading: viewModel.isLoading,
+            message: "loading".localized,
+            strokeColor: .blue,
+            backgroundColor: .gray.opacity(0.1),
+            showBackdrop: true,
+            containerSize: 80,
+            logoSize: 50
         )
     }
     

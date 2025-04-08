@@ -93,9 +93,11 @@ struct ProductDetailView: View {
             }
             
             // Loading overlay
-            if viewModel.isAddingToCart {
-                LoadingView()
-            }
+            /*
+             if viewModel.isAddingToCart {
+             LoadingView()
+             }
+             */
             
             // Error message
             if let errorMessage = viewModel.errorMessage {
@@ -106,11 +108,11 @@ struct ProductDetailView: View {
             
             // Success message
             /*
-            if showAddedToCartMessage {
-                SuccessToast(message: "added_to_cart".localized) {
-                    showAddedToCartMessage = false
-                }
-            }
+             if showAddedToCartMessage {
+             SuccessToast(message: "added_to_cart".localized) {
+             showAddedToCartMessage = false
+             }
+             }
              */
         }
         .navigationBarTitleDisplayMode(.inline)
@@ -133,6 +135,17 @@ struct ProductDetailView: View {
                 }
             }
         }
+        
+        .circularLoading(
+            isLoading: viewModel.isLoading,
+            message: "loading".localized,
+            strokeColor: .blue,
+            backgroundColor: .gray.opacity(0.1),
+            showBackdrop: true,
+            containerSize: 80,
+            logoSize: 50
+        )
+        
         .toast(
             isPresented: $showAddedToCartMessage,
             message: viewModel.cartSuccessMessage ?? "added_to_cart".localized,

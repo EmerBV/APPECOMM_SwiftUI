@@ -44,7 +44,14 @@ struct ShippingAddressesManagerView: View {
         NavigationStack {
             ZStack {
                 if viewModel.isLoading {
-                    LoadingView()
+                    CircularLoadingView(
+                        message: "loading".localized,
+                        strokeColor: .blue,
+                        backgroundColor: .gray.opacity(0.1),
+                        showBackdrop: true,
+                        containerSize: 80,
+                        logoSize: 50
+                    )
                 } else if viewModel.addresses.isEmpty {
                     emptyStateView
                 } else {

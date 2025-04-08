@@ -213,4 +213,4 @@
 "products_updated" = "Se han cargado %d productos";
 
 // Components
-"loading" = "Cargando...";
+"loading" = "Cargando";

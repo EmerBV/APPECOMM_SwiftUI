@@ -25,9 +25,11 @@ struct ProfileView: View {
                 }
                 
                 // Loading overlay
-                if viewModel.isLoading {
-                    LoadingView()
-                }
+                /*
+                 if viewModel.isLoading {
+                 LoadingView()
+                 }
+                 */
                 
                 // Error message
                 if let errorMessage = viewModel.errorMessage {
@@ -49,6 +51,17 @@ struct ProfileView: View {
                     }
                 }
             }
+            
+            .circularLoading(
+                isLoading: viewModel.isLoading,
+                message: "loading".localized,
+                strokeColor: .blue,
+                backgroundColor: .gray.opacity(0.1),
+                showBackdrop: true,
+                containerSize: 80,
+                logoSize: 50
+            )
+            
             .sheet(isPresented: $showingAddressManager) {
                 if let userId = viewModel.user?.id {
                     ShippingAddressesManagerView(userId: userId)

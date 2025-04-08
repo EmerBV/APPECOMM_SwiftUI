@@ -429,7 +429,6 @@ struct CheckoutContentView: View {
     @Binding var selectedOrder: Order?
     @Binding var shouldDismiss: Bool
     @Environment(\.dismiss) private var dismiss
-    //@State private var showCancelConfirmation = false
     
     var body: some View {
         contentView
@@ -456,11 +455,15 @@ struct CheckoutContentView: View {
                     }
                 }
             }
-            .overlay {
-                if viewModel.isLoading {
-                    LoadingView()
-                }
-            }
+        
+        /*
+         .overlay {
+         if viewModel.isLoading {
+         LoadingView()
+         }
+         }
+         */
+        
             .overlay {
                 if let errorMessage = viewModel.errorMessage {
                     
