@@ -359,15 +359,17 @@ struct CheckoutView: View {
         let stripeService = dependencies.resolve(StripeServiceProtocol.self)
         
         // Create view model with dependencies
-        _viewModel = ObservedObject(wrappedValue: CheckoutViewModel(
-            cart: cart,
-            checkoutService: checkoutService,
-            paymentService: paymentService,
-            authRepository: authRepository,
-            validator: validator,
-            shippingService: shippingService,
-            stripeService: stripeService
-        ))
+        _viewModel = ObservedObject(
+            wrappedValue: CheckoutViewModel(
+                cart: cart,
+                checkoutService: checkoutService,
+                paymentService: paymentService,
+                authRepository: authRepository,
+                validator: validator,
+                shippingService: shippingService,
+                stripeService: stripeService
+            )
+        )
     }
     
     // MARK: - Body
@@ -427,7 +429,7 @@ struct CheckoutContentView: View {
     @Binding var selectedOrder: Order?
     @Binding var shouldDismiss: Bool
     @Environment(\.dismiss) private var dismiss
-    @State private var showCancelConfirmation = false
+    //@State private var showCancelConfirmation = false
     
     var body: some View {
         contentView
@@ -461,6 +463,7 @@ struct CheckoutContentView: View {
             }
             .overlay {
                 if let errorMessage = viewModel.errorMessage {
+                    
                     ErrorToast(message: errorMessage) {
                         viewModel.errorMessage = nil
                     }
@@ -519,42 +522,6 @@ struct CheckoutContentView: View {
             return false
         default:
             return true
-        }
-    }
-}
-
-// MARK: - Helper Views
-
-struct ErrorToastView: View {
-    let message: String
-    let onDismiss: () -> Void
-    
-    var body: some View {
-        VStack {
-            Spacer()
-            
-            HStack(alignment: .center, spacing: 12) {
-                Image(systemName: "exclamationmark.circle.fill")
-                    .foregroundColor(.white)
-                
-                Text(message)
-                    .font(.subheadline)
-                    .foregroundColor(.white)
-                
-                Spacer()
-                
-                Button(action: onDismiss) {
-                    Image(systemName: "xmark")
-                        .foregroundColor(.white)
-                }
-            }
-            .padding()
-            .background(
-                RoundedRectangle(cornerRadius: 8)
-                    .fill(Color.red)
-            )
-            .padding(.horizontal)
-            .padding(.bottom, 20)
         }
     }
 }

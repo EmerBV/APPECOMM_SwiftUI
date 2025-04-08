@@ -41,7 +41,12 @@ struct NotificationMessage: Identifiable {
     let duration: TimeInterval
     let action: (() -> Void)?
     
-    init(type: NotificationType, title: String, message: String, duration: TimeInterval = 3.0, action: (() -> Void)? = nil) {
+    init(
+        type: NotificationType,
+        title: String,
+        message: String,
+        duration: TimeInterval = 3.0, action: (() -> Void)? = nil
+    ) {
         self.type = type
         self.title = title
         self.message = message

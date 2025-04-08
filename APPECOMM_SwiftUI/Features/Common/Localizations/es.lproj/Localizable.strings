@@ -186,6 +186,7 @@
 "newsletter_title" = "¿Quieres $20 de descuento? Suscríbete a nuestro Boletín.";
 "newsletter_subtitle" = "¡Regístrate para recibir alertas por SMS y sé el primero en enterarte!";
 "get_in_the_loop" = "¡ÚNETE A LA LISTA!";
+"failed_to_load_data" = "Error al cargar los datos";
 
 // Search View
 "search_products" = "Buscar productos";

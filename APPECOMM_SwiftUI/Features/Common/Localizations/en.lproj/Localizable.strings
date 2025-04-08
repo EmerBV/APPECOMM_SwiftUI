@@ -187,6 +187,7 @@
 "newsletter_title" = "Want $20 Off? Sign up for our Newsletter.";
 "newsletter_subtitle" = "Sign up for SMS alerts and be the first to know!";
 "get_in_the_loop" = "GET IN THE LOOP!";
+"failed_to_load_data" = "Failed to load data";
 
 // Search View
 "search_products" = "Search products";

@@ -22,12 +22,10 @@ class PaymentSheetViewModel: ObservableObject {
     @Published var clientSecret: String?
     @Published var shouldPresentPaymentSheet = false
     @Published var order: Order?
-    @Published var showingSavedOrderConfirmation = false
-    
-    private let navigationCoordinator: NavigationCoordinatorProtocol
     
     // MARK: - Private Properties
     private let paymentService: PaymentServiceProtocol
+    private let navigationCoordinator: NavigationCoordinatorProtocol
     private let orderId: Int
     private let amount: Decimal
     private let email: String?
@@ -191,7 +189,7 @@ class PaymentSheetViewModel: ObservableObject {
                 
             case .canceled:
                 self.paymentStatus = .failed("Pago cancelado")
-                Logger.payment("Payment was canceled by user", level: .info)
+                Logger.payment("Payment was canceled", level: .info)
                 
             case .failed(let error):
                 self.paymentStatus = .failed(error.localizedDescription)
@@ -200,84 +198,6 @@ class PaymentSheetViewModel: ObservableObject {
             }
         }
     }
-    
-    func cancelPayment() {
-        // Limpiar el estado del pago
-        self.paymentSheet = nil
-        self.shouldPresentPaymentSheet = false
-        self.paymentStatus = .idle
-        self.isLoading = false
-        
-        // Si hay un paymentIntentId activo, cancelarlo en el servidor
-        if let paymentIntentId = self.paymentIntentId {
-            paymentService.cancelPayment(paymentIntentId: paymentIntentId)
-                .receive(on: DispatchQueue.main)
-                .sink { completion in
-                    if case .failure(let error) = completion {
-                        Logger.payment("Error canceling payment: \(error)", level: .error)
-                    }
-                } receiveValue: { [weak self] _ in
-                    Logger.payment("Payment cancelled successfully", level: .info)
-                    // Notificar la cancelación del pago
-                    NotificationCenter.default.post(
-                        name: Notification.Name("PaymentCancelled"),
-                        object: nil
-                    )
-                    // Asegurarse de que el estado se actualice
-                    self?.paymentStatus = .failed("Pago cancelado por el usuario")
-                }
-                .store(in: &cancellables)
-        } else {
-            // Si no hay paymentIntentId, simplemente notificar la cancelación
-            NotificationCenter.default.post(
-                name: Notification.Name("PaymentCancelled"),
-                object: nil
-            )
-            self.paymentStatus = .failed("Pago cancelado por el usuario")
-        }
-    }
-    
-    func saveOrderForLater() {
-        // Limpiar el estado del pago sin cancelarlo en el servidor
-        self.paymentSheet = nil
-        self.shouldPresentPaymentSheet = false
-        self.paymentStatus = .idle
-        self.isLoading = false
-        
-        // Usar directamente orderId ya que no es opcional
-        let dependencies = DependencyInjector.shared
-        let checkoutService = dependencies.resolve(CheckoutServiceProtocol.self)
-        
-        checkoutService.updateOrderStatus(id: orderId, status: "pending")
-            .receive(on: DispatchQueue.main)
-            .sink { completion in
-                if case .failure(let error) = completion {
-                    Logger.payment("Error saving order for later: \(error)", level: .error)
-                    
-                    // A pesar del error, seguimos con el flujo para no bloquear al usuario
-                    self.showingSavedOrderConfirmation = true
-                }
-            } receiveValue: { _ in
-                Logger.payment("Order saved for later completion", level: .info)
-                
-                self.showingSavedOrderConfirmation = true
-            }
-            .store(in: &cancellables)
-    }
 }
 
-// MARK: - UIViewController Extension
-extension UIViewController {
-    var topMostViewController: UIViewController {
-        if let presented = presentedViewController {
-            return presented.topMostViewController
-        }
-        if let navigation = self as? UINavigationController {
-            return navigation.visibleViewController?.topMostViewController ?? self
-        }
-        if let tab = self as? UITabBarController {
-            return tab.selectedViewController?.topMostViewController ?? self
-        }
-        return self
-    }
-}
+
