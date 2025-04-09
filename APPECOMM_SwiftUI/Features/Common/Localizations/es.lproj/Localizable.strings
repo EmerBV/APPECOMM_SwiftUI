@@ -214,3 +214,26 @@
 
 // Components
 "loading" = "Cargando";
+
+// Splash View
+"splash_welcome" = "Bienvenido a";
+"splash_loading" = "Cargando...";
+"splash_version" = "Versión %@";
+"splash_error" = "Error al cargar la aplicación";
+"splash_retry" = "Reintentar";
+"splash_initializing" = "Inicializando la aplicación...";
+"splash_checking_auth" = "Verificando autenticación...";
+"splash_loading_data" = "Cargando tus datos...";
+"splash_almost_there" = "Casi listo...";
+"splash_ready" = "¡Listo!";
+"splash_error_message" = "Hubo un error al cargar la aplicación. Por favor, inténtalo de nuevo.";
+"splash_network_error" = "Error de conexión. Por favor, verifica tu conexión.";
+"splash_maintenance" = "La aplicación está en mantenimiento. Por favor, inténtalo más tarde.";
+"splash_update_available" = "Actualización disponible";
+"splash_update_message" = "Hay una nueva versión disponible. Por favor, actualiza para continuar.";
+"splash_update_button" = "Actualizar Ahora";
+"splash_skip_update" = "Omitir por ahora";
+"splash_terms_acceptance" = "Al continuar, aceptas nuestros Términos de Servicio y Política de Privacidad";
+"splash_terms_button" = "Ver Términos";
+"splash_privacy_button" = "Ver Política de Privacidad";
+"splash_continue" = "Continuar";

@@ -10,7 +10,7 @@ import Combine
 
 class SplashViewModel: ObservableObject {
     @Published var isLoading = true
-    @Published var statusMessage = "Verificando sesión..."
+    @Published var statusMessage = "splash_initializing".localized
     @Published var error: String?
     
     private let authRepository: AuthRepositoryProtocol
@@ -22,7 +22,7 @@ class SplashViewModel: ObservableObject {
     
     func checkAuth() {
         isLoading = true
-        statusMessage = "Verificando sesión..."
+        statusMessage = "splash_checking_auth".localized
         error = nil
         
         authRepository.checkAuthStatus()
@@ -30,14 +30,14 @@ class SplashViewModel: ObservableObject {
             .sink { [weak self] completion in
                 if case .failure(let error) = completion {
                     self?.isLoading = false
-                    self?.error = "No se pudo verificar la sesión: \(error.localizedDescription)"
+                    self?.error = "splash_error_message".localized
                     Logger.error("Error en SplashView: \(error)")
                 }
             } receiveValue: { [weak self] user in
                 if user != nil {
-                    self?.statusMessage = "Iniciando sesión..."
+                    self?.statusMessage = "splash_loading_data".localized
                 } else {
-                    self?.statusMessage = "Preparando aplicación..."
+                    self?.statusMessage = "splash_almost_there".localized
                 }
                 
                 // La navegación se manejará por el AppCoordinator

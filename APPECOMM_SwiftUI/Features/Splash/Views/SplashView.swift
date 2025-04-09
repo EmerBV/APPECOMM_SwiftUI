@@ -54,7 +54,7 @@ struct SplashView: View {
                 // Mensaje de error
                 if showError {
                     VStack(spacing: 10) {
-                        Text("Error")
+                        Text("splash_error".localized)
                             .font(.headline)
                             .foregroundColor(.white)
                         
@@ -64,7 +64,7 @@ struct SplashView: View {
                             .multilineTextAlignment(.center)
                             .padding(.horizontal)
                         
-                        Button("Reintentar") {
+                        Button("splash_retry".localized) {
                             showError = false
                             viewModel.checkAuth()
                         }
