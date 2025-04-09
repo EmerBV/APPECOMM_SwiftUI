@@ -12,6 +12,22 @@ extension String {
         return LocalizationManager.shared.localizedString(for: self)
     }
     
+    var toDouble: Double {
+        return Double(self) ?? 0
+    }
+    
+    var toInt: Int {
+        return Int(self) ?? 0
+    }
+    
+    var toPercentage: String {
+        return self.isEmpty ? "-" : self + "%"
+    }
+    
+    var isNumber: String {
+        return self.filter { ("0"..."9").contains($0) }
+    }
+    
     func formattedCreditCardNumber() -> String {
         let clean = self.replacingOccurrences(of: "[^0-9]", with: "", options: .regularExpression)
         var result = ""

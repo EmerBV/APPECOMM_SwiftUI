@@ -45,14 +45,14 @@ struct OrderSummaryCard: View {
             HStack {
                 Text("Subtotal")
                 Spacer()
-                Text(viewModel.orderSummary.formattedSubtotal)
+                Text(viewModel.orderSummary.subtotal.toCurrentLocalePrice)
             }
             
             // Tax
             HStack {
                 Text("Tax")
                 Spacer()
-                Text(viewModel.orderSummary.formattedTax)
+                Text(viewModel.orderSummary.tax.toCurrentLocalePrice)
             }
             
             // Shipping
@@ -69,7 +69,7 @@ struct OrderSummaryCard: View {
                 Text("Total")
                     .fontWeight(.semibold)
                 Spacer()
-                Text(viewModel.orderSummary.formattedTotal)
+                Text(viewModel.orderSummary.total.toCurrentLocalePrice)
                     .fontWeight(.semibold)
             }
         }

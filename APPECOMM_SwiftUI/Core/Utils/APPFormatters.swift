@@ -88,9 +88,13 @@ class APPFormatters {
         return currencyMap[countryCode] ?? "USD"
     }
     
-    public static func formattedPrice(_ price: Decimal) -> String {
-        return currencyFormatter.string(from: price as NSDecimalNumber) ?? "\(price)"
-    }
+    private static let dateFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .medium
+        formatter.timeStyle = .short
+        
+        return formatter
+    }()
     
     private static let dateFormats: [String] = [
         "yyyy-MM-dd'T'HH:mm:ss.SSSSSS",
@@ -111,4 +115,28 @@ class APPFormatters {
         
         return nil
     }
+    
+    public static func formattedPrice(_ price: Decimal) -> String {
+        return currencyFormatter.string(from: price as NSDecimalNumber) ?? "\(price)"
+    }
+    
+    public static func formattedDate(_ date: Date) -> String {
+        return dateFormatter.string(from: date)
+    }
+    
+    public static func formattedDateString(from dateString: String) -> String {
+        // Convert API date string to a formatted date
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSSSS" // Adjust based on API date format
+        
+        for format in dateFormats {
+            dateFormatter.dateFormat = format
+            if let date = dateFormatter.date(from: dateString) {
+                return dateFormatter.string(from: date)
+            }
+        }
+        
+        return dateString // Return original if parsing fails
+    }
+    
 }

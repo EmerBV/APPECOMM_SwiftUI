@@ -17,22 +17,22 @@ enum AppEnvironment: String {
     var baseUrl: String {
         switch self {
         case .development:
-            return "http://localhost:9091/ecommdb/api/v1"
+            return APPEnv.baseURL
         case .staging:
-            return "http://localhost:9091/ecommdb/api/v1"
+            return APPEnv.baseURL
         case .production:
-            return "http://localhost:9091/ecommdb/api/v1"
+            return APPEnv.baseURL
         }
     }
     
     var imageBaseUrl: String {
         switch self {
         case .development:
-            return "http://localhost:9091/ecommdb"
+            return APPEnv.imageBaseURL
         case .staging:
-            return "http://localhost:9091/ecommdb"
+            return APPEnv.imageBaseURL
         case .production:
-            return "http://localhost:9091/ecommdb"
+            return APPEnv.imageBaseURL
         }
     }
     
@@ -82,9 +82,9 @@ class AppConfig {
         
         // Obtener información del Bundle
         let bundle = Bundle.main
-        self.appName = bundle.object(forInfoDictionaryKey: "CFBundleName") as? String ?? "APPECOMM_SwiftUI"
-        self.appVersion = bundle.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "1.0.0"
-        self.buildNumber = bundle.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "1"
+        self.appName = bundle.object(forInfoDictionaryKey: "CFBundleName") as? String ?? APPConstants.appName
+        self.appVersion = bundle.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? APPConstants.appVersion
+        self.buildNumber = bundle.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? APPConstants.appBuild
         
         self.apiBaseUrl = environment.baseUrl
         self.imageBaseUrl = environment.imageBaseUrl

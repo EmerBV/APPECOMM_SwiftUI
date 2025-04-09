@@ -126,7 +126,7 @@ class AppDelegate: NSObject, UIApplicationDelegate {
     
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil) -> Bool {
         // Configura Stripe con tu clave publicable
-        let publishableKey = "pk_test_51R7MBXQeIvmhXc8UtJmUCUVT6zcjB1Wuvc29fzk1dPww2CbsyrrHRJ8Pqa5aSn9OXPoDMUWMEbZH49baYhN7mijG003fghp0ei"
+        let publishableKey = APPEnv.stripePublishableKey
         StripeAPI.defaultPublishableKey = publishableKey
         
         // Configura el manejador de pagos de Stripe
