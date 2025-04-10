@@ -1,5 +1,4 @@
 import SwiftUI
-import Kingfisher
 
 struct CategoryItemView: View {
     let category: Category
@@ -10,21 +9,35 @@ struct CategoryItemView: View {
     var body: some View {
         VStack(alignment: .center, spacing: 12) {
             Group {
-                if let imageUrl = category.imageDownloadUrl,
-                   let url = URL(string: baseURL + imageUrl) {
-                    KFImage(url)
-                        .placeholder {
-                            Image(systemName: "photo")
-                                .font(.system(size: 30))
-                                .foregroundColor(.gray)
+                if let imageUrl = category.imageDownloadUrl {
+                    let fullImageURL = "\(baseURL)\(imageUrl)"
+                    if let url = URL(string: fullImageURL) {
+                        AsyncImage(url: url) { phase in
+                            switch phase {
+                            case .empty:
+                                ProgressView()
+                                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                            case .success(let image):
+                                image
+                                    .resizable()
+                                    .scaledToFit()
+                                    .clipped()
+                                    .padding(16)
+                            case .failure:
+                                Image(systemName: "photo")
+                                    .font(.system(size: 30))
+                                    .foregroundColor(.gray)
+                            @unknown default:
+                                Image(systemName: "photo")
+                                    .font(.system(size: 30))
+                                    .foregroundColor(.gray)
+                            }
                         }
-                        .onFailure { error in
-                            Logger.error("Error al cargar imagen de categoría: \(error.localizedDescription)")
-                        }
-                        .fade(duration: 0.3)
-                        .resizable()
-                        .scaledToFit()
-                        .padding(16)
+                    } else {
+                        Image(systemName: "photo")
+                            .font(.system(size: 30))
+                            .foregroundColor(.gray)
+                    }
                 } else if let uiImage = UIImage(named: category.name.lowercased().replacingOccurrences(of: " ", with: "_")) {
                     Image(uiImage: uiImage)
                         .resizable()
