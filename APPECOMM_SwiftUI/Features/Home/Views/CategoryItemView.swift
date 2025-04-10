@@ -73,4 +73,5 @@ struct CategoryPlaceholderView: View {
         }
         .frame(width: 100)
     }
-} 
+    
+}
