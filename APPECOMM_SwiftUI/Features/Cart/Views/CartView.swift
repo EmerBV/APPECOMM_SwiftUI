@@ -310,7 +310,7 @@ struct CartItemRow: View {
         HStack(alignment: .top, spacing: 16) {
             ProductImageView(
                 size: 80,
-                imageUrl: item.product.imageUrl,
+                imageUrl: item.product.images?.first?.downloadUrl,
                 baseURL: AppConfig.shared.imageBaseUrl
             )
             
@@ -383,11 +383,3 @@ struct CartItemRow: View {
     }
 }
 
-// MARK: - Helper Extension for Image URL
-extension CartProductDto {
-    var imageUrl: String? {
-        // In a real app, this would return the actual image URL from the API
-        // For now, let's just return nil since we're using placeholder images
-        return nil
-    }
-}

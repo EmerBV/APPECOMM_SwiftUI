@@ -40,6 +40,7 @@ struct CartProductDto: Identifiable, Codable, Equatable {
     let name: String
     let brand: String
     let price: Decimal
+    let images: [ProductImage]?
     
     static func == (lhs: CartProductDto, rhs: CartProductDto) -> Bool {
         return lhs.id == rhs.id
