@@ -35,11 +35,6 @@ struct Product: Identifiable, Codable, Equatable {
     }
 }
 
-struct Category: Codable, Equatable {
-    let id: Int
-    let name: String
-}
-
 struct Variant: Identifiable, Codable, Equatable {
     let id: Int
     let name: String
