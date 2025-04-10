@@ -1,12 +1,31 @@
 import SwiftUI
+import Kingfisher
 
 struct CategoryItemView: View {
-    let name: String
+    let category: Category
+    private var baseURL: String {
+        AppConfig.shared.imageBaseUrl
+    }
     
     var body: some View {
         VStack(alignment: .center, spacing: 12) {
             Group {
-                if let uiImage = UIImage(named: name.lowercased().replacingOccurrences(of: " ", with: "_")) {
+                if let imageUrl = category.imageDownloadUrl,
+                   let url = URL(string: baseURL + imageUrl) {
+                    KFImage(url)
+                        .placeholder {
+                            Image(systemName: "photo")
+                                .font(.system(size: 30))
+                                .foregroundColor(.gray)
+                        }
+                        .onFailure { error in
+                            Logger.error("Error al cargar imagen de categoría: \(error.localizedDescription)")
+                        }
+                        .fade(duration: 0.3)
+                        .resizable()
+                        .scaledToFit()
+                        .padding(16)
+                } else if let uiImage = UIImage(named: category.name.lowercased().replacingOccurrences(of: " ", with: "_")) {
                     Image(uiImage: uiImage)
                         .resizable()
                         .scaledToFit()
@@ -26,7 +45,7 @@ struct CategoryItemView: View {
             )
             .shadow(color: .black.opacity(0.1), radius: 4, x: 0, y: 2)
             
-            Text(name)
+            Text(category.name)
                 .font(.system(size: 12, weight: .medium))
                 .multilineTextAlignment(.center)
                 .foregroundColor(.primary)

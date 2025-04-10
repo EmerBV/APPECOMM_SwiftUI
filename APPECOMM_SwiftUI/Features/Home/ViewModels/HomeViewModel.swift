@@ -13,7 +13,7 @@ class HomeViewModel: ObservableObject {
     // Published properties
     @Published var newProducts: [Product] = []
     @Published var bestSellingProducts: [Product] = []
-    @Published var categories: [String] = []
+    @Published var categories: [Category] = []
     @Published var isLoading = false
     @Published var errorMessage: String?
     
@@ -61,7 +61,7 @@ class HomeViewModel: ObservableObject {
             // Load categories
             let categoriesPublisher = productRepository.getAllCategories()
             for try await categories in categoriesPublisher.values {
-                self.categories = categories.map { $0.name }.sorted()
+                self.categories = categories.sorted(by: { $0.name < $1.name })
                 Logger.info("Loaded \(self.categories.count) categories from API")
                 break
             }

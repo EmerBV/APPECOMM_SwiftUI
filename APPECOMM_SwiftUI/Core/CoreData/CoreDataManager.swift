@@ -65,7 +65,13 @@ class CoreDataManager {
                     price: Decimal(entity.price),
                     inventory: 0, // Valor por defecto
                     description: entity.productDescription,
-                    category: Category(id: 0, name: entity.category ?? "", image: nil),
+                    category: Category(
+                        id: 0,
+                        name: entity.category ?? "",
+                        imageFileName: nil,
+                        imageFileType: nil,
+                        imageDownloadUrl: nil
+                    ),
                     discountPercentage: 0, // Valor por defecto
                     status: .inStock, // Valor por defecto
                     salesCount: 0, // Valor por defecto

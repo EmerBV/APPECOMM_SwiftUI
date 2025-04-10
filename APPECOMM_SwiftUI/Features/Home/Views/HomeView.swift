@@ -92,11 +92,11 @@ private struct HomeContentView: View {
         }
         
         /*
-        .overlay {
-            if viewModel.isLoading {
-                LoadingView()
-            }
-        }
+         .overlay {
+         if viewModel.isLoading {
+         LoadingView()
+         }
+         }
          */
         
         .circularLoading(
@@ -136,7 +136,7 @@ private struct SearchButton: View {
 
 // MARK: - Categories Section
 private struct CategoriesSection: View {
-    let categories: [String]
+    let categories: [Category]
     let isLoading: Bool
     
     var body: some View {
@@ -153,9 +153,9 @@ private struct CategoriesSection: View {
                             CategoryPlaceholderView()
                         }
                     } else {
-                        ForEach(categories.prefix(6), id: \.self) { category in
-                            NavigationLink(destination: makeCategoryDestination(for: category)) {
-                                CategoryItemView(name: category)
+                        ForEach(categories.prefix(6)) { category in
+                            NavigationLink(destination: makeCategoryDestination(for: category.name)) {
+                                CategoryItemView(category: category)
                             }
                             .buttonStyle(PlainButtonStyle())
                         }
