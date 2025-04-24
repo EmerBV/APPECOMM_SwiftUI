@@ -14,6 +14,7 @@ protocol AuthRepositoryProtocol {
     func login(email: String, password: String) -> AnyPublisher<User, Error>
     func logout() -> AnyPublisher<Void, Error>
     func checkAuthStatus() -> AnyPublisher<User?, Error>
+    func register(firstName: String, lastName: String, email: String, password: String) -> AnyPublisher<User, Error>
     
     func debugAuthState()
 }
@@ -233,6 +234,77 @@ final class AuthRepository: AuthRepositoryProtocol {
                 // Si falla la actualización, seguimos usando el usuario que teníamos
                 Logger.warning("Error al refrescar info de usuario: \(error). Usando datos locales.")
                 return Just(user).setFailureType(to: Error.self).eraseToAnyPublisher()
+            }
+            .eraseToAnyPublisher()
+    }
+    
+    func register(firstName: String, lastName: String, email: String, password: String) -> AnyPublisher<User, Error> {
+        Logger.info("Iniciando proceso de registro para email: \(email)")
+        authState.send(.loading)
+        
+        return authService.register(firstName: firstName, lastName: lastName, email: email, password: password)
+            .mapError { $0 as Error }
+            .flatMap { [weak self] authToken -> AnyPublisher<User, Error> in
+                guard let self = self else {
+                    return Fail(error: NSError(domain: "AuthRepository", code: -1, userInfo: [NSLocalizedDescriptionKey: "Self está nulo"])).eraseToAnyPublisher()
+                }
+                
+                Logger.info("Registro exitoso, guardando token para usuario ID: \(authToken.id)")
+                
+                // Guardar el token
+                do {
+                    try self.tokenManager.saveTokens(
+                        accessToken: authToken.token,
+                        refreshToken: nil, // Normalmente aquí se guardaría también el refreshToken
+                        userId: authToken.id
+                    )
+                } catch {
+                    Logger.error("Error al guardar tokens: \(error)")
+                    return Fail(error: error).eraseToAnyPublisher()
+                }
+                
+                // Obtener el perfil completo del usuario
+                return self.userService.getUserProfile(userId: authToken.id)
+                    .mapError { $0 as Error }
+                    .map { user -> User in
+                        Logger.info("Perfil de usuario registrado obtenido correctamente: \(user.id)")
+                        
+                        // Guardar el usuario en UserDefaults
+                        self.userDefaultsManager.save(object: user, forKey: Self.userKey)
+                        
+                        // Actualizar el estado de autenticación
+                        self.authState.send(.loggedIn(user))
+                        
+                        return user
+                    }
+                    .catch { error -> AnyPublisher<User, Error> in
+                        Logger.error("Error al obtener perfil de usuario después del registro: \(error)")
+                        
+                        // Si falla, al menos creamos un usuario básico con el ID y email
+                        let basicUser = User(
+                            id: authToken.id,
+                            firstName: firstName,
+                            lastName: lastName,
+                            email: email,
+                            shippingDetails: nil,
+                            cart: nil,
+                            orders: nil
+                        )
+                        
+                        // Guardar usuario básico
+                        self.userDefaultsManager.save(object: basicUser, forKey: Self.userKey)
+                        self.authState.send(.loggedIn(basicUser))
+                        
+                        return Just(basicUser)
+                            .setFailureType(to: Error.self)
+                            .eraseToAnyPublisher()
+                    }
+                    .eraseToAnyPublisher()
+            }
+            .mapError { error -> Error in
+                Logger.error("Error en el proceso de registro: \(error)")
+                self.authState.send(.loggedOut)
+                return error
             }
             .eraseToAnyPublisher()
     }

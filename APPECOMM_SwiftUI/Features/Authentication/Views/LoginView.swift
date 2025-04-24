@@ -347,10 +347,3 @@ enum UIBiometricType {
     case face
 }
 
-// Placeholder para la vista de registro
-struct RegistrationView: View {
-    var body: some View {
-        Text("Registration Screen")
-            .navigationTitle("create_account".localized)
-    }
-}

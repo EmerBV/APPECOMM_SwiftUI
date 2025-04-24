@@ -11,6 +11,7 @@ import Combine
 protocol AuthServiceProtocol {
     func login(email: String, password: String) -> AnyPublisher<AuthToken, NetworkError>
     func logout() -> AnyPublisher<Void, NetworkError>
+    func register(firstName: String, lastName: String, email: String, password: String) -> AnyPublisher<AuthToken, NetworkError>
 }
 
 final class AuthService: AuthServiceProtocol {
@@ -49,6 +50,23 @@ final class AuthService: AuthServiceProtocol {
             .handleEvents(receiveCompletion: { completion in
                 if case .failure(let error) = completion {
                     Logger.error("AuthService: Logout failed with error: \(error)")
+                }
+            })
+            .eraseToAnyPublisher()
+    }
+    
+    func register(firstName: String, lastName: String, email: String, password: String) -> AnyPublisher<AuthToken, NetworkError> {
+        let endpoint = AuthEndpoints.register(firstName: firstName, lastName: lastName, email: email, password: password)
+        Logger.debug("AuthService: Calling register endpoint")
+        
+        return networkDispatcher.dispatch(ApiResponse<AuthToken>.self, endpoint)
+            .map { response -> AuthToken in
+                Logger.info("AuthService: Registration successful with message: \(response.message)")
+                return response.data
+            }
+            .handleEvents(receiveCompletion: { completion in
+                if case .failure(let error) = completion {
+                    Logger.error("AuthService: Registration failed with error: \(error)")
                 }
             })
             .eraseToAnyPublisher()

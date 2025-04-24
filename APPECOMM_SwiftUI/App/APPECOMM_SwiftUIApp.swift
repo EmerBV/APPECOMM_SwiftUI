@@ -20,6 +20,8 @@ struct APPECOMM_SwiftUIApp: App {
         // La inicialización de Stripe se maneja automáticamente a través del PaymentViewModel
         // cuando se obtiene la configuración del servidor
         
+        configureRegistrationSystem()
+        
         // Initialize core app dependencies
         configureDependencies()
         configureAppearance()
@@ -95,6 +97,30 @@ struct APPECOMM_SwiftUIApp: App {
                 await NotificationManager.shared.registerForRemoteNotifications()
             } catch {
                 Logger.error("Failed to register for notifications: \(error)")
+            }
+        }
+    }
+    
+    private func configureRegistrationSystem() {
+        // Configurar el sistema de registro
+        DependencyInjector.shared.setupRegistration()
+        
+        // Observar la notificación de registro exitoso
+        setupRegistrationObservers()
+    }
+    
+    private func setupRegistrationObservers() {
+        // Observar cuando un usuario se registra exitosamente para actualizar la UI
+        NotificationCenter.default.addObserver(
+            forName: Notification.Name("UserRegistered"),
+            object: nil,
+            queue: .main
+        ) { notification in
+            if let user = notification.object as? User {
+                Logger.info("Usuario registrado exitosamente: \(user.id)")
+                
+                // Actualizar el estado de la aplicación
+                self.appState.refreshData()
             }
         }
     }

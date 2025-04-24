@@ -43,6 +43,18 @@ final class DependencyInjector {
 }
 
 extension DependencyInjector {
+    func setupRegistration() {
+        // Registrar el RegistrationViewModel
+        container.register(RegistrationViewModel.self) { r in
+            let authRepository = r.resolve(AuthRepositoryProtocol.self)!
+            let validator = r.resolve(InputValidatorProtocol.self)!
+            return RegistrationViewModel(
+                authRepository: authRepository,
+                validator: validator
+            )
+        }.inObjectScope(.transient) // Transient para no mantener estado entre registros
+    }
+    
     func registerServices() {
         container.register(StripeServiceProtocol.self) { _ in
             StripeService()

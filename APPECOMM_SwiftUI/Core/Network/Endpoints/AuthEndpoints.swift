@@ -11,6 +11,7 @@ enum AuthEndpoints: APIEndpoint {
     case login(email: String, password: String)
     case logout
     case refreshToken(refreshToken: String)
+    case register(firstName: String, lastName: String, email: String, password: String)
     
     var path: String {
         switch self {
@@ -20,12 +21,14 @@ enum AuthEndpoints: APIEndpoint {
             return "/auth/logout"
         case .refreshToken:
             return "/auth/refresh"
+        case .register:
+            return "/auth/register"
         }
     }
     
     var method: String {
         switch self {
-        case .login, .refreshToken:
+        case .login, .refreshToken, .register:
             return HTTPMethod.post.rawValue
         case .logout:
             return HTTPMethod.delete.rawValue
@@ -38,6 +41,13 @@ enum AuthEndpoints: APIEndpoint {
             return ["email": email, "password": password]
         case .refreshToken(let refreshToken):
             return ["refreshToken": refreshToken]
+        case .register(let firstName, let lastName, let email, let password):
+            return [
+                "firstName": firstName,
+                "lastName": lastName,
+                "email": email,
+                "password": password
+            ]
         case .logout:
             return nil
         }
@@ -45,7 +55,7 @@ enum AuthEndpoints: APIEndpoint {
     
     var requiresAuthentication: Bool {
         switch self {
-        case .login, .refreshToken:
+        case .login, .refreshToken, .register:
             return false
         case .logout:
             return true
