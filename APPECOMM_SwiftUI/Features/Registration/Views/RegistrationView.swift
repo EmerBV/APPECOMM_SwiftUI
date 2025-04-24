@@ -9,7 +9,7 @@ import SwiftUI
 
 struct RegistrationView: View {
     @StateObject private var viewModel: RegistrationViewModel
-    @Environment(\.presentationMode) private var presentationMode
+    @Environment(\.dismiss) private var dismiss
     @Environment(\.colorScheme) private var colorScheme
     @State private var isKeyboardVisible = false
     @State private var showTermsAndConditions = false
@@ -33,13 +33,11 @@ struct RegistrationView: View {
                     )
                     .padding(.horizontal)
                     
-                    // Spacer para empujar el contenido hacia arriba
                     if !isKeyboardVisible {
                         Spacer()
                             .frame(height: 40)
                     }
                     
-                    // Botón de registro
                     PrimaryButton(
                         title: "Sign Up",
                         isLoading: viewModel.isRegistering,
@@ -51,7 +49,6 @@ struct RegistrationView: View {
                     .padding(.horizontal)
                     .padding(.bottom, 20)
                     
-                    // Enlace para volver a iniciar sesión
                     if !isKeyboardVisible {
                         HStack {
                             Text("Already have an account?")
@@ -59,7 +56,7 @@ struct RegistrationView: View {
                                 .foregroundColor(.secondary)
                             
                             Button(action: {
-                                presentationMode.wrappedValue.dismiss()
+                                dismiss()
                             }) {
                                 Text("Sign In")
                                     .font(.subheadline)
@@ -73,10 +70,20 @@ struct RegistrationView: View {
                 .padding()
                 .frame(minHeight: geometry.size.height)
             }
-            .navigationBarTitle("Create Account", displayMode: .large)
-            .navigationBarItems(leading: BackButton {
-                presentationMode.wrappedValue.dismiss()
-            })
+            .navigationBarBackButtonHidden(true)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button(action: {
+                        dismiss()
+                    }) {
+                        HStack(spacing: 4) {
+                            Image(systemName: "chevron.left")
+                            Text("Atrás")
+                        }
+                        .foregroundColor(.blue)
+                    }
+                }
+            }
             .background(backgroundColor.edgesIgnoringSafeArea(.all))
             .keyboardAdaptive(isKeyboardVisible: $isKeyboardVisible)
             .onTapGesture {
@@ -265,19 +272,6 @@ private struct RegistrationForm: View {
                 }
             }
             .padding(.vertical, 5)
-        }
-    }
-}
-
-private struct BackButton: View {
-    var action: () -> Void
-    
-    var body: some View {
-        Button(action: action) {
-            Image(systemName: "chevron.left")
-                .foregroundColor(.blue)
-                .imageScale(.large)
-                .accessibilityLabel("Back")
         }
     }
 }

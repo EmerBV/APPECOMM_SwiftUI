@@ -22,7 +22,7 @@ enum AuthEndpoints: APIEndpoint {
         case .refreshToken:
             return "/auth/refresh"
         case .register:
-            return "/auth/register"
+            return "/users/add"
         }
     }
     

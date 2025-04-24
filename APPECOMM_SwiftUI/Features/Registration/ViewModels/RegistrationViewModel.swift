@@ -190,10 +190,6 @@ class RegistrationViewModel: ObservableObject {
                 guard let self = self else { return }
                 
                 Logger.info("Registro exitoso para usuario: \(user.id)")
-                self.successMessage = "Registration successful!"
-                
-                // Notificar explícitamente el registro exitoso
-                NotificationCenter.default.post(name: Notification.Name("UserRegistered"), object: user)
                 
                 // Mostrar notificación de bienvenida
                 NotificationService.shared.showSuccess(

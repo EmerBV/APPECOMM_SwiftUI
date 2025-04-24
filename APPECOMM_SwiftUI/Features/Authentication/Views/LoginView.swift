@@ -20,53 +20,50 @@ struct LoginView: View {
     
     var body: some View {
         GeometryReader { geometry in
-            NavigationView {
-                VStack(spacing: 30) {
-                    if !isKeyboardVisible {
-                        Spacer()
-                            .frame(height: geometry.size.height * 0.05)
-                            .accessibilityHidden(true)
-                    }
-                    
-                    LogoHeaderView()
-                        .padding(.bottom, isKeyboardVisible ? 10 : 30)
-                    
-                    LoginFormView(
-                        viewModel: viewModel,
-                        isKeyboardVisible: isKeyboardVisible,
-                        showBiometricPrompt: $showBiometricPrompt
-                    )
-                    .padding(.horizontal)
-                    
+            VStack() {
+                if !isKeyboardVisible {
                     Spacer()
+                        .frame(height: geometry.size.height * 0.05)
+                        .accessibilityHidden(true)
                 }
-                .padding()
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .background(backgroundColor.edgesIgnoringSafeArea(.all))
-                .navigationBarHidden(true)
-                .keyboardAdaptive(isKeyboardVisible: $isKeyboardVisible)
-                .alert(isPresented: $viewModel.showAuthAlert) {
-                    Alert(
-                        title: Text(viewModel.authAlertTitle),
-                        message: Text(viewModel.authAlertMessage),
-                        dismissButton: .default(Text("ok".localized))
-                    )
-                }
-                .sheet(isPresented: $showBiometricPrompt) {
-                    BiometricAuthView(
-                        onSuccess: handleBiometricSuccess,
-                        onFailure: handleBiometricFailure,
-                        biometricType: viewModel.biometricType
-                    )
-                }
-                .onChange(of: scenePhase) { phase in
-                    if phase == .active {
-                        viewModel.checkBiometricAvailability()
-                    }
+                
+                LogoHeaderView()
+                    .padding(.bottom, isKeyboardVisible ? 10 : 30)
+                
+                LoginFormView(
+                    viewModel: viewModel,
+                    isKeyboardVisible: isKeyboardVisible,
+                    showBiometricPrompt: $showBiometricPrompt
+                )
+                .padding(.horizontal)
+                
+                Spacer()
+            }
+            .padding()
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(backgroundColor.edgesIgnoringSafeArea(.all))
+            .keyboardAdaptive(isKeyboardVisible: $isKeyboardVisible)
+            .alert(isPresented: $viewModel.showAuthAlert) {
+                Alert(
+                    title: Text(viewModel.authAlertTitle),
+                    message: Text(viewModel.authAlertMessage),
+                    dismissButton: .default(Text("ok".localized))
+                )
+            }
+            .sheet(isPresented: $showBiometricPrompt) {
+                BiometricAuthView(
+                    onSuccess: handleBiometricSuccess,
+                    onFailure: handleBiometricFailure,
+                    biometricType: viewModel.biometricType
+                )
+            }
+            .onChange(of: scenePhase) { phase in
+                if phase == .active {
+                    viewModel.checkBiometricAvailability()
                 }
             }
-            .accentColor(.blue)
         }
+        .accentColor(.blue)
     }
     
     private var backgroundColor: Color {
@@ -242,7 +239,9 @@ private struct LoginFormView: View {
     }
     
     private var registerButton: some View {
-        NavigationLink(destination: RegistrationView()) {
+        NavigationLink {
+            RegistrationView()
+        } label: {
             Text("create_account".localized)
                 .fontWeight(.semibold)
                 .frame(maxWidth: .infinity)

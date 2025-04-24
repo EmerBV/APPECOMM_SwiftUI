@@ -43,9 +43,11 @@ struct ContentView: View {
                 .onAppear { Logger.info("SplashView appeared") }
                 .transition(.opacity)
         case .login:
-            LoginView(viewModel: DependencyInjector.shared.resolve(AuthViewModel.self))
-                .onAppear { Logger.info("LoginView appeared") }
-                .transition(.slide)
+            NavigationStack {
+                LoginView(viewModel: DependencyInjector.shared.resolve(AuthViewModel.self))
+                    .onAppear { Logger.info("LoginView appeared") }
+            }
+            .transition(.slide)
         case .main:
             MainTabView()
                 .onAppear { Logger.info("MainTabView appeared") }

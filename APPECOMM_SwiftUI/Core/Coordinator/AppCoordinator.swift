@@ -20,6 +20,10 @@ class AppCoordinator: ObservableObject {
         self.authRepository = authRepository
         self.tokenManager = tokenManager
         
+        setupSubscriptions()
+    }
+    
+    private func setupSubscriptions() {
         // Observar cambios en el estado de autenticación
         authRepository.authState
             .receive(on: DispatchQueue.main)
@@ -28,64 +32,40 @@ class AppCoordinator: ObservableObject {
                 
                 switch state {
                 case .loggedIn(let user):
-                    Logger.info("Usuario logueado: \(user.id), cambiando a pantalla principal")
-                    self.currentScreen = .main
-                    
-                    // Send a notification to pre-load data for the home view
-                    NotificationCenter.default.post(
-                        name: Notification.Name("UserLoggedInPreloadHome"),
-                        object: nil,
-                        userInfo: ["userId": user.id]
-                    )
+                    Logger.info("Usuario autenticado: \(user.id), navegando a la pantalla principal")
+                    withAnimation {
+                        self.currentScreen = .main
+                    }
                 case .loggedOut:
-                    Logger.info("Usuario deslogueado, cambiando a pantalla de login")
-                    self.currentScreen = .login
+                    Logger.info("Usuario no autenticado, navegando a login")
+                    withAnimation {
+                        self.currentScreen = .login
+                    }
                 case .loading:
-                    Logger.info("Estado de autenticación cargando, cambiando a splash")
-                    self.currentScreen = .splash
+                    Logger.info("Verificando estado de autenticación")
+                    withAnimation {
+                        self.currentScreen = .splash
+                    }
                 }
             }
             .store(in: &cancellables)
         
         // Verificar estado de autenticación al inicio
-        checkAuth()
+        checkInitialAuthState()
     }
     
-    private func checkAuth() {
-        Logger.info("Verificando estado de autenticación...")
-        
-        // Si tenemos un token válido, intentamos obtener el usuario
-        if tokenManager.hasValidToken() {
-            Logger.info("Token válido encontrado, verificando usuario...")
-            
-            // Verificar si hay un usuario guardado
-            authRepository.checkAuthStatus()
-                .receive(on: DispatchQueue.main)
-                .sink { completion in
-                    if case .failure(let error) = completion {
-                        Logger.error("Error al verificar estado de autenticación: \(error)")
+    private func checkInitialAuthState() {
+        Task {
+            do {
+                try await authRepository.checkAuthStatus()
+            } catch {
+                Logger.error("Error al verificar estado de autenticación inicial: \(error.localizedDescription)")
+                DispatchQueue.main.async {
+                    withAnimation {
                         self.currentScreen = .login
                     }
-                } receiveValue: { [weak self] user in
-                    if let user = user {
-                        Logger.info("Usuario recuperado correctamente: \(user.id)")
-                        self?.currentScreen = .main
-                        
-                        // Also trigger home data preload
-                        NotificationCenter.default.post(
-                            name: Notification.Name("UserLoggedInPreloadHome"),
-                            object: nil,
-                            userInfo: ["userId": user.id]
-                        )
-                    } else {
-                        Logger.warning("No se encontró información de usuario a pesar de tener token")
-                        self?.currentScreen = .login
-                    }
                 }
-                .store(in: &cancellables)
-        } else {
-            Logger.info("No hay token válido, redirigiendo a login")
-            currentScreen = .login
+            }
         }
     }
 }

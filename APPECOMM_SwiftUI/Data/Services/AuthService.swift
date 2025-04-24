@@ -11,7 +11,7 @@ import Combine
 protocol AuthServiceProtocol {
     func login(email: String, password: String) -> AnyPublisher<AuthToken, NetworkError>
     func logout() -> AnyPublisher<Void, NetworkError>
-    func register(firstName: String, lastName: String, email: String, password: String) -> AnyPublisher<AuthToken, NetworkError>
+    func register(firstName: String, lastName: String, email: String, password: String) -> AnyPublisher<User, NetworkError>
 }
 
 final class AuthService: AuthServiceProtocol {
@@ -55,12 +55,12 @@ final class AuthService: AuthServiceProtocol {
             .eraseToAnyPublisher()
     }
     
-    func register(firstName: String, lastName: String, email: String, password: String) -> AnyPublisher<AuthToken, NetworkError> {
+    func register(firstName: String, lastName: String, email: String, password: String) -> AnyPublisher<User, NetworkError> {
         let endpoint = AuthEndpoints.register(firstName: firstName, lastName: lastName, email: email, password: password)
         Logger.debug("AuthService: Calling register endpoint")
         
-        return networkDispatcher.dispatch(ApiResponse<AuthToken>.self, endpoint)
-            .map { response -> AuthToken in
+        return networkDispatcher.dispatch(ApiResponse<User>.self, endpoint)
+            .map { response -> User in
                 Logger.info("AuthService: Registration successful with message: \(response.message)")
                 return response.data
             }
