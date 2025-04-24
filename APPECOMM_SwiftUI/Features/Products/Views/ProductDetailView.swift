@@ -165,6 +165,8 @@ struct ProductImageCarousel: View {
     let product: Product
     @Binding var showingImageViewer: Bool
     @Binding var selectedImageIndex: Int
+    @State private var isInWishList: Bool = false
+    @State private var isUpdatingWishList = false
     
     private var baseURL: String {
         AppConfig.shared.imageBaseUrl
@@ -184,6 +186,7 @@ struct ProductImageCarousel: View {
                             .onFailure { error in
                                 Logger.error("Error loading image: \(error)")
                             }
+                            .fade(duration: 0.3)
                             .resizable()
                             .aspectRatio(contentMode: .fit)
                             .onTapGesture {
@@ -204,18 +207,79 @@ struct ProductImageCarousel: View {
                     .background(Color.gray.opacity(0.1))
             }
             
-            if product.discountPercentage > 0 {
-                Text("-\(product.discountPercentage)%")
-                    .font(.caption)
-                    .fontWeight(.bold)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
-                    .background(Color.red)
-                    .foregroundColor(.white)
-                    .cornerRadius(4)
-                    .padding(16)
+            // Botones flotantes en la esquina superior derecha
+            HStack(spacing: 10) {
+                // Botón de lista de deseos
+                Button(action: toggleWishListStatus) {
+                    Image(systemName: isInWishList ? "heart.fill" : "heart")
+                        .font(.system(size: 22))
+                        .foregroundColor(isInWishList ? .red : .white)
+                        .frame(width: 44, height: 44)
+                        .background(
+                            Circle()
+                                .fill(Color.black.opacity(0.6))
+                        )
+                }
+                .disabled(isUpdatingWishList)
+                
+                // Botón de descuento si existe
+                if product.discountPercentage > 0 {
+                    Text("-\(product.discountPercentage)%")
+                        .font(.caption)
+                        .fontWeight(.bold)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background(Color.red)
+                        .foregroundColor(.white)
+                        .cornerRadius(4)
+                }
             }
+            .padding(16)
         }
+        .onAppear {
+            checkWishListStatus()
+        }
+    }
+    
+    private func toggleWishListStatus() {
+        guard !isUpdatingWishList else { return }
+        
+        isUpdatingWishList = true
+        
+        let wishListViewModel = DependencyInjector.shared.resolve(WishListViewModel.self)
+        
+        if isInWishList {
+            // Remover de la lista de deseos
+            wishListViewModel.removeFromWishList(productId: product.id)
+        } else {
+            // Añadir a la lista de deseos
+            wishListViewModel.addToWishList(productId: product.id)
+        }
+        
+        // Proporcionar retroalimentación visual inmediata
+        withAnimation(.spring()) {
+            isInWishList.toggle()
+        }
+        
+        // Actualizar el estado después de la operación de red
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+            isUpdatingWishList = false
+            
+            // Mostrar notificación de éxito
+            let message = isInWishList ?
+            "Product added to wishlist" :
+            "Product removed from wishlist"
+            
+            NotificationService.shared.showInfo(
+                title: isInWishList ? "Added to Wishlist" : "Removed from Wishlist",
+                message: message
+            )
+        }
+    }
+    
+    private func checkWishListStatus() {
+        let wishListViewModel = DependencyInjector.shared.resolve(WishListViewModel.self)
+        isInWishList = wishListViewModel.isProductInWishList(productId: product.id)
     }
 }
 
