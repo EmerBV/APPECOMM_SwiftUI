@@ -94,5 +94,12 @@ final class ViewModelAssembly: Assembly {
                 stripeService: stripeService
             )
         }
+        
+        // WishList ViewModel
+        container.register(WishListViewModel.self) { r in
+            let wishListRepository = r.resolve(WishListRepositoryProtocol.self)!
+            let authRepository = r.resolve(AuthRepositoryProtocol.self)!
+            return WishListViewModel(wishListRepository: wishListRepository, authRepository: authRepository)
+        }.inObjectScope(.container)
     }
 }

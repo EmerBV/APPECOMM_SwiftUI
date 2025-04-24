@@ -241,7 +241,7 @@ struct ProfileView: View {
             
             // Actions
             Section {
-                NavigationLink(destination: Text("my_wishlist".localized)) {
+                NavigationLink(destination: WishListView(viewModel: DependencyInjector.shared.resolve(WishListViewModel.self))) {
                     Label("my_wishlist".localized, systemImage: "heart")
                 }
                 

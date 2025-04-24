@@ -15,11 +15,11 @@ enum WishListEndpoints: APIEndpoint {
     var path: String {
         switch self {
         case .getUserWishList(let userId):
-            return "/api/wishlist/user/\(userId)"
-        case .addToWishList:
-            return "/api/wishlist/add"
+            return "/wishlists/user/\(userId)"
+        case .addToWishList(let userId, let productId):
+            return "/wishlists/user/\(userId)/product/\(productId)/add"
         case .removeFromWishList(let userId, let productId):
-            return "/api/wishlist/user/\(userId)/product/\(productId)"
+            return "/wishlists/user/\(userId)/product/\(productId)/remove"
         }
     }
     
@@ -34,6 +34,11 @@ enum WishListEndpoints: APIEndpoint {
         }
     }
     
+    var requiresAuthentication: Bool {
+        return true
+    }
+    
+    /*
     var parameters: [String: Any]? {
         switch self {
         case .addToWishList(let userId, let productId):
@@ -54,5 +59,6 @@ enum WishListEndpoints: APIEndpoint {
             return .url
         }
     }
+     */
 }
 

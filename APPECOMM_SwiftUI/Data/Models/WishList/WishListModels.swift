@@ -14,7 +14,7 @@ struct WishList: Identifiable, Codable, Equatable {
     
     enum CodingKeys: String, CodingKey {
         case id
-        case userId = "user_id"
+        case userId
         case products
     }
     

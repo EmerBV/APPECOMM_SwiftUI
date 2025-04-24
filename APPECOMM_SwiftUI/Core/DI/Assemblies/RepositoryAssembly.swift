@@ -62,5 +62,11 @@ final class RepositoryAssembly: Assembly {
             let shippingService = r.resolve(ShippingServiceProtocol.self)!
             return ShippingRepository(shippingService: shippingService)
         }.inObjectScope(.container)
+        
+        // WishList Repository
+        container.register(WishListRepositoryProtocol.self) { r in
+            let wishListService = r.resolve(WishListServiceProtocol.self)!
+            return WishListRepository(wishListService: wishListService)
+        }.inObjectScope(.container)
     }
 }

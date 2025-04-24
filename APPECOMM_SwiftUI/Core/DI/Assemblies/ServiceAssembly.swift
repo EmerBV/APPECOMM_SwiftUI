@@ -57,5 +57,11 @@ final class ServiceAssembly: Assembly {
             let networkDispatcher = r.resolve(NetworkDispatcherProtocol.self)!
             return CheckoutService(networkDispatcher: networkDispatcher)
         }.inObjectScope(.container)
+        
+        // WishList Service
+        container.register(WishListServiceProtocol.self) { r in
+            let networkDispatcher = r.resolve(NetworkDispatcherProtocol.self)!
+            return WishListService(networkDispatcher: networkDispatcher)
+        }.inObjectScope(.container)
     }
 }
