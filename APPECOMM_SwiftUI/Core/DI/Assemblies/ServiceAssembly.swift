@@ -53,6 +53,13 @@ final class ServiceAssembly: Assembly {
         }.inObjectScope(.container)
         
         // Checkout Service
+        /*
+        container.register(CheckoutServiceProtocol.self) { r in
+            let networkDispatcher = r.resolve(NetworkDispatcherProtocol.self)!
+            return CheckoutService(networkDispatcher: networkDispatcher)
+        }.inObjectScope(.container)
+         */
+        
         container.register(CheckoutServiceProtocol.self) { r in
             let networkDispatcher = r.resolve(NetworkDispatcherProtocol.self)!
             return CheckoutService(networkDispatcher: networkDispatcher)

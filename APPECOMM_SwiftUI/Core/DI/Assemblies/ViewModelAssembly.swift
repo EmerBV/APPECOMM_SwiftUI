@@ -30,7 +30,7 @@ final class ViewModelAssembly: Assembly {
                 authRepository: authRepository,
                 validator: validator
             )
-        }.inObjectScope(.container)
+        }.inObjectScope(.transient)
         
         // Product List ViewModel
         container.register(ProductListViewModel.self) { r in
@@ -85,14 +85,14 @@ final class ViewModelAssembly: Assembly {
         }.inObjectScope(.container)
         
         // Checkout ViewModel
-        container.register(CheckoutViewModel.self) { resolver in
-            let cart = resolver.resolve(Cart.self)
-            let checkoutService = resolver.resolve(CheckoutServiceProtocol.self)!
-            let paymentService = resolver.resolve(PaymentServiceProtocol.self)!
-            let authRepository = resolver.resolve(AuthRepositoryProtocol.self)!
-            let validator = resolver.resolve(InputValidatorProtocol.self)!
-            let shippingService = resolver.resolve(ShippingServiceProtocol.self)!
-            let stripeService = resolver.resolve(StripeServiceProtocol.self)!
+        container.register(CheckoutViewModel.self) { r in
+            let cart = r.resolve(Cart.self)
+            let checkoutService = r.resolve(CheckoutServiceProtocol.self)!
+            let paymentService = r.resolve(PaymentServiceProtocol.self)!
+            let authRepository = r.resolve(AuthRepositoryProtocol.self)!
+            let validator = r.resolve(InputValidatorProtocol.self)!
+            let shippingService = r.resolve(ShippingServiceProtocol.self)!
+            let stripeService = r.resolve(StripeServiceProtocol.self)!
             
             return CheckoutViewModel(
                 cart: cart,

@@ -106,6 +106,7 @@ class CheckoutViewModel: ObservableObject {
         // Inicializar PaymentViewModel primero
         let dependencies = DependencyInjector.shared
         let stripeAPIClient = dependencies.resolve(StripeAPIClientProtocol.self)
+        
         self.paymentViewModel = PaymentViewModel(
             paymentService: paymentService,
             stripeService: stripeService,

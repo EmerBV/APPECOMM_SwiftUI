@@ -102,9 +102,6 @@ struct APPECOMM_SwiftUIApp: App {
     }
     
     private func configureRegistrationSystem() {
-        // Configurar el sistema de registro
-        DependencyInjector.shared.setupRegistration()
-        
         // Observar la notificación de registro exitoso
         setupRegistrationObservers()
     }

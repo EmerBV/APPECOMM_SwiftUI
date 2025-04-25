@@ -25,9 +25,11 @@ final class PaymentService: PaymentServiceProtocol {
     private let stripeService: StripeServiceProtocol
     private let stripeAPIClient: StripeAPIClientProtocol
     
-    init(networkDispatcher: NetworkDispatcherProtocol,
-         stripeService: StripeServiceProtocol,
-         stripeAPIClient: StripeAPIClientProtocol) {
+    init(
+        networkDispatcher: NetworkDispatcherProtocol,
+        stripeService: StripeServiceProtocol,
+        stripeAPIClient: StripeAPIClientProtocol
+    ) {
         self.networkDispatcher = networkDispatcher
         self.stripeService = stripeService
         self.stripeAPIClient = stripeAPIClient
