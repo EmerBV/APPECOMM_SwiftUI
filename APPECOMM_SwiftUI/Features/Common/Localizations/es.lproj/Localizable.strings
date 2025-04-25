@@ -22,7 +22,7 @@
 "expired_credentials" = "Las credenciales guardadas han expirado. Por favor, inicie sesión nuevamente.";
 "biometric_login_success" = "Hola %@, has iniciado sesión correctamente con autenticación biométrica";
 "ok" = "Aceptar";
-"welcome_title" = "Bienvenido a Kaioland";
+"welcome_title" = "Bienvenido a APPECOMM";
 "sign_in_subtitle" = "Inicia sesión en tu cuenta";
 "password_placeholder" = "Tu contraseña";
 "remember_me" = "Recordarme";

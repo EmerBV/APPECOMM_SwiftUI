@@ -22,7 +22,7 @@
 "expired_credentials" = "Saved credentials have expired. Please login again.";
 "biometric_login_success" = "Hello %@, you have successfully logged in with biometric authentication";
 "ok" = "OK";
-"welcome_title" = "Welcome to Kaioland";
+"welcome_title" = "Welcome to APPECOMM";
 "sign_in_subtitle" = "Sign in to your account";
 "password_placeholder" = "Your password";
 "remember_me" = "Remember me";
