@@ -81,6 +81,8 @@ struct CheckoutContentView: View {
     @Binding var selectedOrder: Order?
     @Binding var shouldDismiss: Bool
     @Environment(\.dismiss) private var dismiss
+    @State private var showCancelConfirmation = false
+    @ObservedObject private var navigationCoordinator = NavigationCoordinator.shared
     
     var body: some View {
         contentView
@@ -96,8 +98,9 @@ struct CheckoutContentView: View {
                     } else if viewModel.currentStep == .shippingInfo {
                         // Solo mostramos el botón cancelar en la vista de envío
                         Button("cancel".localized) {
-                            dismiss()
+                            showCancelConfirmation = true
                         }
+                        .foregroundColor(.red)
                     }
                 }
                 
@@ -108,6 +111,24 @@ struct CheckoutContentView: View {
                         }
                     }
                 }
+            }
+            .alert("¿Cancelar pedido?", isPresented: $showCancelConfirmation) {
+                Button("Continuar con el pedido", role: .cancel) { }
+                Button("Cancelar pedido", role: .destructive) {
+                    // Limpiamos cualquier estado temporal antes de salir
+                    viewModel.resetCheckoutState()
+                    // Publicamos una notificación para que se actualice el carrito si es necesario
+                    NotificationCenter.default.post(name: .refreshCart, object: nil)
+                    
+                    // Usamos el NavigationCoordinator para manejar la navegación de manera centralizada
+                    navigationCoordinator.dismissCurrentView()
+                    // Notificamos que hay que volver al carrito
+                    NotificationCenter.default.post(name: .navigateToCartTab, object: nil)
+                    // También llamamos a dismiss() para cerrar cualquier vista modal
+                    dismiss()
+                }
+            } message: {
+                Text("Si cancelas ahora, perderás la información introducida y volverás al carrito.")
             }
             .overlay {
                 if viewModel.isLoading {

@@ -11,9 +11,7 @@ struct ShippingInfoView: View {
     @ObservedObject var viewModel: CheckoutViewModel
     @FocusState private var focusedField: ShippingField?
     @State private var showingAddressSelector = false
-    @State private var showCancelConfirmation = false
     @Environment(\.dismiss) private var dismiss
-    @ObservedObject private var navigationCoordinator = NavigationCoordinator.shared
     
     enum ShippingField {
         case fullName
@@ -82,16 +80,6 @@ struct ShippingInfoView: View {
         }
         .navigationTitle("Shipping Information")
         .toolbar {
-            // Botón de cancelación en la barra de navegación
-            /*
-             ToolbarItem(placement: .navigationBarLeading) {
-             Button("Cancel") {
-             showCancelConfirmation = true
-             }
-             .foregroundColor(.red)
-             }
-             */
-            
             ToolbarItem(placement: .keyboard) {
                 HStack {
                     Spacer()
@@ -118,24 +106,6 @@ struct ShippingInfoView: View {
                 message: Text(viewModel.errorMessage ?? "An unknown error occurred"),
                 dismissButton: .default(Text("OK"))
             )
-        }
-        .alert("¿Cancelar pedido?", isPresented: $showCancelConfirmation) {
-            Button("Continuar con el pedido", role: .cancel) { }
-            Button("Cancelar pedido", role: .destructive) {
-                // Limpiamos cualquier estado temporal antes de salir
-                viewModel.resetCheckoutState()
-                // Publicamos una notificación para que se actualice el carrito si es necesario
-                NotificationCenter.default.post(name: .refreshCart, object: nil)
-                
-                // Usamos el NavigationCoordinator para manejar la navegación de manera centralizada
-                navigationCoordinator.dismissCurrentView()
-                // Notificamos que hay que volver al carrito
-                NotificationCenter.default.post(name: .navigateToCartTab, object: nil)
-                // También llamamos a dismiss() para cerrar cualquier vista modal
-                dismiss()
-            }
-        } message: {
-            Text("Si cancelas ahora, perderás la información introducida y volverás al carrito.")
         }
         .onAppear {
             // Cargar direcciones de envío al aparecer la vista
