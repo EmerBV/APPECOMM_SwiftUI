@@ -237,3 +237,6 @@
 "splash_terms_button" = "Ver Términos";
 "splash_privacy_button" = "Ver Política de Privacidad";
 "splash_continue" = "Continuar";
+
+// Checkout
+"done" = "Hecho";

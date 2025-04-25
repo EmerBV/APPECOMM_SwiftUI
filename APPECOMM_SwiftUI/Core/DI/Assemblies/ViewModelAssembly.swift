@@ -15,23 +15,6 @@ final class ViewModelAssembly: Assembly {
             InputValidator()
         }.inObjectScope(.container)
         
-        // Auth ViewModel
-        container.register(AuthViewModel.self) { r in
-            let authRepository = r.resolve(AuthRepositoryProtocol.self)!
-            let validator = r.resolve(InputValidatorProtocol.self)!
-            return AuthViewModel(authRepository: authRepository, validator: validator)
-        }.inObjectScope(.container) // Singleton para mantener estado consistente
-        
-        // Registration ViewModel
-        container.register(RegistrationViewModel.self) { r in
-            let authRepository = r.resolve(AuthRepositoryProtocol.self)!
-            let validator = r.resolve(InputValidatorProtocol.self)!
-            return RegistrationViewModel(
-                authRepository: authRepository,
-                validator: validator
-            )
-        }.inObjectScope(.transient)
-        
         // Product List ViewModel
         container.register(ProductListViewModel.self) { r in
             let productRepository = r.resolve(ProductRepositoryProtocol.self)!
@@ -56,16 +39,6 @@ final class ViewModelAssembly: Assembly {
         container.register(HomeViewModel.self) { r in
             let productRepository = r.resolve(ProductRepositoryProtocol.self)!
             return HomeViewModel(productRepository: productRepository)
-        }.inObjectScope(.container) // Singleton para mantener estado consistente
-        
-        // Profile ViewModel
-        container.register(ProfileViewModel.self) { r in
-            let userRepository = r.resolve(UserRepositoryProtocol.self)!
-            let authRepository = r.resolve(AuthRepositoryProtocol.self)!
-            return ProfileViewModel(
-                userRepository: userRepository,
-                authRepository: authRepository
-            )
         }.inObjectScope(.container) // Singleton para mantener estado consistente
         
         // Orders ViewModel

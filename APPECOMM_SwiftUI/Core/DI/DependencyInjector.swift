@@ -22,6 +22,7 @@ final class DependencyInjector {
         // Register all assemblies
         assembler = Assembler(
             [
+                AuthAssembly(),
                 NetworkAssembly(),
                 StorageAssembly(),
                 ServiceAssembly(),
