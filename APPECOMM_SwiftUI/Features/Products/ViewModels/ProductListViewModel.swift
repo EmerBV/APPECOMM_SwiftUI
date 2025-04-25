@@ -61,7 +61,10 @@ class ProductListViewModel: ObservableObject {
     private var lastProductLoadTime: Date?
     private let cacheTimeout: TimeInterval = 5 * 60 // 5 minutos
     
-    init(productRepository: ProductRepositoryProtocol, cartRepository: CartRepositoryProtocol) {
+    init(
+        productRepository: ProductRepositoryProtocol,
+        cartRepository: CartRepositoryProtocol
+    ) {
         self.productRepository = productRepository
         self.cartRepository = cartRepository
         

@@ -103,7 +103,7 @@ final class ViewModelAssembly: Assembly {
                 shippingService: shippingService,
                 stripeService: stripeService
             )
-        }
+        }.inObjectScope(.container)
         
         // WishList ViewModel
         container.register(WishListViewModel.self) { r in
