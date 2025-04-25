@@ -83,12 +83,14 @@ struct ShippingInfoView: View {
         .navigationTitle("Shipping Information")
         .toolbar {
             // Botón de cancelación en la barra de navegación
-            ToolbarItem(placement: .navigationBarLeading) {
-                Button("Cancel") {
-                    showCancelConfirmation = true
-                }
-                .foregroundColor(.red)
-            }
+            /*
+             ToolbarItem(placement: .navigationBarLeading) {
+             Button("Cancel") {
+             showCancelConfirmation = true
+             }
+             .foregroundColor(.red)
+             }
+             */
             
             ToolbarItem(placement: .keyboard) {
                 HStack {
@@ -138,7 +140,7 @@ struct ShippingInfoView: View {
         .onAppear {
             // Cargar direcciones de envío al aparecer la vista
             if viewModel.shippingAddresses.isEmpty {
-                viewModel.loadShippingAddresses()
+                viewModel.loadUserAddress() // Corregido: usar el método correcto
             }
         }
     }

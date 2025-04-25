@@ -7,24 +7,29 @@
 
 import Foundation
 
-enum PaymentEndpoints: APIEndpoint {
+enum PaymentEndpoints {
     case getStripeConfig
     case createPaymentIntent(orderId: Int, request: PaymentRequest)
-    case confirmPayment(paymentIntentId: String)
-    case cancelPayment(paymentIntentId: String)
-    case createCustomer(parameters: [String: Any])
+    case confirmPaymentIntent(paymentIntentId: String, paymentMethodId: String)
+    case cancelPaymentIntent(paymentIntentId: String)
+    case createPaymentMethod(cardDetails: CreditCardDetails)
+    case createCustomer(userId: Int, email: String)
     case createEphemeralKey(customerId: String)
-    
+}
+
+extension PaymentEndpoints: APIEndpoint {
     var path: String {
         switch self {
         case .getStripeConfig:
             return "/stripe-client/config"
         case .createPaymentIntent(let orderId, _):
             return "/payments/checkout/order/\(orderId)"
-        case .confirmPayment(let paymentIntentId):
+        case .confirmPaymentIntent(let paymentIntentId, _):
             return "/payments/confirm/\(paymentIntentId)"
-        case .cancelPayment(let paymentIntentId):
+        case .cancelPaymentIntent(let paymentIntentId):
             return "/payments/cancel/\(paymentIntentId)"
+        case .createPaymentMethod:
+            return "/payments/payment-methods"
         case .createCustomer:
             return "/stripe-client/customer"
         case .createEphemeralKey(let customerId):
@@ -36,8 +41,10 @@ enum PaymentEndpoints: APIEndpoint {
         switch self {
         case .getStripeConfig:
             return HTTPMethod.get.rawValue
-        case .createPaymentIntent, .confirmPayment, .cancelPayment, .createCustomer, .createEphemeralKey:
+        case .createPaymentIntent, .confirmPaymentIntent, .createPaymentMethod, .createCustomer, .createEphemeralKey:
             return HTTPMethod.post.rawValue
+        case .cancelPaymentIntent:
+            return HTTPMethod.delete.rawValue
         }
     }
     
@@ -50,10 +57,43 @@ enum PaymentEndpoints: APIEndpoint {
                 return dict
             }
             return nil
-        case .createCustomer(let parameters):
-            return parameters
+            
+        case .confirmPaymentIntent(_, let paymentMethodId):
+            return ["payment_method_id": paymentMethodId]
+            
+        case .createPaymentMethod(let cardDetails):
+            // Crear objeto para enviar solo los datos necesarios
+            return [
+                "card": [
+                    "number": cardDetails.cardNumber.replacingOccurrences(of: " ", with: ""),
+                    "exp_month": Int(cardDetails.expiryDate.prefix(2)) ?? 0,
+                    "exp_year": Int("20" + String(cardDetails.expiryDate.suffix(2))) ?? 0,
+                    "cvc": cardDetails.cvv
+                ],
+                "billing_details": [
+                    "name": cardDetails.cardholderName
+                ],
+                "type": "card"
+            ]
+            
+        case .createCustomer(_, let email):
+            return ["email": email]
+            
         default:
             return nil
+        }
+    }
+    
+    var headers: [String: String]? {
+        return nil // Usar los headers por defecto de APIConfiguration
+    }
+    
+    var encoding: ParameterEncoding {
+        switch self {
+        case .getStripeConfig, .cancelPaymentIntent:
+            return .url
+        default:
+            return .json
         }
     }
     

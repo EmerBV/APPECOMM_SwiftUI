@@ -3,13 +3,53 @@ import Combine
 import Stripe
 
 protocol PaymentServiceProtocol {
+    /// Obtiene la configuración de Stripe desde el servidor
     func getStripeConfig() -> AnyPublisher<StripeConfig, NetworkError>
+    
+    /// Crea un intent de pago para una orden
+    /// - Parameters:
+    ///   - orderId: El ID de la orden
+    ///   - request: Los datos de la solicitud de pago
+    /// - Returns: Un publisher con la respuesta del intent de pago
     func createPaymentIntent(orderId: Int, request: PaymentRequest) -> AnyPublisher<PaymentIntentResponse, NetworkError>
+    
+    /// Confirma un pago
+    /// - Parameters:
+    ///   - paymentIntentId: El ID del intent de pago
+    ///   - paymentMethodId: El ID del método de pago
+    /// - Returns: Un publisher con la respuesta de confirmación
     func confirmPayment(paymentIntentId: String, paymentMethodId: String) -> AnyPublisher<PaymentConfirmationResponse, NetworkError>
+    
+    /// Cancela un pago
+    /// - Parameter paymentIntentId: El ID del intent de pago
+    /// - Returns: Un publisher con void en caso de éxito
     func cancelPayment(paymentIntentId: String) -> AnyPublisher<Void, NetworkError>
+    
+    /// Crea un método de pago con los detalles de una tarjeta
+    /// - Parameter cardDetails: Los detalles de la tarjeta
+    /// - Returns: Un publisher con el ID del método de pago creado
     func createPaymentMethod(cardDetails: CreditCardDetails) -> AnyPublisher<String, Error>
+    
+    /// Crea un cliente en Stripe
+    /// - Parameters:
+    ///   - userId: El ID del usuario
+    ///   - email: El email del usuario
+    /// - Returns: Un publisher con el cliente creado
     func createCustomer(userId: Int, email: String) -> AnyPublisher<StripeCustomer, Error>
+    
+    /// Prepara un checkout completo
+    /// - Parameters:
+    ///   - orderId: El ID de la orden
+    ///   - amount: El monto a pagar
+    ///   - email: El email del cliente (opcional)
+    /// - Returns: Un publisher con la información de checkout
     func prepareCheckout(orderId: Int, amount: Decimal, email: String?) -> AnyPublisher<PaymentCheckout, Error>
+    
+    /// Maneja el resultado de un pago
+    /// - Parameters:
+    ///   - result: El resultado de la acción del manejador de pagos
+    ///   - error: El error, si existe
+    /// - Returns: Un publisher con un booleano indicando el éxito
     func handlePaymentResult(_ result: STPPaymentHandlerActionStatus, error: Error?) -> AnyPublisher<Bool, Error>
 }
 
@@ -25,6 +65,11 @@ final class PaymentService: PaymentServiceProtocol {
     private let stripeService: StripeServiceProtocol
     private let stripeAPIClient: StripeAPIClientProtocol
     
+    /// Inicializa el servicio de pagos con sus dependencias
+    /// - Parameters:
+    ///   - networkDispatcher: El dispatcher de red para comunicación con la API
+    ///   - stripeService: El servicio local de Stripe
+    ///   - stripeAPIClient: El cliente API de Stripe
     init(
         networkDispatcher: NetworkDispatcherProtocol,
         stripeService: StripeServiceProtocol,
@@ -71,6 +116,8 @@ final class PaymentService: PaymentServiceProtocol {
                 // Si falla, intentamos con la API de Stripe
                 Logger.payment("Local Stripe service failed, trying API client: \(error)", level: .warning)
                 return self.stripeAPIClient.createPaymentMethod(withCard: cardDetails)
+                    .mapError { $0 as Error }
+                    .eraseToAnyPublisher()
             }
             .eraseToAnyPublisher()
     }
@@ -93,9 +140,9 @@ final class PaymentService: PaymentServiceProtocol {
                 code: "INVALID_ORDER_ID",
                 details: nil
             )))
-                .eraseToAnyPublisher()
+            .eraseToAnyPublisher()
         }
-
+        
         // 1. Crear PaymentIntent sin paymentMethodId
         let paymentRequest = PaymentRequest(paymentMethodId: nil)
         

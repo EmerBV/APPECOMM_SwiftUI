@@ -10,7 +10,7 @@ import Stripe
 
 struct CheckoutView: View {
     @Environment(\.dismiss) private var dismiss
-    @ObservedObject private var viewModel: CheckoutViewModel
+    @StateObject private var viewModel: CheckoutViewModel
     @State private var showingPaymentForm = false
     @State private var selectedOrder: Order?
     @State private var shouldDismiss = false
@@ -19,27 +19,9 @@ struct CheckoutView: View {
     // MARK: - Initialization
     
     init(cart: Cart?) {
-        // Inject dependencies using DependencyInjector
-        let dependencies = DependencyInjector.shared
-        let checkoutService = dependencies.resolve(CheckoutServiceProtocol.self)
-        let paymentService = dependencies.resolve(PaymentServiceProtocol.self)
-        let authRepository = dependencies.resolve(AuthRepositoryProtocol.self)
-        let validator = dependencies.resolve(InputValidatorProtocol.self)
-        let shippingService = dependencies.resolve(ShippingServiceProtocol.self)
-        let stripeService = dependencies.resolve(StripeServiceProtocol.self)
-        
-        // Create view model with dependencies
-        _viewModel = ObservedObject(
-            wrappedValue: CheckoutViewModel(
-                cart: cart,
-                checkoutService: checkoutService,
-                paymentService: paymentService,
-                authRepository: authRepository,
-                validator: validator,
-                shippingService: shippingService,
-                stripeService: stripeService
-            )
-        )
+        // Inject dependencies properly using DependencyInjector
+        let dependencyInjector = DependencyInjector.shared
+        _viewModel = StateObject(wrappedValue: dependencyInjector.resolve(CheckoutViewModel.self, arguments: cart))
     }
     
     // MARK: - Body
@@ -113,39 +95,36 @@ struct CheckoutContentView: View {
                         }
                     } else if viewModel.currentStep == .shippingInfo {
                         // Solo mostramos el botón cancelar en la vista de envío
-                        // (El botón ya está implementado en ShippingInfoView)
+                        Button("cancel".localized) {
+                            dismiss()
+                        }
                     }
                 }
                 
                 ToolbarItemGroup(placement: .navigationBarTrailing) {
                     if viewModel.currentStep == .confirmation {
-                        Button("Done") {
+                        Button("done".localized) {
                             shouldDismiss = true
                         }
                     }
                 }
             }
-        
-        /*
-         .overlay {
-         if viewModel.isLoading {
-         LoadingView()
-         }
-         }
-         */
-        
+            .overlay {
+                if viewModel.isLoading {
+                    LoadingView()
+                }
+            }
             .overlay {
                 if let errorMessage = viewModel.errorMessage {
-                    
                     ErrorToast(message: errorMessage) {
                         viewModel.errorMessage = nil
                     }
                 }
             }
-            .alert("Error", isPresented: $viewModel.showError) {
-                Button("OK", role: .cancel) {}
+            .alert("error".localized, isPresented: $viewModel.showError) {
+                Button("ok".localized, role: .cancel) {}
             } message: {
-                Text(viewModel.errorMessage ?? "Ha ocurrido un error")
+                Text(viewModel.errorMessage ?? "an_error_occurred".localized)
             }
     }
     
@@ -174,17 +153,17 @@ struct CheckoutContentView: View {
     private var navigationTitle: String {
         switch viewModel.currentStep {
         case .shippingInfo:
-            return "Shipping"
+            return "shipping".localized
         case .paymentMethod:
-            return "Payment Method"
+            return "payment_method".localized
         case .review:
-            return "Order Review"
+            return "order_review".localized
         case .processing:
-            return "Processing"
+            return "processing".localized
         case .confirmation:
-            return "Payment Confirmation"
+            return "payment_confirmation".localized
         case .error:
-            return "Error"
+            return "error".localized
         }
     }
     

@@ -11,74 +11,76 @@ import Stripe
 import UIKit
 
 protocol StripeAPIClientProtocol {
-    func configure(with publicKey: String)
     func getStripeConfig() -> AnyPublisher<StripeConfig, NetworkError>
     func createPaymentIntent(orderId: Int, paymentRequest: PaymentRequest) -> AnyPublisher<PaymentIntentResponse, NetworkError>
     func confirmPaymentIntent(paymentIntentId: String, paymentMethodId: String) -> AnyPublisher<PaymentConfirmationResponse, NetworkError>
     func cancelPaymentIntent(paymentIntentId: String) -> AnyPublisher<Void, NetworkError>
-    func createPaymentMethod(withCard card: CreditCardDetails) -> AnyPublisher<String, Error>
-    func handlePaymentAuthentication(paymentIntentClientSecret: String, from viewController: UIViewController, completion: @escaping (Bool, Error?) -> Void)
+    func createPaymentMethod(withCard cardDetails: CreditCardDetails) -> AnyPublisher<String, NetworkError>
     func createCustomer(userId: Int, email: String) -> AnyPublisher<StripeCustomer, NetworkError>
+    func handlePaymentAuthentication(paymentIntentClientSecret: String, from viewController: UIViewController, completion: @escaping (Bool, Error?) -> Void)
+    
 }
 
-/// Cliente especializado para interactuar con la API de Stripe
-class StripeAPIClient: StripeAPIClientProtocol {
+//// Implementación del cliente API de Stripe para comunicación con el backend
+final class StripeAPIClient: StripeAPIClientProtocol {
     private let networkDispatcher: NetworkDispatcherProtocol
-    private var stripePublishableKey: String?
     
     init(networkDispatcher: NetworkDispatcherProtocol) {
         self.networkDispatcher = networkDispatcher
     }
     
-    /// Configura la clave publicable de Stripe
-    func configure(with publicKey: String) {
-        self.stripePublishableKey = publicKey
-        StripeAPI.defaultPublishableKey = publicKey
-        Logger.payment("Stripe configured with publishable key: \(publicKey)", level: .info)
-    }
-    
     /// Obtener configuración de Stripe desde el servidor
     func getStripeConfig() -> AnyPublisher<StripeConfig, NetworkError> {
         let endpoint = PaymentEndpoints.getStripeConfig
+        Logger.payment("Getting Stripe configuration", level: .info)
         
         return networkDispatcher.dispatch(ApiResponse<StripeConfig>.self, endpoint)
-            .handleEvents(receiveOutput: { [weak self] response in
-                // Configurar Stripe SDK con la clave publicable
-                self?.configure(with: response.data.publicKey)
+            .map { response -> StripeConfig in
+                Logger.payment("Successfully received Stripe configuration", level: .info)
+                return response.data
+            }
+            .handleEvents(receiveCompletion: { completion in
+                if case .failure(let error) = completion {
+                    Logger.payment("Failed to get Stripe configuration: \(error)", level: .error)
+                }
             })
-            .map { $0.data }
             .eraseToAnyPublisher()
     }
     
     /// Crea un PaymentIntent para procesar un pago
     func createPaymentIntent(orderId: Int, paymentRequest: PaymentRequest) -> AnyPublisher<PaymentIntentResponse, NetworkError> {
-        Logger.payment("Creating PaymentIntent for order \(orderId)", level: .info)
-        
         let endpoint = PaymentEndpoints.createPaymentIntent(orderId: orderId, request: paymentRequest)
+        Logger.payment("Creating payment intent for order \(orderId)", level: .info)
         
         return networkDispatcher.dispatch(ApiResponse<PaymentIntentResponse>.self, endpoint)
             .map { response -> PaymentIntentResponse in
-                Logger.payment("PaymentIntent created successfully: \(response.data.paymentIntentId)", level: .info)
+                Logger.payment("Successfully created payment intent: \(response.data.paymentIntentId)", level: .info)
                 return response.data
             }
-            .mapError { error -> NetworkError in
-                Logger.payment("Failed to create PaymentIntent: \(error)", level: .error)
-                return error
-            }
+            .handleEvents(receiveCompletion: { completion in
+                if case .failure(let error) = completion {
+                    Logger.payment("Failed to create payment intent: \(error)", level: .error)
+                }
+            })
             .eraseToAnyPublisher()
     }
     
     /// Confirma un PaymentIntent existente
     func confirmPaymentIntent(paymentIntentId: String, paymentMethodId: String) -> AnyPublisher<PaymentConfirmationResponse, NetworkError> {
-        let endpoint = PaymentEndpoints.confirmPayment(paymentIntentId: paymentIntentId)
+        let endpoint = PaymentEndpoints.confirmPaymentIntent(
+            paymentIntentId: paymentIntentId,
+            paymentMethodId: paymentMethodId
+        )
+        Logger.payment("Confirming payment intent: \(paymentIntentId)", level: .info)
         
         return networkDispatcher.dispatch(ApiResponse<PaymentConfirmationResponse>.self, endpoint)
-            .map { $0.data }
-            .handleEvents(receiveOutput: { response in
-                Logger.payment("Payment confirmation: \(response.success)", level: .info)
-            }, receiveCompletion: { completion in
+            .map { response -> PaymentConfirmationResponse in
+                Logger.payment("Payment confirmation response: \(response.data.success)", level: .info)
+                return response.data
+            }
+            .handleEvents(receiveCompletion: { completion in
                 if case .failure(let error) = completion {
-                    Logger.payment("Payment confirmation failed: \(error)", level: .error)
+                    Logger.payment("Failed to confirm payment: \(error)", level: .error)
                 }
             })
             .eraseToAnyPublisher()
@@ -86,13 +88,15 @@ class StripeAPIClient: StripeAPIClientProtocol {
     
     /// Cancela un PaymentIntent
     func cancelPaymentIntent(paymentIntentId: String) -> AnyPublisher<Void, NetworkError> {
-        let endpoint = PaymentEndpoints.cancelPayment(paymentIntentId: paymentIntentId)
+        let endpoint = PaymentEndpoints.cancelPaymentIntent(paymentIntentId: paymentIntentId)
+        Logger.payment("Cancelling payment intent: \(paymentIntentId)", level: .info)
         
         return networkDispatcher.dispatch(ApiResponse<EmptyResponse>.self, endpoint)
-            .map { _ in () }
-            .handleEvents(receiveOutput: { _ in
-                Logger.payment("Payment intent canceled: \(paymentIntentId)", level: .info)
-            }, receiveCompletion: { completion in
+            .map { _ -> Void in
+                Logger.payment("Successfully cancelled payment intent", level: .info)
+                return ()
+            }
+            .handleEvents(receiveCompletion: { completion in
                 if case .failure(let error) = completion {
                     Logger.payment("Failed to cancel payment: \(error)", level: .error)
                 }
@@ -101,58 +105,21 @@ class StripeAPIClient: StripeAPIClientProtocol {
     }
     
     /// Crea un método de pago con Stripe SDK
-    func createPaymentMethod(withCard card: CreditCardDetails) -> AnyPublisher<String, Error> {
-        return Future<String, Error> { promise in
-            // Verificar que Stripe esté configurado
-            guard self.stripePublishableKey != nil else {
-                Logger.payment("Stripe not configured before creating payment method", level: .error)
-                promise(.failure(NSError(
-                    domain: "com.appecomm.StripeAPIClient",
-                    code: 1001,
-                    userInfo: [NSLocalizedDescriptionKey: "Stripe not configured"]
-                )))
-                return
+    func createPaymentMethod(withCard cardDetails: CreditCardDetails) -> AnyPublisher<String, NetworkError> {
+        let endpoint = PaymentEndpoints.createPaymentMethod(cardDetails: cardDetails)
+        Logger.payment("Creating payment method with card", level: .info)
+        
+        return networkDispatcher.dispatch(ApiResponse<PaymentMethodResponse>.self, endpoint)
+            .map { response -> String in
+                Logger.payment("Successfully created payment method: \(response.data.id)", level: .info)
+                return response.data.id
             }
-            
-            // Validar datos de la tarjeta
-            do {
-                let cardParams = try self.validateAndCreateCardParams(card)
-                
-                // Detalles de facturación
-                let billingDetails = STPPaymentMethodBillingDetails()
-                billingDetails.name = card.cardholderName
-                
-                // Crear parámetros para el método de pago
-                let paymentMethodParams = STPPaymentMethodParams(
-                    card: cardParams,
-                    billingDetails: billingDetails,
-                    metadata: nil
-                )
-                
-                // Crear el método de pago con Stripe
-                STPAPIClient.shared.createPaymentMethod(with: paymentMethodParams) { paymentMethod, error in
-                    if let error = error {
-                        Logger.payment("Error creating payment method: \(error.localizedDescription)", level: .error)
-                        promise(.failure(error))
-                        return
-                    }
-                    
-                    guard let paymentMethod = paymentMethod else {
-                        promise(.failure(NSError(
-                            domain: "com.appecomm.StripeAPIClient",
-                            code: 1004,
-                            userInfo: [NSLocalizedDescriptionKey: "Failed to create payment method"]
-                        )))
-                        return
-                    }
-                    
-                    Logger.payment("Payment method created: \(paymentMethod.stripeId)", level: .info)
-                    promise(.success(paymentMethod.stripeId))
+            .handleEvents(receiveCompletion: { completion in
+                if case .failure(let error) = completion {
+                    Logger.payment("Failed to create payment method: \(error)", level: .error)
                 }
-            } catch {
-                promise(.failure(error))
-            }
-        }.eraseToAnyPublisher()
+            })
+            .eraseToAnyPublisher()
     }
     
     /// Validar y crear parámetros de tarjeta de crédito
@@ -226,23 +193,24 @@ class StripeAPIClient: StripeAPIClientProtocol {
     
     /// Crea un cliente en Stripe para el usuario
     func createCustomer(userId: Int, email: String) -> AnyPublisher<StripeCustomer, NetworkError> {
-        let parameters: [String: Any] = [
-            "userId": userId,
-            "email": email
-        ]
-        
-        // Endpoint para crear cliente en Stripe (debe ser implementado en tu API)
-        let endpoint = PaymentEndpoints.createCustomer(parameters: parameters)
+        let endpoint = PaymentEndpoints.createCustomer(userId: userId, email: email)
+        Logger.payment("Creating Stripe customer for user \(userId)", level: .info)
         
         return networkDispatcher.dispatch(ApiResponse<StripeCustomer>.self, endpoint)
-            .map { $0.data }
-            .handleEvents(receiveOutput: { customer in
-                Logger.payment("Stripe customer created: \(customer.id)", level: .info)
-            }, receiveCompletion: { completion in
+            .map { response -> StripeCustomer in
+                Logger.payment("Successfully created Stripe customer: \(response.data.id)", level: .info)
+                return response.data
+            }
+            .handleEvents(receiveCompletion: { completion in
                 if case .failure(let error) = completion {
                     Logger.payment("Failed to create Stripe customer: \(error)", level: .error)
                 }
             })
             .eraseToAnyPublisher()
     }
+}
+
+struct PaymentMethodResponse: Codable {
+    let id: String
+    let type: String
 }

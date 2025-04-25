@@ -93,6 +93,7 @@ final class ViewModelAssembly: Assembly {
             let validator = r.resolve(InputValidatorProtocol.self)!
             let shippingService = r.resolve(ShippingServiceProtocol.self)!
             let stripeService = r.resolve(StripeServiceProtocol.self)!
+            let shippingRepository = r.resolve(ShippingRepositoryProtocol.self)!
             
             return CheckoutViewModel(
                 cart: cart,
@@ -101,7 +102,8 @@ final class ViewModelAssembly: Assembly {
                 authRepository: authRepository,
                 validator: validator,
                 shippingService: shippingService,
-                stripeService: stripeService
+                stripeService: stripeService,
+                shippingRepository: shippingRepository
             )
         }.inObjectScope(.container)
         

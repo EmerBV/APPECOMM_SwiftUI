@@ -32,7 +32,6 @@ class PaymentSheetViewModel: ObservableObject {
     private var paymentIntentId: String?
     private var cancellables = Set<AnyCancellable>()
     
-    
     // MARK: - Computed Properties
     var amountFormatted: String {
         let formatter = NumberFormatter()
@@ -93,41 +92,54 @@ class PaymentSheetViewModel: ObservableObject {
                 self.clientSecret = checkout.clientSecret
                 self.paymentIntentId = checkout.paymentIntentId
                 
-                var configuration = PaymentSheet.Configuration()
-                configuration.merchantDisplayName = "APPECOMM"
-                if let email = self.email {
-                    configuration.defaultBillingDetails.email = email
-                }
-                
-                if let customerId = checkout.customerId,
-                   let ephemeralKey = checkout.ephemeralKey {
-                    configuration.customer = .init(id: customerId, ephemeralKeySecret: ephemeralKey)
-                }
-                
-                // Configurar la apariencia del PaymentSheet
-                var appearance = PaymentSheet.Appearance()
-                appearance.colors.primary = .systemBlue
-                appearance.colors.background = .systemBackground
-                appearance.colors.componentBackground = .secondarySystemBackground
-                appearance.colors.componentBorder = .separator
-                appearance.primaryButton.backgroundColor = .systemBlue
-                appearance.primaryButton.textColor = .white
-                appearance.primaryButton.cornerRadius = 10
-                
-                // Configurar el PaymentSheet
-                configuration.appearance = appearance
-                configuration.defaultBillingDetails.address.country = "ES"
-                
-                self.paymentSheet = PaymentSheet(
-                    paymentIntentClientSecret: checkout.clientSecret,
-                    configuration: configuration
+                let paymentSheet = self.createPaymentSheet(
+                    clientSecret: checkout.clientSecret,
+                    customerId: checkout.customerId,
+                    ephemeralKey: checkout.ephemeralKey
                 )
                 
+                self.paymentSheet = paymentSheet
                 self.isLoading = false
                 self.paymentStatus = .ready
                 Logger.payment("Payment sheet ready with client secret", level: .info)
             }
             .store(in: &cancellables)
+    }
+    
+    private func createPaymentSheet(
+        clientSecret: String,
+        customerId: String?,
+        ephemeralKey: String?
+    ) -> PaymentSheet {
+        var configuration = PaymentSheet.Configuration()
+        configuration.merchantDisplayName = "APPECOMM"
+        if let email = self.email {
+            configuration.defaultBillingDetails.email = email
+        }
+        
+        if let customerId = customerId,
+           let ephemeralKey = ephemeralKey {
+            configuration.customer = .init(id: customerId, ephemeralKeySecret: ephemeralKey)
+        }
+        
+        // Configurar la apariencia del PaymentSheet
+        var appearance = PaymentSheet.Appearance()
+        appearance.colors.primary = .systemBlue
+        appearance.colors.background = .systemBackground
+        appearance.colors.componentBackground = .secondarySystemBackground
+        appearance.colors.componentBorder = .separator
+        appearance.primaryButton.backgroundColor = .systemBlue
+        appearance.primaryButton.textColor = .white
+        appearance.primaryButton.cornerRadius = 10
+        
+        // Aplicar la configuración de apariencia
+        configuration.appearance = appearance
+        configuration.defaultBillingDetails.address.country = "ES"
+        
+        return PaymentSheet(
+            paymentIntentClientSecret: clientSecret,
+            configuration: configuration
+        )
     }
     
     func presentPaymentSheetIfReady() {
@@ -188,16 +200,27 @@ class PaymentSheetViewModel: ObservableObject {
                 Logger.payment("Payment completed successfully", level: .info)
                 
             case .canceled:
-                self.paymentStatus = .failed("Pago cancelado")
+                self.paymentStatus = .failed("payment_cancelled".localized)
+                
+                // Notificar cancelación de pago
+                NotificationCenter.default.post(
+                    name: Notification.Name("PaymentCancelled"),
+                    object: nil
+                )
                 Logger.payment("Payment was canceled", level: .info)
                 
             case .failed(let error):
                 self.paymentStatus = .failed(error.localizedDescription)
                 self.error = error.localizedDescription
                 Logger.payment("Payment failed: \(error.localizedDescription)", level: .error)
+                
+                // Notificar fallo de pago
+                NotificationCenter.default.post(
+                    name: Notification.Name("PaymentFailed"),
+                    object: nil,
+                    userInfo: ["error": error.localizedDescription]
+                )
             }
         }
     }
 }
-
-

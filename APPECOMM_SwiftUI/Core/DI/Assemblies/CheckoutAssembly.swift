@@ -17,18 +17,6 @@ final class CheckoutAssembly: Assembly {
             return CheckoutService(networkDispatcher: networkDispatcher)
         }.inObjectScope(.container)
         
-        // Register Payment Service
-        container.register(PaymentServiceProtocol.self) { r in
-            let networkDispatcher = r.resolve(NetworkDispatcherProtocol.self)!
-            let stripeService = r.resolve(StripeServiceProtocol.self)!
-            let stripeAPIClient = r.resolve(StripeAPIClientProtocol.self)!
-            return PaymentService(
-                networkDispatcher: networkDispatcher,
-                stripeService: stripeService,
-                stripeAPIClient: stripeAPIClient
-            )
-        }.inObjectScope(.container)
-        
         // Register Checkout Repository
         container.register(CheckoutRepositoryProtocol.self) { r in
             let checkoutService = r.resolve(CheckoutServiceProtocol.self)!
@@ -43,5 +31,41 @@ final class CheckoutAssembly: Assembly {
         container.register(InputValidatorProtocol.self) { _ in
             InputValidator()
         }.inObjectScope(.container)
+        
+        // Register Checkout ViewModel
+        container.register(CheckoutViewModel.self) { (r, cart: Cart?) in
+            let checkoutService = r.resolve(CheckoutServiceProtocol.self)!
+            let paymentService = r.resolve(PaymentServiceProtocol.self)!
+            let authRepository = r.resolve(AuthRepositoryProtocol.self)!
+            let validator = r.resolve(InputValidatorProtocol.self)!
+            let shippingService = r.resolve(ShippingServiceProtocol.self)!
+            let stripeService = r.resolve(StripeServiceProtocol.self)!
+            let shippingRepository = r.resolve(ShippingRepositoryProtocol.self)!
+            
+            return CheckoutViewModel(
+                cart: cart,
+                checkoutService: checkoutService,
+                paymentService: paymentService,
+                authRepository: authRepository,
+                validator: validator,
+                shippingService: shippingService,
+                stripeService: stripeService,
+                shippingRepository: shippingRepository
+            )
+        }
+        
+        // Register PaymentSheetViewModel
+        container.register(PaymentSheetViewModel.self) { (r, orderId: Int, amount: Decimal, email: String?) in
+            let paymentService = r.resolve(PaymentServiceProtocol.self)!
+            let navigationCoordinator = NavigationCoordinator.shared
+            
+            return PaymentSheetViewModel(
+                paymentService: paymentService,
+                orderId: orderId,
+                amount: amount,
+                email: email,
+                navigationCoordinator: navigationCoordinator
+            )
+        }
     }
 }
