@@ -8,7 +8,7 @@
 import Foundation
 
 final class APPConstants {
-    static let appName: String = "APPECOMM_SwiftUI"
+    static let appName: String = "APPECOMM"
     static let appVersion: String = "1.0.0"
     static let appBuild: String = "1"
     static let nilChar: String = "-"
