@@ -15,32 +15,6 @@ final class ViewModelAssembly: Assembly {
             InputValidator()
         }.inObjectScope(.container)
         
-        // Product List ViewModel
-        container.register(ProductListViewModel.self) { r in
-            let productRepository = r.resolve(ProductRepositoryProtocol.self)!
-            let cartRepository = r.resolve(CartRepositoryProtocol.self)!
-            return ProductListViewModel(
-                productRepository: productRepository,
-                cartRepository: cartRepository
-            )
-        }.inObjectScope(.container) // Singleton para mantener estado consistente
-        
-        // Cart ViewModel
-        container.register(CartViewModel.self) { r in
-            let cartRepository = r.resolve(CartRepositoryProtocol.self)!
-            let authRepository = r.resolve(AuthRepositoryProtocol.self)!
-            return CartViewModel(
-                cartRepository: cartRepository,
-                authRepository: authRepository
-            )
-        }.inObjectScope(.container) // Singleton para mantener estado consistente
-        
-        // Home ViewModel
-        container.register(HomeViewModel.self) { r in
-            let productRepository = r.resolve(ProductRepositoryProtocol.self)!
-            return HomeViewModel(productRepository: productRepository)
-        }.inObjectScope(.container) // Singleton para mantener estado consistente
-        
         // Orders ViewModel
         container.register(OrdersViewModel.self) { r in
             let authRepository = r.resolve(AuthRepositoryProtocol.self)!

@@ -22,15 +22,25 @@ final class DependencyInjector {
         // Register all assemblies
         assembler = Assembler(
             [
-                AuthAssembly(),
+                // MARK: - Core
                 NetworkAssembly(),
                 StorageAssembly(),
+                
+                // MARK: - Data
                 ServiceAssembly(),
                 RepositoryAssembly(),
-                ViewModelAssembly(),
+                
+                // MARK: - Features
+                AuthAssembly(),
+                HomeAssembly(),
+                ProductAssembly(),
+                CartAssembly(),
                 CheckoutAssembly(),
                 PaymentAssembly(),
-                ShippingAssembly()
+                ShippingAssembly(),
+                
+                // MARK: - Genérico
+                ViewModelAssembly()
             ],
             container: container
         )

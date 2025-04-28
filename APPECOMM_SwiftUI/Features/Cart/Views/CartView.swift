@@ -8,13 +8,13 @@
 import SwiftUI
 
 struct CartView: View {
-    @StateObject private var viewModel: CartViewModel
+    @ObservedObject var viewModel: CartViewModel
     @State private var shouldShowClearCartAlert = false
     @State private var isShowingCheckout = false
     @ObservedObject private var navigationCoordinator = NavigationCoordinator.shared
     
     init(viewModel: CartViewModel) {
-        _viewModel = StateObject(wrappedValue: viewModel)
+        self.viewModel = viewModel
     }
     
     var body: some View {

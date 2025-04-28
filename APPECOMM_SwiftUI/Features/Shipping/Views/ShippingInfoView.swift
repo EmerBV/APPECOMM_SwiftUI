@@ -110,7 +110,7 @@ struct ShippingInfoView: View {
         .onAppear {
             // Cargar direcciones de envío al aparecer la vista
             if viewModel.shippingAddresses.isEmpty {
-                viewModel.loadUserAddress() // Corregido: usar el método correcto
+                viewModel.loadUserAddress()
             }
         }
     }

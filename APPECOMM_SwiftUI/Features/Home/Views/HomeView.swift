@@ -9,11 +9,11 @@ import SwiftUI
 
 // MARK: - HomeView
 struct HomeView: View {
-    @StateObject private var viewModel: HomeViewModel
+    @ObservedObject var viewModel: HomeViewModel
     @State private var isSearchPresented = false
     
     init(viewModel: HomeViewModel) {
-        _viewModel = StateObject(wrappedValue: viewModel)
+        self.viewModel = viewModel
     }
     
     var body: some View {

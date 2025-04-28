@@ -8,13 +8,13 @@
 import SwiftUI
 
 struct ProductListView: View {
-    @StateObject private var viewModel: ProductListViewModel
+    @ObservedObject var viewModel: ProductListViewModel
     @State private var isShowingCategoryFilter = false
     @Environment(\.colorScheme) private var colorScheme
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     
     init(viewModel: ProductListViewModel) {
-        _viewModel = StateObject(wrappedValue: viewModel)
+        self.viewModel = viewModel
     }
     
     var body: some View {
@@ -44,9 +44,9 @@ struct ProductListView: View {
                 }
                 
                 /*
-                if viewModel.isLoading {
-                    LoadingView()
-                }
+                 if viewModel.isLoading {
+                 LoadingView()
+                 }
                  */
                 
                 if let errorMessage = viewModel.errorMessage {
@@ -200,6 +200,3 @@ private struct ProductList: View {
     }
 }
 
-// Continue with remaining view components...
-// (CategoryFilterItem, ProductRowView, InventoryIndicator, etc.)
-// Following same patterns and best practices

@@ -9,6 +9,9 @@ import SwiftUI
 
 struct MainTabView: View {
     @State private var selectedTab = 0
+    @StateObject private var homeViewModel = DependencyInjector.shared.resolve(HomeViewModel.self)
+    @StateObject private var productListViewModel = DependencyInjector.shared.resolve(ProductListViewModel.self)
+    @StateObject private var cartViewModel = DependencyInjector.shared.resolve(CartViewModel.self)
     @StateObject private var profileViewModel = DependencyInjector.shared.resolve(ProfileViewModel.self)
     
     init() {
@@ -18,7 +21,7 @@ struct MainTabView: View {
     var body: some View {
         TabView(selection: $selectedTab) {
             NavigationStack {
-                HomeView(viewModel: DependencyInjector.shared.resolve(HomeViewModel.self))
+                HomeView(viewModel: homeViewModel)
             }
             .tabItem {
                 Image(systemName: "house")
@@ -29,7 +32,7 @@ struct MainTabView: View {
             }
             
             NavigationStack {
-                ProductListView(viewModel: DependencyInjector.shared.resolve(ProductListViewModel.self))
+                ProductListView(viewModel: productListViewModel)
             }
             .tabItem {
                 Image(systemName: "bag")
@@ -40,7 +43,7 @@ struct MainTabView: View {
             }
             
             NavigationStack {
-                CartView(viewModel: DependencyInjector.shared.resolve(CartViewModel.self))
+                CartView(viewModel: cartViewModel)
             }
             .tabItem {
                 Image(systemName: "cart")
