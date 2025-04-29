@@ -13,7 +13,7 @@ struct OrdersListView: View {
     var body: some View {
         List {
             if let user = viewModel.user {
-                Section(header: Text("Pedidos pendientes de pago")) {
+                Section(header: Text("pending_payment".localized)) {
                     if !viewModel.pendingOrders.isEmpty {
                         ForEach(viewModel.pendingOrders) { order in
                             NavigationLink(
@@ -23,12 +23,12 @@ struct OrdersListView: View {
                             }
                         }
                     } else {
-                        Text("No hay pedidos pendientes")
+                        Text("no_pending_orders".localized)
                             .foregroundColor(.secondary)
                     }
                 }
                 
-                Section(header: Text("Historial de pedidos")) {
+                Section(header: Text("order_history".localized)) {
                     if !viewModel.completedOrders.isEmpty {
                         ForEach(viewModel.completedOrders) { order in
                             NavigationLink(
@@ -38,16 +38,16 @@ struct OrdersListView: View {
                             }
                         }
                     } else {
-                        Text("No hay pedidos en el historial")
+                        Text("no_orders_history".localized)
                             .foregroundColor(.secondary)
                     }
                 }
             } else {
-                Text("Cargando pedidos...")
+                Text("loading_orders".localized)
                     .foregroundColor(.secondary)
             }
         }
-        .navigationTitle("Mis Pedidos")
+        .navigationTitle("my_orders".localized)
         .onAppear {
             viewModel.loadOrders()
         }
@@ -62,7 +62,7 @@ struct OrdersListView: View {
         var body: some View {
             VStack(alignment: .leading, spacing: 8) {
                 HStack {
-                    Text("Pedido #\(order.id)")
+                    Text(String(format: "order".localized, order.id))
                         .font(.headline)
                     Spacer()
                     Text(formattedDate(from: order.orderDate))
@@ -71,13 +71,13 @@ struct OrdersListView: View {
                 }
                 
                 HStack {
-                    Text("Total: \(order.totalAmount.toCurrentLocalePrice)")
+                    Text("total".localized + ":" + " \(order.totalAmount.toCurrentLocalePrice)")
                         .font(.subheadline)
                     
                     Spacer()
                     
                     // Badge para el estado del pedido
-                    StatusState(status: order.status)
+                    OrderStatusBadge(status: order.status)
                 }
             }
             .padding(.vertical, 8)
@@ -93,68 +93,6 @@ struct OrdersListView: View {
             }
             
             return dateString
-        }
-    }
-    
-    // Componente auxiliar para mostrar el estado del pedido
-    struct StatusState: View {
-        let status: String
-        
-        var body: some View {
-            Text(localizedStatus)
-                .font(.caption)
-                .fontWeight(.semibold)
-                .padding(.horizontal, 8)
-                .padding(.vertical, 4)
-                .background(statusColor)
-                .foregroundColor(.white)
-                .cornerRadius(4)
-        }
-        
-        private var localizedStatus: String {
-            switch status.lowercased() {
-            case "pending":
-                return "Pendiente"
-            case "pending_payment":
-                return "Pago pendiente"
-            case "processing":
-                return "En proceso"
-            case "shipped":
-                return "Enviado"
-            case "delivered":
-                return "Entregado"
-            case "cancelled":
-                return "Cancelado"
-            case "refunded":
-                return "Reembolsado"
-            case "paid":
-                return "Pagado"
-            default:
-                return status.capitalized
-            }
-        }
-        
-        private var statusColor: Color {
-            switch status.lowercased() {
-            case "pending":
-                return .orange
-            case "processing":
-                return .blue
-            case "paid":
-                return .yellow
-            case "shipped":
-                return .purple
-            case "delivered":
-                return .green
-            case "cancelled":
-                return .red
-            case "pending_payment":
-                return .blue
-            case "refunded":
-                return .gray
-            default:
-                return .gray
-            }
         }
     }
 }

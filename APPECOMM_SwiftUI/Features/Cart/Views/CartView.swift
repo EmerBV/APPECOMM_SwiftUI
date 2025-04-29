@@ -341,7 +341,7 @@ struct CartItemRow: View {
                 .lineLimit(2)
             
             if let variantName = item.variantName {
-                Text("\(String(localized: "variant_label")) \(variantName)")
+                Text(String(format: "variant_label".localized, variantName))
                     .font(.subheadline)
                     .foregroundColor(.accentColor)
             }

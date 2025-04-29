@@ -11,9 +11,9 @@ struct PaymentMethodSelectionView: View {
     @ObservedObject var viewModel: CheckoutViewModel
     
     var body: some View {
-        ScrollView {
+        ScrollView(showsIndicators: false) {
             VStack(spacing: 20) {
-                Text("Select Payment Method")
+                Text("select_payment_method".localized)
                     .font(.headline)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.horizontal)
@@ -35,7 +35,7 @@ struct PaymentMethodSelectionView: View {
                 
                 // Continue button
                 PrimaryButton(
-                    title: "Continue",
+                    title: "continue_label".localized,
                     isLoading: false,
                     isEnabled: true
                 ) {

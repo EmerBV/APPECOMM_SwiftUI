@@ -101,12 +101,12 @@ class RegistrationViewModel: ObservableObject {
     
     func validateConfirmPassword() {
         if confirmPassword.isEmpty {
-            confirmPasswordState = .invalid("Password confirmation is required")
+            confirmPasswordState = .invalid("password_confirmation_required".localized)
             return
         }
         
         if password != confirmPassword {
-            confirmPasswordState = .invalid("Passwords do not match")
+            confirmPasswordState = .invalid("passwords_do_not_match".localized)
             return
         }
         
@@ -115,7 +115,7 @@ class RegistrationViewModel: ObservableObject {
     
     func validateTerms() {
         if !acceptTerms {
-            termsState = .invalid("You must accept the terms and conditions")
+            termsState = .invalid("must_accept_terms".localized)
             return
         }
         
@@ -142,8 +142,8 @@ class RegistrationViewModel: ObservableObject {
         guard isFormValid else {
             Logger.warning("Formulario de registro no válido")
             NotificationService.shared.showError(
-                title: "Validation Error",
-                message: "Please check the form for errors"
+                title: "validation_error".localized,
+                message: "form_errors".localized
             )
             return
         }
@@ -163,23 +163,23 @@ class RegistrationViewModel: ObservableObject {
                         switch networkError {
                         case .badRequest:
                             NotificationService.shared.showError(
-                                title: "Registration Error",
-                                message: "Invalid registration details"
+                                title: "registration_error".localized,
+                                message: "invalid_registration_details".localized
                             )
                         case .serverError:
                             NotificationService.shared.showError(
-                                title: "Server Error",
-                                message: "Please try again later"
+                                title: "server_error".localized,
+                                message: "try_again_later".localized
                             )
                         default:
                             NotificationService.shared.showError(
-                                title: "Error",
+                                title: "error".localized,
                                 message: networkError.localizedDescription
                             )
                         }
                     } else {
                         NotificationService.shared.showError(
-                            title: "Error",
+                            title: "error".localized,
                             message: error.localizedDescription
                         )
                     }
@@ -193,8 +193,8 @@ class RegistrationViewModel: ObservableObject {
                 
                 // Mostrar notificación de bienvenida
                 NotificationService.shared.showSuccess(
-                    title: "Welcome!",
-                    message: "Your account has been created successfully. Welcome to APPECOMM!"
+                    title: "welcome".localized,
+                    message: "account_created_success".localized
                 )
                 
                 // Reiniciar el formulario

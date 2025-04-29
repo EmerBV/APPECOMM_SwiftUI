@@ -64,11 +64,11 @@ struct ShippingAddressesManagerView: View {
                     }
                 }
             }
-            .navigationTitle("Shipping Addresses")
+            .navigationTitle("shipping_addresses".localized)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Close") {
+                    Button("close".localized) {
                         dismiss()
                     }
                 }
@@ -92,15 +92,15 @@ struct ShippingAddressesManagerView: View {
             .refreshable {
                 await refreshAddresses()
             }
-            .alert("Delete Address", isPresented: $showingDeleteConfirmation) {
-                Button("Delete", role: .destructive) {
+            .alert("delete_address".localized, isPresented: $showingDeleteConfirmation) {
+                Button("delete_btn_address".localized, role: .destructive) {
                     if let addressId = addressToDelete {
                         deleteAddress(addressId: addressId)
                     }
                 }
-                Button("Cancel", role: .cancel) { }
+                Button("cancel_btn_address".localized, role: .cancel) { }
             } message: {
-                Text("Are you sure you want to delete this address?")
+                Text("are_you_sure".localized)
             }
             .onAppear {
                 viewModel.loadAddresses(userId: userId)
@@ -114,11 +114,11 @@ struct ShippingAddressesManagerView: View {
                 .font(.system(size: 64))
                 .foregroundColor(.gray)
             
-            Text("No Addresses Yet")
+            Text("no_addresses".localized)
                 .font(.title2)
                 .fontWeight(.semibold)
             
-            Text("Add your first shipping address to make checkout faster.")
+            Text("first_shipping_address".localized)
                 .multilineTextAlignment(.center)
                 .foregroundColor(.secondary)
                 .padding(.horizontal, 40)
@@ -128,7 +128,7 @@ struct ShippingAddressesManagerView: View {
                 selectedAddress = nil
                 isSheetPresented = true
             }) {
-                Label("Add Address", systemImage: "plus")
+                Label("add_address".localized, systemImage: "plus")
                     .padding()
                     .foregroundColor(.white)
                     .background(Color.accentColor)
@@ -205,7 +205,7 @@ struct AddressListItem: View {
                         .font(.headline)
                     
                     if let isDefault = address.isDefault, isDefault {
-                        Text("Default Address")
+                        Text("default_address".localized)
                             .font(.caption)
                             .foregroundColor(.blue)
                             .padding(.horizontal, 8)
@@ -221,17 +221,17 @@ struct AddressListItem: View {
                 
                 Menu {
                     Button(action: isEditing) {
-                        Label("Edit", systemImage: "pencil")
+                        Label("edit".localized, systemImage: "pencil")
                     }
                     
                     if !(address.isDefault ?? false) {
                         Button(action: isSettingDefault) {
-                            Label("Set as Default", systemImage: "checkmark.circle")
+                            Label("set_as".localized, systemImage: "checkmark.circle")
                         }
                     }
                     
                     Button(role: .destructive, action: isDeleting) {
-                        Label("Delete", systemImage: "trash")
+                        Label("delete_btn_address".localized, systemImage: "trash")
                     }
                 } label: {
                     Image(systemName: "ellipsis.circle")

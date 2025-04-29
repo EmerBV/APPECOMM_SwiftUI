@@ -106,15 +106,15 @@ struct CheckoutContentView: View {
                 
                 ToolbarItemGroup(placement: .navigationBarTrailing) {
                     if viewModel.currentStep == .confirmation {
-                        Button("done".localized) {
+                        Button("done_label".localized) {
                             shouldDismiss = true
                         }
                     }
                 }
             }
-            .alert("¿Cancelar pedido?", isPresented: $showCancelConfirmation) {
-                Button("Continuar con el pedido", role: .cancel) { }
-                Button("Cancelar pedido", role: .destructive) {
+            .alert("checkout_cancel_order".localized, isPresented: $showCancelConfirmation) {
+                Button("checkout_continue_order".localized, role: .cancel) { }
+                Button("cancel_order_label".localized, role: .destructive) {
                     // Limpiamos cualquier estado temporal antes de salir
                     viewModel.resetCheckoutState()
                     // Publicamos una notificación para que se actualice el carrito si es necesario
@@ -128,7 +128,7 @@ struct CheckoutContentView: View {
                     dismiss()
                 }
             } message: {
-                Text("Si cancelas ahora, perderás la información introducida y volverás al carrito.")
+                Text("if_you_cancel_now".localized)
             }
             .overlay {
                 if viewModel.isLoading {
@@ -145,7 +145,7 @@ struct CheckoutContentView: View {
             .alert("error".localized, isPresented: $viewModel.showError) {
                 Button("ok".localized, role: .cancel) {}
             } message: {
-                Text(viewModel.errorMessage ?? "an_error_occurred".localized)
+                Text(viewModel.errorMessage ?? "error_occurred".localized)
             }
     }
     
@@ -176,13 +176,13 @@ struct CheckoutContentView: View {
         case .shippingInfo:
             return "shipping".localized
         case .paymentMethod:
-            return "payment_method".localized
+            return "checkout_payment_method".localized
         case .review:
-            return "order_review".localized
+            return "checkout_order_review".localized
         case .processing:
-            return "processing".localized
+            return "checkout_processing_review".localized
         case .confirmation:
-            return "payment_confirmation".localized
+            return "checkout_payment_confirmation".localized
         case .error:
             return "error".localized
         }

@@ -45,9 +45,9 @@ struct ShippingAddressFormView: View {
         NavigationStack {
             Form {
                 // Sección de información de contacto
-                Section(header: Text("Contact Information")) {
+                Section(header: Text("contact_info".localized)) {
                     CustomTextField(
-                        title: "Full Name",
+                        title: "full_name".localized,
                         placeholder: "John Doe",
                         type: .regular,
                         state: viewModel.form.isFullNameValid ? .valid : .normal,
@@ -61,7 +61,7 @@ struct ShippingAddressFormView: View {
                     .keyboardType(.namePhonePad)
                     
                     CustomTextField(
-                        title: "Phone Number",
+                        title: "phone_number".localized,
                         placeholder: "+1 (555) 123-4567",
                         type: .regular,
                         state: viewModel.form.isPhoneNumberValid ? .valid : .normal,
@@ -76,9 +76,9 @@ struct ShippingAddressFormView: View {
                 }
                 
                 // Sección de dirección
-                Section(header: Text("Address")) {
+                Section(header: Text("address".localized)) {
                     CustomTextField(
-                        title: "Street Address",
+                        title: "street_address".localized,
                         placeholder: "123 Main St",
                         type: .regular,
                         state: viewModel.form.isAddressValid ? .valid : .normal,
@@ -91,7 +91,7 @@ struct ShippingAddressFormView: View {
                     )
                     
                     CustomTextField(
-                        title: "City",
+                        title: "city".localized,
                         placeholder: "New York",
                         type: .regular,
                         state: viewModel.form.isCityValid ? .valid : .normal,
@@ -104,7 +104,7 @@ struct ShippingAddressFormView: View {
                     )
                     
                     CustomTextField(
-                        title: "State/Province",
+                        title: "state_province".localized,
                         placeholder: "NY",
                         type: .regular,
                         state: viewModel.form.isStateValid ? .valid : .normal,
@@ -117,7 +117,7 @@ struct ShippingAddressFormView: View {
                     )
                     
                     CustomTextField(
-                        title: "Postal Code",
+                        title: "postal_code".localized,
                         placeholder: "10001",
                         type: .regular,
                         state: viewModel.form.isPostalCodeValid ? .valid : .normal,
@@ -131,7 +131,7 @@ struct ShippingAddressFormView: View {
                     .keyboardType(.numberPad)
                     
                     CustomTextField(
-                        title: "Country",
+                        title: "country".localized,
                         placeholder: "United States",
                         type: .regular,
                         state: viewModel.form.isCountryValid ? .valid : .normal,
@@ -150,7 +150,7 @@ struct ShippingAddressFormView: View {
                         get: { viewModel.form.isDefaultAddress ?? false },
                         set: { viewModel.form.isDefaultAddress = $0 }
                     )) {
-                        Text("Set as Default Address")
+                        Text("set_as_default_address".localized)
                     }
                     .accessibilityLabel("Set as Default Address")
                 }
@@ -163,7 +163,7 @@ struct ShippingAddressFormView: View {
                                 .progressViewStyle(CircularProgressViewStyle())
                                 .frame(maxWidth: .infinity)
                         } else {
-                            Text("Save Address")
+                            Text("save_address".localized)
                                 .frame(maxWidth: .infinity)
                                 .foregroundColor(.white)
                                 .padding(.vertical, 10)
@@ -177,11 +177,11 @@ struct ShippingAddressFormView: View {
                     )
                 }
             }
-            .navigationTitle(address == nil ? "Add Address" : "Edit Address")
+            .navigationTitle(address == nil ? "add_address".localized : "edit_address".localized)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Cancel") {
+                    Button("cancel".localized) {
                         dismiss()
                     }
                 }
@@ -197,16 +197,16 @@ struct ShippingAddressFormView: View {
                 logoSize: 50
             )
             
-            .alert("Error", isPresented: $viewModel.showingError) {
-                Button("OK", role: .cancel) { }
+            .alert("error".localized, isPresented: $viewModel.showingError) {
+                Button("ok".localized, role: .cancel) { }
             } message: {
-                Text(viewModel.errorMessage ?? "An error occurred")
+                Text(viewModel.errorMessage ?? "error_occurred".localized)
             }
             
             .overlay(alignment: .bottom) {
                 if viewModel.showingSuccess {
                     SuccessToast(
-                        message: viewModel.successMessage ?? "Address saved successfully!",
+                        message: viewModel.successMessage ?? "address_saved".localized,
                         onDismiss: {
                             viewModel.showingSuccess = false
                         }

@@ -20,7 +20,7 @@ struct RegistrationView: View {
     
     var body: some View {
         GeometryReader { geometry in
-            ScrollView {
+            ScrollView(showsIndicators: false) {
                 VStack(spacing: 25) {
                     if !isKeyboardVisible {
                         LogoHeader()
@@ -39,7 +39,7 @@ struct RegistrationView: View {
                     }
                     
                     PrimaryButton(
-                        title: "Sign Up",
+                        title: "sign_up".localized,
                         isLoading: viewModel.isRegistering,
                         isEnabled: viewModel.isFormValid
                     ) {
@@ -51,14 +51,14 @@ struct RegistrationView: View {
                     
                     if !isKeyboardVisible {
                         HStack {
-                            Text("Already have an account?")
+                            Text("already_have_account".localized)
                                 .font(.subheadline)
                                 .foregroundColor(.secondary)
                             
                             Button(action: {
                                 dismiss()
                             }) {
-                                Text("Sign In")
+                                Text("sign_in".localized)
                                     .font(.subheadline)
                                     .fontWeight(.semibold)
                                     .foregroundColor(.blue)
@@ -78,7 +78,7 @@ struct RegistrationView: View {
                     }) {
                         HStack(spacing: 4) {
                             Image(systemName: "chevron.left")
-                            Text("Atrás")
+                            Text("back_label".localized)
                         }
                         .foregroundColor(.blue)
                     }
@@ -92,7 +92,7 @@ struct RegistrationView: View {
             
             .circularLoading(
                 isLoading: viewModel.isRegistering,
-                message: "Creating account...",
+                message: "creating_account".localized,
                 strokeColor: .blue,
                 backgroundColor: .gray.opacity(0.1),
                 showBackdrop: true,
@@ -138,14 +138,14 @@ private struct LogoHeader: View {
                 .frame(width: 80, height: 80)
                 .accessibilityLabel("App Logo")
             
-            Text("Create Your Account")
+            Text("create_your_account".localized)
                 .font(.title2)
                 .fontWeight(.bold)
                 .multilineTextAlignment(.center)
                 .foregroundColor(.primary)
                 .accessibilityAddTraits(.isHeader)
             
-            Text("Join us and start shopping with exclusive benefits!")
+            Text("join_us_message".localized)
                 .font(.subheadline)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
@@ -162,8 +162,8 @@ private struct RegistrationForm: View {
         VStack(spacing: 20) {
             // Nombre
             CustomTextField(
-                title: "First Name",
-                placeholder: "Enter your first name",
+                title: "first_name".localized,
+                placeholder: "first_name_placeholder".localized,
                 type: .regular,
                 state: viewModel.firstNameState,
                 text: $viewModel.firstName,
@@ -178,8 +178,8 @@ private struct RegistrationForm: View {
             
             // Apellido
             CustomTextField(
-                title: "Last Name",
-                placeholder: "Enter your last name",
+                title: "last_name".localized,
+                placeholder: "last_name_placeholder".localized,
                 type: .regular,
                 state: viewModel.lastNameState,
                 text: $viewModel.lastName,
@@ -194,8 +194,8 @@ private struct RegistrationForm: View {
             
             // Email
             CustomTextField(
-                title: "Email",
-                placeholder: "Enter your email address",
+                title: "email".localized,
+                placeholder: "email_placeholder".localized,
                 type: .regular,
                 state: viewModel.emailState,
                 text: $viewModel.email,
@@ -211,8 +211,8 @@ private struct RegistrationForm: View {
             
             // Contraseña
             CustomTextField(
-                title: "Password",
-                placeholder: "Create a password",
+                title: "password".localized,
+                placeholder: "password_placeholder".localized,
                 type: .secure,
                 state: viewModel.passwordState,
                 text: $viewModel.password,
@@ -226,8 +226,8 @@ private struct RegistrationForm: View {
             
             // Confirmar contraseña
             CustomTextField(
-                title: "Confirm Password",
-                placeholder: "Enter your password again",
+                title: "confirm_password".localized,
+                placeholder: "confirm_password_placeholder".localized,
                 type: .secure,
                 state: viewModel.confirmPasswordState,
                 text: $viewModel.confirmPassword,
@@ -241,20 +241,19 @@ private struct RegistrationForm: View {
             
             // Terms and conditions
             VStack(alignment: .leading, spacing: 10) {
-                HStack(alignment: .top, spacing: 10) {
+                HStack(alignment: .center, spacing: 10) {
                     Toggle("", isOn: $viewModel.acceptTerms)
                         .labelsHidden()
                         .onChange(of: viewModel.acceptTerms) { _ in
                             viewModel.validateTerms()
                         }
                     
-                    // Versión corregida usando HStack
                     HStack(spacing: 0) {
-                        Text("I accept the")
+                        Text("registration_accept_terms".localized)
                             .font(.subheadline)
                             .foregroundColor(.secondary)
                         
-                        Text(" Terms and Conditions")
+                        Text("terms_and_conditions".localized)
                             .font(.subheadline)
                             .fontWeight(.semibold)
                             .foregroundColor(.blue)
@@ -282,91 +281,91 @@ struct TermsAndConditionsView: View {
     
     var body: some View {
         NavigationView {
-            ScrollView {
+            ScrollView(showsIndicators: false) {
                 VStack(alignment: .leading, spacing: 20) {
                     Group {
-                        Text("Terms and Conditions")
+                        Text("terms_and_conditions".localized)
                             .font(.largeTitle)
                             .fontWeight(.bold)
                             .padding(.bottom, 10)
                         
-                        Text("Last Updated: April 24, 2025")
+                        Text(String(format: "last_updated".localized, "24 de abril de 2025"))
                             .font(.subheadline)
                             .foregroundColor(.secondary)
                             .padding(.bottom, 20)
                         
-                        Text("1. Agreement to Terms")
+                        Text("agreement_to_terms".localized)
                             .font(.headline)
                         
-                        Text("By accessing and using the APPECOMM app, you agree to be bound by these Terms and Conditions and our Privacy Policy. If you do not agree to these Terms, you may not access or use the app.")
+                        Text("agreement_to_terms_text".localized)
                             .fixedSize(horizontal: false, vertical: true)
                         
-                        Text("2. User Accounts")
+                        Text("user_accounts".localized)
                             .font(.headline)
                             .padding(.top, 10)
                         
-                        Text("When you create an account with us, you must provide accurate, complete, and current information. You are responsible for maintaining the confidentiality of your account and password and for restricting access to your device.")
+                        Text("user_accounts_text".localized)
                             .fixedSize(horizontal: false, vertical: true)
                         
-                        Text("3. Purchases and Payments")
+                        Text("purchases_and_payments".localized)
                             .font(.headline)
                             .padding(.top, 10)
                         
-                        Text("By providing a payment method, you represent that you are authorized to use the designated payment method and that the payment information you provide is true and accurate.")
+                        Text("purchases_and_payments_text".localized)
                             .fixedSize(horizontal: false, vertical: true)
                     }
                     
                     Group {
-                        Text("4. Privacy Policy")
+                        Text("privacy_policy_section".localized)
                             .font(.headline)
                             .padding(.top, 10)
                         
-                        Text("Your privacy is important to us. Our Privacy Policy explains how we collect, use, disclose, and safeguard your information. By using our app, you consent to the data practices described in our Privacy Policy.")
+                        Text("privacy_policy_section_text".localized)
                             .fixedSize(horizontal: false, vertical: true)
                         
-                        Text("5. Product Information")
+                        Text("product_information".localized)
                             .font(.headline)
                             .padding(.top, 10)
                         
-                        Text("We strive to provide accurate product descriptions, pricing, and availability information, but we do not warrant that product descriptions or other content is accurate, complete, reliable, or error-free.")
+                        Text("product_information_text".localized)
                             .fixedSize(horizontal: false, vertical: true)
                         
-                        Text("6. Limitations of Liability")
+                        Text("limitations_of_liability".localized)
                             .font(.headline)
                             .padding(.top, 10)
                         
-                        Text("In no event shall APPECOMM be liable for any direct, indirect, punitive, incidental, special, or consequential damages arising out of, or in any way connected with, your use of this app or with the delay or inability to use this app.")
+                        Text("limitations_of_liability_text".localized)
                             .fixedSize(horizontal: false, vertical: true)
                         
-                        Text("7. Governing Law")
+                        Text("governing_law".localized)
                             .font(.headline)
                             .padding(.top, 10)
                         
-                        Text("These Terms shall be governed by and construed in accordance with the laws of the state or country where APPECOMM is headquartered, without regard to its conflict of law provisions.")
+                        Text("governing_law_text".localized)
                             .fixedSize(horizontal: false, vertical: true)
+                        
+                        Button(action: {
+                            presentationMode.wrappedValue.dismiss()
+                        }) {
+                            Text("i_accept".localized)
+                                .fontWeight(.semibold)
+                                .frame(maxWidth: .infinity)
+                                .padding()
+                                .background(Color.blue)
+                                .foregroundColor(.white)
+                                .cornerRadius(10)
+                        }
+                        .padding(.top, 20)
                     }
-                    
-                    Button(action: {
-                        presentationMode.wrappedValue.dismiss()
-                    }) {
-                        Text("I Accept")
-                            .fontWeight(.semibold)
-                            .frame(maxWidth: .infinity)
-                            .padding()
-                            .background(Color.blue)
-                            .foregroundColor(.white)
-                            .cornerRadius(10)
-                    }
-                    .padding(.top, 20)
                 }
                 .padding()
             }
-            .navigationBarTitle("Terms and Conditions", displayMode: .inline)
+            .navigationBarTitle("terms_and_conditions".localized, displayMode: .inline)
             .navigationBarItems(trailing:
-                                    Button(action: {
+                                Button(action: {
                 presentationMode.wrappedValue.dismiss()
             }) {
-                Text("Close")
+                Text("close".localized)
                     .foregroundColor(.blue)
             }
             )

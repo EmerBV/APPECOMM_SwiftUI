@@ -47,7 +47,7 @@ struct ShippingAddressSelectorView: View {
     
     private var headerView: some View {
         HStack {
-            Text("Select Shipping Address")
+            Text("select_shipping_address".localized)
                 .font(.headline)
             
             Spacer()
@@ -63,7 +63,7 @@ struct ShippingAddressSelectorView: View {
     }
     
     private var addressesListView: some View {
-        ScrollView {
+        ScrollView(showsIndicators: false) {
             VStack(spacing: 12) {
                 ForEach(viewModel.shippingAddresses.compactMap { $0.id }, id: \.self) { addressId in
                     if let address = viewModel.shippingAddresses.first(where: { $0.id == addressId }) {
@@ -97,7 +97,7 @@ struct ShippingAddressSelectorView: View {
         }) {
             HStack {
                 Image(systemName: "plus.circle.fill")
-                Text("Add New Address")
+                Text("add_new_address".localized)
             }
             .padding()
             .foregroundColor(.blue)
@@ -134,7 +134,7 @@ struct AddressCard: View {
                             .font(.headline)
                         
                         if address.isDefault ?? false {
-                            Text("Default")
+                            Text("default_label".localized)
                                 .font(.caption)
                                 .fontWeight(.semibold)
                                 .padding(.horizontal, 8)
@@ -172,7 +172,7 @@ struct AddressCard: View {
                 
                 if !(address.isDefault ?? false) {
                     Button(action: onSetDefault) {
-                        Text("Set as Default")
+                        Text("set_as_default".localized)
                             .font(.caption)
                             .foregroundColor(.blue)
                     }
@@ -180,7 +180,7 @@ struct AddressCard: View {
                 }
                 
                 Button(action: onDelete) {
-                    Text("Delete")
+                    Text("delete_btn_address".localized)
                         .font(.caption)
                         .foregroundColor(.red)
                 }
@@ -199,9 +199,4 @@ struct AddressCard: View {
     }
 }
 
-// Helper para representar el ID como Identifiable para alertas
-extension Int: Identifiable {
-    public var id: Int {
-        return self
-    }
-}
+

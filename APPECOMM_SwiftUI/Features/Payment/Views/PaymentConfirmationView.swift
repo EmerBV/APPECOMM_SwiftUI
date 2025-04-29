@@ -13,7 +13,7 @@ struct PaymentConfirmationView: View {
     @State private var navigateToOrderDetails = false
     
     var body: some View {
-        ScrollView {
+        ScrollView(showsIndicators: false) {
             VStack(spacing: 30) {
                 // Success icon
                 ZStack {
@@ -29,11 +29,11 @@ struct PaymentConfirmationView: View {
                 }
                 .padding(.top, 30)
                 
-                Text("Payment Successful!")
+                Text("payment_successful".localized)
                     .font(.title)
                     .fontWeight(.bold)
                 
-                Text("Thank you for your order. Your payment has been processed successfully.")
+                Text("thank_you_for_your_order".localized)
                     .font(.body)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal)
@@ -41,25 +41,25 @@ struct PaymentConfirmationView: View {
                 if let order = viewModel.order {
                     // Order details card
                     VStack(alignment: .leading, spacing: 12) {
-                        Text("Order Details")
+                        Text("order_details".localized)
                             .font(.headline)
                             .padding(.bottom, 8)
                         
                         HStack {
-                            Text("Order Number")
+                            Text("order_number".localized)
                             Spacer()
                             Text("#\(order.id)")
                                 .fontWeight(.semibold)
                         }
                         
                         HStack {
-                            Text("Date")
+                            Text("date_label".localized)
                             Spacer()
                             Text(APPFormatters.formattedDateString(from: order.orderDate))
                         }
                         
                         HStack {
-                            Text("Order Total")
+                            Text("order_total".localized)
                             Spacer()
                             Text(order.totalAmount.toCurrentLocalePrice)
                                 .fontWeight(.semibold)
@@ -67,7 +67,7 @@ struct PaymentConfirmationView: View {
                         
                         Divider()
                         
-                        Text("A confirmation email has been sent to your email address.")
+                        Text("a_confirmation_email".localized)
                             .font(.subheadline)
                             .foregroundColor(.secondary)
                     }
@@ -79,12 +79,12 @@ struct PaymentConfirmationView: View {
                 } else {
                     // Order Summary if no order object is available
                     VStack(alignment: .leading, spacing: 12) {
-                        Text("Order Summary")
+                        Text("order_summary".localized)
                             .font(.headline)
                             .padding(.bottom, 8)
                         
                         HStack {
-                            Text("Order Total")
+                            Text("order_total".localized)
                             Spacer()
                             Text(viewModel.orderSummary.total.toCurrentLocalePrice)
                                 .fontWeight(.semibold)
@@ -92,7 +92,7 @@ struct PaymentConfirmationView: View {
                         
                         Divider()
                         
-                        Text("A confirmation email has been sent to your email address.")
+                        Text("a_confirmation_email".localized)
                             .font(.subheadline)
                             .foregroundColor(.secondary)
                     }
@@ -114,7 +114,7 @@ struct PaymentConfirmationView: View {
                         object: nil
                     )
                 }) {
-                    Text("Continue Shopping")
+                    Text("continue_shopping_btn".localized)
                         .fontWeight(.semibold)
                         .foregroundColor(.white)
                         .padding()
@@ -129,7 +129,7 @@ struct PaymentConfirmationView: View {
                     Button(action: {
                         navigateToOrderDetails = true
                     }) {
-                        Text("View Order")
+                        Text("view_order_btn".localized)
                             .fontWeight(.semibold)
                             .foregroundColor(.blue)
                             .padding()
@@ -151,7 +151,7 @@ struct PaymentConfirmationView: View {
             }
             .padding()
         }
-        .navigationTitle("Payment Confirmation")
+        .navigationTitle("checkout_payment_confirmation".localized)
         .navigationBarBackButtonHidden(true)
     }
     

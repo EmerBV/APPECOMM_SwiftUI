@@ -28,19 +28,19 @@ class AppState: ObservableObject {
         Logger.info("Refreshing app data...")
     }
     
-    func showSuccessMessage(_ message: String, title: String = "Success") {
+    func showSuccessMessage(_ message: String, title: String = "success".localized) {
         currentAlert = AlertItem(
             title: title,
             message: message,
-            dismissButton: .default(Text("OK"))
+            dismissButton: .default(Text("ok".localized))
         )
     }
     
-    func showErrorMessage(_ message: String, title: String = "Error") {
+    func showErrorMessage(_ message: String, title: String = "error".localized) {
         currentAlert = AlertItem(
             title: title,
             message: message,
-            dismissButton: .default(Text("OK"))
+            dismissButton: .default(Text("ok".localized))
         )
     }
     

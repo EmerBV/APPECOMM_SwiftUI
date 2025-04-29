@@ -110,7 +110,7 @@ private struct NewsletterSignupView: View {
                     TextField("phone_number_optional".localized, text: $phoneNumber)
                         .keyboardType(.phonePad)
                     
-                    Toggle("accept_terms".localized, isOn: $acceptTerms)
+                    Toggle("newsletter_accept_terms".localized, isOn: $acceptTerms)
                 }
                 
                 Button(action: {

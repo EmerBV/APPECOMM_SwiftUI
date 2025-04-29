@@ -11,7 +11,7 @@ struct OrderReviewItemRow: View {
     let item: CartItem
     
     var body: some View {
-        HStack(alignment: .top, spacing: 12) {
+        HStack(alignment: .center, spacing: 12) {
             ZStack {
                 RoundedRectangle(cornerRadius: 6)
                     .fill(Color.gray.opacity(0.1))

@@ -16,7 +16,10 @@ class AppCoordinator: ObservableObject {
     private let tokenManager: TokenManagerProtocol
     private var cancellables = Set<AnyCancellable>()
     
-    init(authRepository: AuthRepositoryProtocol, tokenManager: TokenManagerProtocol) {
+    init(
+        authRepository: AuthRepositoryProtocol,
+        tokenManager: TokenManagerProtocol
+    ) {
         self.authRepository = authRepository
         self.tokenManager = tokenManager
         

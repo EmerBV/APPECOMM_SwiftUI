@@ -32,7 +32,7 @@ struct WishListView: View {
                 }
             }
         }
-        .navigationTitle("My Wishlist")
+        .navigationTitle("my_wishlist_title".localized)
         .onAppear {
             viewModel.loadWishList()
         }
@@ -60,7 +60,7 @@ struct WishListView: View {
                     Button(role: .destructive) {
                         viewModel.removeFromWishList(productId: product.id)
                     } label: {
-                        Label("Remove", systemImage: "trash")
+                        Label("remove".localized, systemImage: "trash")
                     }
                 }
             }
@@ -123,7 +123,7 @@ struct WishListItemRow: View {
                         .fill(product.status == .inStock ? Color.green : Color.red)
                         .frame(width: 8, height: 8)
                     
-                    Text(product.status == .inStock ? "In Stock" : "Out of Stock")
+                    Text(product.status == .inStock ? "in_stock".localized : "out_of_stock".localized)
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
@@ -142,11 +142,11 @@ struct EmptyWishListView: View {
                 .font(.system(size: 80))
                 .foregroundColor(.gray)
             
-            Text("Your wishlist is empty")
+            Text("wishlist_empty".localized)
                 .font(.title2)
                 .fontWeight(.semibold)
             
-            Text("Items you add to your wishlist will appear here")
+            Text("wishlist_will_appear".localized)
                 .font(.body)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
@@ -159,7 +159,7 @@ struct EmptyWishListView: View {
                 }
                 NotificationCenter.default.post(name: Notification.Name("NavigateToHomeTab"), object: nil)
             }) {
-                Text("Browse Products")
+                Text("browse_products".localized)
                     .font(.headline)
                     .foregroundColor(.white)
                     .padding()

@@ -24,14 +24,8 @@ struct ShippingInfoView: View {
     }
     
     var body: some View {
-        ScrollView {
+        ScrollView(showsIndicators: false) {
             VStack(spacing: 20) {
-                // Header
-                Text("Shipping Information")
-                    .font(.headline)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.horizontal)
-                
                 // Content: address selector, existing details, or form
                 VStack(alignment: .leading, spacing: 16) {
                     if !viewModel.shippingAddresses.isEmpty && !viewModel.isAddingNewAddress {
@@ -47,7 +41,7 @@ struct ShippingInfoView: View {
                     
                     // Continue button
                     PrimaryButton(
-                        title: "Continue to Payment",
+                        title: "continue_to_payment".localized,
                         isLoading: viewModel.isLoading,
                         isEnabled: viewModel.hasExistingShippingDetails || viewModel.selectedAddress != nil || viewModel.shippingDetailsForm.isValid
                     ) {
@@ -67,7 +61,7 @@ struct ShippingInfoView: View {
                             if viewModel.shippingDetailsForm.isValid {
                                 viewModel.saveShippingDetails()
                             } else {
-                                viewModel.errorMessage = "Please fill in all required fields correctly"
+                                viewModel.errorMessage = "please_fill_in".localized
                                 viewModel.showError = true
                             }
                         }
@@ -78,17 +72,17 @@ struct ShippingInfoView: View {
             }
             .padding(.vertical)
         }
-        .navigationTitle("Shipping Information")
+        .navigationTitle("shipping_information".localized)
         .toolbar {
             ToolbarItem(placement: .keyboard) {
                 HStack {
                     Spacer()
                     
-                    Button("Next") {
+                    Button("next_label".localized) {
                         moveToNextField()
                     }
                     
-                    Button("Done") {
+                    Button("done_label".localized) {
                         focusedField = nil
                     }
                 }
@@ -102,9 +96,9 @@ struct ShippingInfoView: View {
             set: { if !$0 { viewModel.errorMessage = nil } }
         )) {
             Alert(
-                title: Text("Error"),
-                message: Text(viewModel.errorMessage ?? "An unknown error occurred"),
-                dismissButton: .default(Text("OK"))
+                title: Text("error".localized),
+                message: Text(viewModel.errorMessage ?? "unknown_error".localized),
+                dismissButton: .default(Text("ok".localized))
             )
         }
         .onAppear {
@@ -122,7 +116,7 @@ struct ShippingInfoView: View {
         VStack(alignment: .leading, spacing: 12) {
             // Cabecera con texto descriptivo y botón de selección
             HStack {
-                Text("Shipping Address")
+                Text("shipping_address_label".localized)
                     .font(.headline)
                 
                 Spacer()
@@ -130,7 +124,7 @@ struct ShippingInfoView: View {
                 Button(action: {
                     showingAddressSelector = true
                 }) {
-                    Text("Change")
+                    Text("change_label".localized)
                         .font(.subheadline)
                         .foregroundColor(.blue)
                 }
@@ -167,7 +161,7 @@ struct ShippingInfoView: View {
                 .cornerRadius(8)
             } else {
                 // Mensaje si no hay dirección seleccionada
-                Text("No shipping address selected")
+                Text("no_shipping_address_selected".localized)
                     .foregroundColor(.secondary)
                     .padding()
                     .frame(maxWidth: .infinity, alignment: .center)
@@ -181,7 +175,7 @@ struct ShippingInfoView: View {
             }) {
                 HStack {
                     Image(systemName: "plus")
-                    Text("Add New Address")
+                    Text("add_new_address".localized)
                 }
                 .foregroundColor(.blue)
                 .padding(.vertical, 8)
@@ -195,7 +189,7 @@ struct ShippingInfoView: View {
             // Header con botón para cancelar
             if !viewModel.shippingAddresses.isEmpty {
                 HStack {
-                    Text("Add New Address")
+                    Text("add_new_address".localized)
                         .font(.headline)
                     
                     Spacer()
@@ -203,24 +197,24 @@ struct ShippingInfoView: View {
                     Button(action: {
                         viewModel.isAddingNewAddress = false
                     }) {
-                        Text("Cancel")
+                        Text("cancel".localized)
                             .foregroundColor(.blue)
                     }
                 }
             } else {
-                Text("Add Shipping Address")
+                Text("add_shipping_address".localized)
                     .font(.headline)
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
             
             // Campos del formulario
             CustomTextField(
-                title: "Full Name",
+                title: "full_name".localized,
                 placeholder: "John Doe",
                 type: .regular,
                 state: viewModel.shippingDetailsForm.isFullNameValid ?
                     .valid :
-                    (viewModel.shippingDetailsForm.fullName.isEmpty ? .normal : .error("Name is required")),
+                    (viewModel.shippingDetailsForm.fullName.isEmpty ? .normal : .error("fullname_is_required".localized)),
                 text: Binding(
                     get: { viewModel.shippingDetailsForm.fullName },
                     set: {
@@ -236,7 +230,7 @@ struct ShippingInfoView: View {
             }
             
             CustomTextField(
-                title: "Address",
+                title: "address".localized,
                 placeholder: "123 Main St",
                 type: .regular,
                 state: viewModel.shippingDetailsForm.isAddressValid ? .valid : .normal,
@@ -256,7 +250,7 @@ struct ShippingInfoView: View {
             
             HStack(spacing: 12) {
                 CustomTextField(
-                    title: "City",
+                    title: "city".localized,
                     placeholder: "New York",
                     type: .regular,
                     state: viewModel.shippingDetailsForm.isCityValid ? .valid : .normal,
@@ -275,7 +269,7 @@ struct ShippingInfoView: View {
                 }
                 
                 CustomTextField(
-                    title: "State",
+                    title: "state_province".localized,
                     placeholder: "NY",
                     type: .regular,
                     state: viewModel.shippingDetailsForm.isStateValid ? .valid : .normal,
@@ -296,7 +290,7 @@ struct ShippingInfoView: View {
             
             HStack(spacing: 12) {
                 CustomTextField(
-                    title: "Postal Code",
+                    title: "postal_code".localized,
                     placeholder: "10001",
                     type: .numeric,
                     state: viewModel.shippingDetailsForm.isPostalCodeValid ? .valid : .normal,
@@ -315,7 +309,7 @@ struct ShippingInfoView: View {
                 }
                 
                 CustomTextField(
-                    title: "Country",
+                    title: "country".localized,
                     placeholder: "United States",
                     type: .regular,
                     state: viewModel.shippingDetailsForm.isCountryValid ? .valid : .normal,
@@ -335,7 +329,7 @@ struct ShippingInfoView: View {
             }
             
             CustomTextField(
-                title: "Phone Number",
+                title: "phone_number".localized,
                 placeholder: "+1 (555) 123-4567",
                 type: .phone,
                 state: viewModel.shippingDetailsForm.isPhoneNumberValid ? .valid : .normal,
@@ -354,7 +348,7 @@ struct ShippingInfoView: View {
             }
             
             // Opción para establecer como dirección predeterminada
-            Toggle("Set as default shipping address", isOn: Binding(
+            Toggle("set_as_default_shipping".localized, isOn: Binding(
                 get: { viewModel.shippingDetailsForm.isDefaultAddress ?? false },
                 set: { viewModel.shippingDetailsForm.isDefaultAddress = $0 }
             ))

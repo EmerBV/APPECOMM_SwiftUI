@@ -172,7 +172,7 @@ struct ProfileView: View {
                     showingAddressManager = true
                 }) {
                     HStack {
-                        Text("Manage Shipping Addresses")
+                        Text("manage_shipping_addresses".localized)
                         Spacer()
                         Image(systemName: "chevron.right")
                             .font(.caption)
@@ -189,7 +189,7 @@ struct ProfileView: View {
                                     .fontWeight(.semibold)
                                 
                                 if address.isDefault ?? false {
-                                    Text("Default")
+                                    Text("default".localized)
                                         .font(.caption)
                                         .fontWeight(.semibold)
                                         .padding(.horizontal, 6)
@@ -213,12 +213,12 @@ struct ProfileView: View {
                     }
                     
                     if (user.shippingDetails?.count ?? 0) > 2 {
-                        Text("+ \((user.shippingDetails?.count ?? 0) - 2) more addresses")
+                        Text(String(format: "more_addresses".localized, (user.shippingDetails?.count ?? 0) - 2))
                             .font(.caption)
                             .foregroundColor(.secondary)
                     }
                 } else {
-                    Text("No shipping addresses")
+                    Text("no_shipping_addresses")
                         .foregroundColor(.secondary)
                         .padding(.vertical, 8)
                 }
@@ -227,10 +227,10 @@ struct ProfileView: View {
             }
             
             // Orders
-            Section(header: Text("my_orders".localized)) {
+            Section(header: Text("orders".localized)) {
                 if let orders = user.orders, !orders.isEmpty {
                     NavigationLink(destination: OrdersListView(viewModel: DependencyInjector.shared.resolve(OrdersViewModel.self))) {
-                        Label("Mis Pedidos", systemImage: "list.bullet.clipboard")
+                        Label("my_orders".localized, systemImage: "list.bullet.clipboard")
                     }
                 } else {
                     Text("no_orders".localized)

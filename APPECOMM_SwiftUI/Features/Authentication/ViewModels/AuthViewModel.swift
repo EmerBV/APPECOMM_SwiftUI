@@ -196,7 +196,7 @@ class AuthViewModel: ObservableObject {
         guard let credentials = retrieveCredentials() else {
             Logger.warning("No hay credenciales guardadas para login biométrico")
             showAlert(
-                title: "Error",
+                title: "error".localized,
                 message: "no_biometric_credentials".localized
             )
             return

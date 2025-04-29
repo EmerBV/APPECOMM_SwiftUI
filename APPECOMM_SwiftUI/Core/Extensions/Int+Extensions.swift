@@ -11,24 +11,11 @@ extension Int {
     var toString: String {
         return String(self)
     }
-    
 }
 
-extension Double {
-    var toString: String {
-        return String(self)
+// Helper para representar el ID como Identifiable para alertas
+extension Int: @retroactive Identifiable {
+    public var id: Int {
+        return self
     }
-    
-    var toPercentage: String {
-        return String(format: "%.2f%%", self * 100)
-    }
-    
-    var toDecimals: String {
-        return String(format: "%.2f", self)
-    }
-    
-    var toCurrency: String {
-        return String(format: "$%.2f", self)
-    }
-    
 }

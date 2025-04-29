@@ -1,7 +1,7 @@
-// General
+// MARK: - General
 "app_name" = "APPECOMM";
 
-// Authentication
+// MARK: - Authentication
 "login" = "Login";
 "register" = "Register";
 "email" = "Email";
@@ -13,7 +13,6 @@
 "form_errors" = "Please correct the form errors";
 "auth_error" = "Authentication Error";
 "invalid_credentials" = "Invalid email or password";
-"server_error" = "Server Error";
 "try_again_later" = "Please try again later";
 "login_success" = "Login Successful";
 "welcome" = "Welcome!";
@@ -35,7 +34,7 @@
 "cancel" = "Cancel";
 "auth_failed" = "Authentication failed";
 
-// Profile
+// MARK: - Profile
 "profile" = "Profile";
 "settings" = "Settings";
 "logout" = "Logout";
@@ -49,7 +48,35 @@
 "save_changes" = "Save Changes";
 "hello_user" = "Hello,";
 "shipping_information" = "Shipping Information";
+"default" = "Default";
+"shipping_addresses" = "Shipping Addresses";
+"manage_shipping_addresses" = "Manage Shipping Addresses";
+"more_addresses" = "+ %d more addresses";
+"no_shipping_addresses" = "No shipping addresses";
 "add_shipping_address" = "Add Shipping Address";
+"delete_address" = "Delete Address";
+"delete_btn_address" = "Delete";
+"cancel_btn_address" = "Cancel";
+"are_you_sure" = "Are you sure you want to delete this address?";
+"no_addresses" = "No Addresses Yet";
+"first_shipping_address" = "Add your first shipping address to make checkout faster.";
+"add_address" = "Add Address";
+"edit_address" = "Edit Address";
+"default_address" = "Default Address";
+"set_as" = "Set as Default";
+"contact_info" = "Contact Info";
+"full_name" = "Full Name";
+"phone_number" = "Phone Number";
+"address" = "Address";
+"street_address" = "Street Address";
+"city" = "City";
+"state_province" = "State/Province";
+"postal_code" = "Postal Code";
+"country" = "Country";
+"set_as_default_address" = "Set as Default Address";
+"save_address" = "Save Address";
+"address_saved" = "Address saved successfully!";
+"orders" = "Orders";
 "my_orders" = "My Orders";
 "order_details" = "Order Details";
 "order_number" = "Order #";
@@ -59,14 +86,14 @@
 "notifications" = "Notifications";
 "help_support" = "Help & Support";
 
-// Products
+// MARK: - Products
 "products" = "Products";
 "all" = "All";
 "add_to_cart" = "Add to Cart";
 "price" = "Price";
 "description" = "Description";
 
-// Cart
+// MARK: - Cart
 "cart" = "My Cart";
 "checkout" = "Checkout";
 "total" = "Total";
@@ -77,7 +104,6 @@
 "clear_cart_confirmation" = "Are you sure you want to remove all items from your cart?";
 "empty_cart_message" = "Looks like you haven't added any items to your cart yet";
 "browse_products" = "Browse Products";
-"order_summary" = "Order Summary";
 "subtotal" = "Subtotal";
 "shipping" = "Shipping";
 "shipping_calculated" = "Calculated at checkout";
@@ -85,7 +111,7 @@
 "remove_item" = "Remove Item";
 "remove" = "Remove";
 "remove_item_confirmation" = "Are you sure you want to remove this item from your cart?";
-"variant_label" = "Variant:";
+"variant_label" = "Variant: %@";
 "quantity_label" = "Quantity:";
 "unable_to_load_cart" = "Unable to load cart: %@";
 "unable_to_update_item" = "Unable to update item: %@";
@@ -95,20 +121,68 @@
 "unable_to_clear_cart" = "Unable to clear cart: %@";
 "cart_cleared" = "Cart cleared";
 
-// Orders
-"orders" = "Orders";
+// MARK: - Orders
 "order_history" = "Order History";
 "order_status" = "Order Status";
 "order_date" = "Order Date";
+"pending_payment" = "Pending payment orders";
+"no_pending_orders" = "There are no pending orders";
+"no_orders_history" = "There are no orders in the history";
+"loading_orders" = "Loading Orders...";
+"order" = "Order #%d";
+"pending_status" = "Pending";
+"pending_payment_status" = "Pending Payment";
+"processing_status" = "Processing";
+"shipped_status" = "Shipped";
+"delivered_status" = "Delivered";
+"cancelled_status" = "Cancelled";
+"refunded_status" = "Refunded";
+"paid_status" = "Paid";
+"no_order_details" = "No order details available";
+"order_placed" = "Order Placed";
+"items_label" = "Items";
+"order_summary" = "Order Summary";
+"free_label" = "Free";
+"payment_confirmed" = "Payment Confirmed";
+"order_shipped" = "Order Shipped";
+"order_delivered" = "Order Delivered";
+"contact_support" = "Contact Support";
+"reorder_label" = "Reorder";
+"error_loading_order" = "Error Loading Order";
+"order_try_again" = "Try Again";
 
-// Settings
+// MARK: - Order Review
+"no_items_in_cart" = "No items in cart";
+"order_payment_method" = "Payment Method";
+"tax_label" = "Tax";
+"place_order" = "Place Order";
+"review_order" = "Review Order";
+
+// MARK: - Order Summary Card
+"and_more_items" = "And %d more items...";
+"select_shipping_address" = "Select Shipping Address";
+"default_label" = "Default";
+"set_as_default" = "Set as Default";
+
+// MARK: - Shipping Info View
+"continue_to_payment" = "Continue to Payment";
+"please_fill_in" = "Please fill in all required fields correctly";
+"next_label" = "Next";
+"shipping_address_label" = "Shipping Address";
+"change_label" = "Change";
+"no_shipping_address_selected" = "No shipping address selected";
+"add_new_address" = "Add New Address";
+"fullname_is_required" = "Full name is required";
+"set_as_default_shipping" = "Set as default shipping address";
+
+// MARK: - Settings
 "preferences" = "Preferences";
 "language" = "Language";
 "language_settings" = "Language Settings";
 "about" = "About";
 "version" = "Version";
 
-// Product Details
+// MARK: - Product Details
 "product_details" = "Product Details";
 "available_variants" = "Available Variants";
 "original_price" = "Original price:";
@@ -130,7 +204,7 @@
 "yes" = "Yes";
 "no" = "No";
 
-// Why Shop Section
+// MARK: - Why Shop Section
 "why_shop_title" = "WHY SHOP WITH US?";
 "why_shop_subtitle" = "Shopping with us comes with unique perks not available anywhere else. Discover all the reasons to stay and play.";
 "rewards_title" = "EARN REWARDS AND SHOP WITH POINTS";
@@ -142,7 +216,7 @@
 "contests_title" = "CONTESTS & GIVEAWAYS";
 "contests_description" = "Win exclusive prizes";
 
-// Network Errors
+// MARK: - Network Errors
 "invalid_url" = "The URL is not valid";
 "invalid_response" = "Invalid server response";
 "no_data" = "No data received";
@@ -150,33 +224,31 @@
 "forbidden" = "You don't have permission to perform this action";
 "not_found" = "The requested resource does not exist";
 "invalid_request" = "Invalid request";
-"server_error" = "Server error";
 "processing_error" = "Error processing the response";
-"unknown_error" = "Unknown error";
 
-// Validation
+// MARK: - Validation
 "name_empty" = "Name cannot be empty";
 "name_too_short" = "Name must be at least 2 characters";
 
-// Notifications
+// MARK: - Notifications
 "dismiss_notification" = "Dismiss notification";
 "sign_up_exclusive" = "Sign up for exclusive offers";
 
-// Newsletter Form
+// MARK: - Newsletter Form
 "email" = "Email";
 "phone_number_optional" = "Phone Number (optional)";
-"accept_terms" = "I accept the terms and conditions";
+"newsletter_accept_terms" = "I accept the terms and conditions";
 "sign_up" = "Sign Up";
 "newsletter_signup" = "Newsletter Signup";
 "close" = "Close";
 
-// Legal & Accessibility
+// MARK: - Legal & Accessibility
 "privacy_policy" = "Privacy Policy";
 "terms_conditions" = "Terms & Conditions";
 "accessibility_statement" = "Accessibility Statement";
 "copyright_notice" = "Series content, product specifications, release dates and pricing are subject to change. All Rights Reserved.";
 
-// Home View
+// MARK: - Home View
 "search" = "Search";
 "featured_categories" = "Featured Categories";
 "new_arrivals" = "New Arrivals";
@@ -189,13 +261,13 @@
 "get_in_the_loop" = "GET IN THE LOOP!";
 "failed_to_load_data" = "Failed to load data";
 
-// Search View
+// MARK: - Search View
 "search_products" = "Search products";
 "no_products_found" = "No products found";
 "try_different_keywords" = "Try different keywords";
 "clear_search" = "Clear search";
 
-// Promotion Banner
+// MARK: - Promotion Banner
 "summer_sale" = "Summer Sale";
 "summer_sale_subtitle" = "Up to 50% off on selected items";
 "shop_now" = "Shop Now";
@@ -206,22 +278,22 @@
 "special_offer_subtitle" = "Free shipping on orders over $50";
 "learn_more" = "Learn More";
 
-// Error Messages
+// MARK: - Error Messages
 "processing_error" = "Error processing response. Unexpected data format.";
 "server_error" = "Server error. Please try again later.";
 "unauthorized" = "Session expired. Please login again.";
 "unknown_error" = "An unknown error occurred. Please try again.";
 "error" = "Error";
+"error_occurred" = "An error occurred";
 
-// Success Messages
+// MARK: - Success Messages
 "success" = "Success";
-"added_to_cart" = "Product added to cart";
 "products_updated" = "%d products have been loaded";
 
-// Components
+// MARK: - Components
 "loading" = "Loading";
 
-// Splash View
+// MARK: - Splash View
 "splash_welcome" = "Welcome to";
 "splash_loading" = "Loading...";
 "splash_version" = "Version %@";
@@ -244,5 +316,93 @@
 "splash_privacy_button" = "View Privacy Policy";
 "splash_continue" = "Continue";
 
-// Checkout
-"done" = "Done";
+// MARK: - Checkout View
+"done_label" = "Done";
+"checkout_payment_method" = "Payment Method";
+"checkout_order_review" = "Order Review";
+"checkout_processing_review" = "Processing Review";
+"checkout_payment_confirmation" = "Payment Confirmation";
+"checkout_cancel_order" = "Cancel Order?";
+"checkout_continue_order" = "Continue with the order";
+"cancel_order_label" = "Cancel Order";
+"if_you_cancel_now" = "If you cancel now, you will lose the information you entered and will be returned to the cart.";
+"select_payment_method" = "Select Payment Method";
+"credit_card_option" = "Credit Card";
+"apple_pay_option" = "Apple Pay";
+"checkout_payment_failure" = "Payment could not be processed: Order not found";
+"no_authenticated_user" = "No Authenticated User";
+"failed_to_save_shipping_details" = "Failed to save shipping details";
+"please_select_shipping_address" = "Please select shipping address";
+"invalid_shipping_address_id" = "Invalid shipping address ID";
+"payment_completed" = "Payment Completed";
+"please_complete_shipping_fields" = "Please complete shipping fields";
+"please_complete_shipping_fields_or_select_address" = "Please complete shipping fields or select address";
+"failed_to_load_shipping_addresses" = "Failed to load shipping addresses";
+"no_user_id_available" = "No user ID available";
+"please_fill_required_fields" = "Please fill required fields";
+"failed_to_create_shipping_address" = "Failed to create shipping address";
+"failed_to_set_default_address" = "Failed to set default address";
+"failed_to_delete_address" = "Failed to delete address";
+"continue_label" = "Continue";
+
+// MARK: - Registration
+"create_your_account" = "Create Your Account";
+"join_us_message" = "Join us and start shopping with exclusive benefits!";
+"first_name" = "First Name";
+"first_name_placeholder" = "Enter your first name";
+"last_name" = "Last Name";
+"last_name_placeholder" = "Enter your last name";
+"email_placeholder" = "Enter your email address";
+"password_placeholder" = "Create a password";
+"confirm_password" = "Confirm Password";
+"confirm_password_placeholder" = "Enter your password again";
+"password_confirmation_required" = "Password confirmation is required";
+"passwords_do_not_match" = "Passwords do not match";
+"must_accept_terms" = "You must accept the terms and conditions";
+"creating_account" = "Creating account...";
+"registration_error" = "Registration Error";
+"invalid_registration_details" = "Invalid registration details";
+"account_created_success" = "Your account has been created successfully! Welcome to APPECOMM";
+"already_have_account" = "Already have an account? ";
+"sign_in" = "Sign In";
+"back_label" = "Back";
+"registration_accept_terms" = "I Accept the ";
+"terms_and_conditions" = "Terms and Conditions";
+"last_updated" = "Last Updated: %@";
+"agreement_to_terms" = "1. Agreement to Terms";
+"agreement_to_terms_text" = "By accessing and using the APPECOMM app, you agree to be bound by these Terms and Conditions and our Privacy Policy. If you do not agree to these Terms, you may not access or use the app.";
+"user_accounts" = "2. User Accounts";
+"user_accounts_text" = "When you create an account with us, you must provide accurate, complete, and current information. You are responsible for maintaining the confidentiality of your account and password and for restricting access to your device.";
+"purchases_and_payments" = "3. Purchases and Payments";
+"purchases_and_payments_text" = "By providing a payment method, you represent that you are authorized to use the designated payment method and that the payment information you provide is true and accurate.";
+"privacy_policy_section" = "4. Privacy Policy";
+"privacy_policy_section_text" = "Your privacy is important to us. Our Privacy Policy explains how we collect, use, disclose, and safeguard your information. By using our app, you consent to the data practices described in our Privacy Policy.";
+"product_information" = "5. Product Information";
+"product_information_text" = "We strive to provide accurate product descriptions, pricing, and availability information, but we do not warrant that product descriptions or other content is accurate, complete, reliable, or error-free.";
+"limitations_of_liability" = "6. Limitations of Liability";
+"limitations_of_liability_text" = "In no event shall APPECOMM be liable for any direct, indirect, punitive, incidental, special, or consequential damages arising out of, or in any way connected with, your use of this app or with the delay or inability to use this app.";
+"governing_law" = "7. Governing Law";
+"governing_law_text" = "These Terms shall be governed by and construed in accordance with the laws of the state or country where APPECOMM is headquartered, without regard to its conflict of law provisions.";
+"i_accept" = "I Accept";
+
+// MARK: - Payment Confirmation View
+"payment_successful" = "Payment Successful!";
+"thank_you_for_your_order" = "Thank you for your order. Your payment has been processed successfully.";
+"order_number" = "Order Number";
+"date_label" = "Date";
+"order_total" = "Order Total";
+"a_confirmation_email" = "A confirmation email has been sent to your email address.";
+"continue_shopping_btn" = "Continue Shopping";
+"view_order_btn" = "View Order";
+
+// MARK: - Payment Error View
+"payment_failed" = "Payment Failed";
+"there_was_a_problem" = "There was a problem processing your payment. Please try again.";
+"return_to_cart" = "Return to Cart";
+"payment_cancelled" = "Payment Cancelled";
+
+// MARK: - My Wishlist View
+"my_wishlist_title" = "My Wishlist";
+"wishlist_empty" = "Your wishlist is empty";
+"wishlist_will_appear" = "Items you add to your wishlist will appear here";
+"browse_products" = "Browse Products";

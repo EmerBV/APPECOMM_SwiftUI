@@ -13,7 +13,7 @@ struct OrderDetailView: View {
     @Environment(\.dismiss) private var dismiss
     
     var body: some View {
-        ScrollView {
+        ScrollView(showsIndicators: false) {
             VStack(spacing: 20) {
                 if viewModel.isLoading {
                     ProgressView()
@@ -42,14 +42,14 @@ struct OrderDetailView: View {
                 } else if let error = viewModel.errorMessage {
                     errorView(error)
                 } else {
-                    Text("No order details available")
+                    Text("no_order_details".localized)
                         .foregroundColor(.secondary)
                         .padding(.top, 50)
                 }
             }
             .padding()
         }
-        .navigationTitle("Order #\(orderId)")
+        .navigationTitle(String(format: "order".localized, orderId))
         .navigationBarTitleDisplayMode(.inline)
         .onAppear {
             viewModel.loadOrderDetails(orderId: orderId)
@@ -62,7 +62,7 @@ struct OrderDetailView: View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("Order Placed")
+                    Text("order_placed".localized)
                         .font(.caption)
                         .foregroundColor(.secondary)
                     
@@ -73,7 +73,7 @@ struct OrderDetailView: View {
                 Spacer()
                 
                 VStack(alignment: .trailing, spacing: 4) {
-                    Text("Total")
+                    Text("total".localized)
                         .font(.caption)
                         .foregroundColor(.secondary)
                     
@@ -83,7 +83,7 @@ struct OrderDetailView: View {
             }
             
             HStack {
-                Text("Status")
+                Text("status_label".localized)
                     .font(.caption)
                     .foregroundColor(.secondary)
                 
@@ -99,7 +99,7 @@ struct OrderDetailView: View {
     
     private func orderItemsSection(_ order: Order) -> some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("Items")
+            Text("items_label".localized)
                 .font(.headline)
             
             ForEach(order.items, id: \.id) { item in
@@ -124,7 +124,7 @@ struct OrderDetailView: View {
                             .foregroundColor(.secondary)
                         
                         if let variantName = item.variantName {
-                            Text("Variant: \(variantName)")
+                            Text(String(format: "variant_label".localized, variantName))
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                         }
@@ -154,28 +154,28 @@ struct OrderDetailView: View {
     
     private func orderSummarySection(_ order: Order) -> some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("Order Summary")
+            Text("order_summary".localized)
                 .font(.headline)
             
             Group {
                 HStack {
-                    Text("Subtotal")
+                    Text("subtotal".localized)
                     Spacer()
                     Text(order.totalAmount.toCurrentLocalePrice)
                 }
                 
                 // In a real app, you'd have tax and shipping details
                 HStack {
-                    Text("Shipping")
+                    Text("shipping".localized)
                     Spacer()
-                    Text("Free")
+                    Text("free_label".localized)
                         .foregroundColor(.green)
                 }
                 
                 Divider()
                 
                 HStack {
-                    Text("Total")
+                    Text("total".localized)
                         .fontWeight(.bold)
                     Spacer()
                     Text(order.totalAmount.toCurrentLocalePrice)
@@ -191,35 +191,35 @@ struct OrderDetailView: View {
     
     private func orderStatusSection(_ order: Order) -> some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Order Status")
+            Text("order_status".localized)
                 .font(.headline)
             
             VStack(alignment: .leading, spacing: 16) {
                 HStack {
                     Image(systemName: "checkmark.circle.fill")
                         .foregroundColor(.green)
-                    Text("Order Placed")
+                    Text("order_placed".localized)
                         .foregroundColor(.primary)
                 }
                 
                 HStack {
                     Image(systemName: "checkmark.circle.fill")
                         .foregroundColor(.green)
-                    Text("Payment Confirmed")
+                    Text("payment_confirmed".localized)
                         .foregroundColor(.primary)
                 }
                 
                 HStack {
-                    Image(systemName: order.status == "shipping" || order.status == "delivered" ? "checkmark.circle.fill" : "circle")
+                    Image(systemName: order.status == "shipped" || order.status == "delivered" ? "checkmark.circle.fill" : "circle")
                         .foregroundColor(order.status == "shipping" || order.status == "delivered" ? .green : .gray)
-                    Text("Order Shipped")
-                        .foregroundColor(order.status == "shipping" || order.status == "delivered" ? .primary : .secondary)
+                    Text("order_shipped".localized)
+                        .foregroundColor(order.status == "shipped" || order.status == "delivered" ? .primary : .secondary)
                 }
                 
                 HStack {
                     Image(systemName: order.status == "delivered" ? "checkmark.circle.fill" : "circle")
                         .foregroundColor(order.status == "delivered" ? .green : .gray)
-                    Text("Order Delivered")
+                    Text("order_delivered".localized)
                         .foregroundColor(order.status == "delivered" ? .primary : .secondary)
                 }
             }
@@ -235,7 +235,7 @@ struct OrderDetailView: View {
                 // In a real app, this would navigate to a support chat or email
                 viewModel.contactSupport()
             }) {
-                Text("Contact Support")
+                Text("contact_support".localized)
                     .fontWeight(.semibold)
                     .foregroundColor(.blue)
                     .padding()
@@ -251,7 +251,7 @@ struct OrderDetailView: View {
                 // In a real app, this would allow reordering the same items
                 viewModel.reorder()
             }) {
-                Text("Reorder")
+                Text("reorder_label".localized)
                     .fontWeight(.semibold)
                     .foregroundColor(.white)
                     .padding()
@@ -269,7 +269,7 @@ struct OrderDetailView: View {
                 .font(.system(size: 50))
                 .foregroundColor(.orange)
             
-            Text("Error Loading Order")
+            Text("error_loading_order".localized)
                 .font(.title3)
                 .fontWeight(.bold)
             
@@ -280,7 +280,7 @@ struct OrderDetailView: View {
             Button(action: {
                 viewModel.loadOrderDetails(orderId: orderId)
             }) {
-                Text("Try Again")
+                Text("order_try_again".localized)
                     .fontWeight(.semibold)
                     .padding(.horizontal, 20)
                     .padding(.vertical, 10)

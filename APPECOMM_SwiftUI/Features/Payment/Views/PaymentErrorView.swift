@@ -28,11 +28,11 @@ struct PaymentErrorView: View {
                     .frame(width: 80, height: 80)
             }
             
-            Text("Payment Failed")
+            Text("payment_failed".localized)
                 .font(.title)
                 .fontWeight(.bold)
             
-            Text(viewModel.errorMessage ?? "There was a problem processing your payment. Please try again.")
+            Text(viewModel.errorMessage ?? "there_was_a_problem".localized)
                 .font(.body)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal)
@@ -44,7 +44,7 @@ struct PaymentErrorView: View {
                 viewModel.errorMessage = nil
                 //viewModel.preparePaymentSheet()
             }) {
-                Text("Try Again")
+                Text("order_try_again".localized)
                     .fontWeight(.semibold)
                     .foregroundColor(.white)
                     .padding()
@@ -59,7 +59,7 @@ struct PaymentErrorView: View {
                 // Return to cart screen
                 dismiss()
             }) {
-                Text("Return to Cart")
+                Text("return_to_cart".localized)
                     .fontWeight(.semibold)
                     .foregroundColor(.blue)
                     .padding()
@@ -74,7 +74,7 @@ struct PaymentErrorView: View {
             Spacer()
         }
         .padding()
-        .navigationTitle("Payment Failed")
+        .navigationTitle("payment_failed".localized)
         .navigationBarBackButtonHidden(true)
     }
 }

@@ -10,44 +10,6 @@ import SwiftUI
 struct OrderStatusBadge: View {
     let status: String
     
-    private var statusColor: Color {
-        switch status.lowercased() {
-        case "pending":
-            return .orange
-        case "paid":
-            return .yellow
-        case "processing":
-            return .blue
-        case "shipping":
-            return .purple
-        case "delivered":
-            return .green
-        case "cancelled":
-            return .red
-        default:
-            return .gray
-        }
-    }
-    
-    private var statusText: String {
-        switch status.lowercased() {
-        case "pending":
-            return "Pending"
-        case "paid":
-            return "Paid"
-        case "processing":
-            return "Processing"
-        case "shipping":
-            return "Shipping"
-        case "delivered":
-            return "Delivered"
-        case "cancelled":
-            return "Cancelled"
-        default:
-            return status.capitalized
-        }
-    }
-    
     var body: some View {
         Text(statusText)
             .font(.subheadline)
@@ -58,5 +20,50 @@ struct OrderStatusBadge: View {
             .foregroundColor(statusColor)
             .cornerRadius(8)
     }
+    
+    private var statusText: String {
+        switch status.lowercased() {
+        case "pending":
+            return "pending_status".localized
+        case "pending_payment":
+            return "pending_payment_status".localized
+        case "processing":
+            return "processing_status".localized
+        case "paid":
+            return "paid_status".localized
+        case "shipped":
+            return "shipped_status".localized
+        case "delivered":
+            return "delivered_status".localized
+        case "cancelled":
+            return "cancelled_status".localized
+        case "refunded":
+            return "refunded_status".localized
+        default:
+            return status.capitalized
+        }
+    }
+    
+    private var statusColor: Color {
+        switch status.lowercased() {
+        case "pending":
+            return .orange
+        case "pending_payment":
+            return .blue
+        case "processing":
+            return .blue
+        case "paid":
+            return .yellow
+        case "shipped":
+            return .purple
+        case "delivered":
+            return .green
+        case "cancelled":
+            return .red
+        case "refunded":
+            return .gray
+        default:
+            return .gray
+        }
+    }
 }
-

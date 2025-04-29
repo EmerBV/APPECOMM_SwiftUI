@@ -47,7 +47,7 @@ struct ProductDetailView: View {
     var body: some View {
         ZStack {
             // Contenido principal
-            ScrollView {
+            ScrollView(showsIndicators: false) {
                 VStack(alignment: .leading, spacing: 0) {
                     // Product Images
                     ProductImageCarousel(
@@ -372,7 +372,7 @@ struct ProductPriceVariantView: View {
                     Spacer()
                     
                     if let variant = selectedVariant {
-                        Text("\("variant_label".localized) \(variant.name)")
+                        Text(String(format: "variant_label".localized, variant.name))
                             .font(.subheadline)
                             .foregroundColor(.blue)
                     }

@@ -12,7 +12,7 @@ struct OrderSummaryCard: View {
     
     var body: some View {
         VStack(spacing: 12) {
-            Text("Order Summary")
+            Text("order_summary".localized)
                 .font(.headline)
                 .frame(maxWidth: .infinity, alignment: .leading)
             
@@ -32,7 +32,7 @@ struct OrderSummaryCard: View {
                 }
                 
                 if cart.items.count > 3 {
-                    Text("And \(cart.items.count - 3) more items...")
+                    Text(String(format: "and_more_items".localized, cart.items.count - 3))
                         .font(.caption)
                         .foregroundColor(.secondary)
                         .frame(maxWidth: .infinity, alignment: .leading)
@@ -43,21 +43,21 @@ struct OrderSummaryCard: View {
             
             // Subtotal
             HStack {
-                Text("Subtotal")
+                Text("subtotal".localized)
                 Spacer()
                 Text(viewModel.orderSummary.subtotal.toCurrentLocalePrice)
             }
             
             // Tax
             HStack {
-                Text("Tax")
+                Text("tax_label".localized)
                 Spacer()
                 Text(viewModel.orderSummary.tax.toCurrentLocalePrice)
             }
             
             // Shipping
             HStack {
-                Text("Shipping")
+                Text("shipping".localized)
                 Spacer()
                 Text(viewModel.orderSummary.formattedShipping)
             }
@@ -66,7 +66,7 @@ struct OrderSummaryCard: View {
             
             // Total
             HStack {
-                Text("Total")
+                Text("total".localized)
                     .fontWeight(.semibold)
                 Spacer()
                 Text(viewModel.orderSummary.total.toCurrentLocalePrice)

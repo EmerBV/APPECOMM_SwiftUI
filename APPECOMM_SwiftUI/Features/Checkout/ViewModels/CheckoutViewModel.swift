@@ -140,7 +140,7 @@ class CheckoutViewModel: ObservableObject {
                     self?.handlePaymentSuccess(orderId: order.id)
                 } else {
                     // Si no hay orden, mostrar un error
-                    self?.handlePaymentFailure(message: "No se pudo procesar el pago: Orden no encontrada")
+                    self?.handlePaymentFailure(message: "checkout_payment_failure".localized)
                 }
             }
             .store(in: &cancellables)
@@ -157,7 +157,7 @@ class CheckoutViewModel: ObservableObject {
                 self?.isLoading = false
                 self?.showPaymentSheet = false
                 self?.currentStep = .review
-                self?.errorMessage = "payment_cancelled_message".localized
+                self?.errorMessage = "payment_cancelled".localized
                 
                 // Limpiar el PaymentSheetViewModel
                 self?.paymentSheetViewModel = nil

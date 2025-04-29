@@ -11,11 +11,11 @@ struct OrderReviewView: View {
     @ObservedObject var viewModel: CheckoutViewModel
     
     var body: some View {
-        ScrollView {
+        ScrollView(showsIndicators: false) {
             VStack(spacing: 24) {
                 // Order summary section
                 VStack(alignment: .leading, spacing: 16) {
-                    Text("Order Summary")
+                    Text("order_summary".localized)
                         .font(.headline)
                     
                     if let cart = viewModel.cart, !cart.items.isEmpty {
@@ -23,7 +23,7 @@ struct OrderReviewView: View {
                             OrderReviewItemRow(item: item)
                         }
                     } else {
-                        Text("No items in cart")
+                        Text("no_items_in_cart".localized)
                             .foregroundColor(.secondary)
                     }
                 }
@@ -35,7 +35,7 @@ struct OrderReviewView: View {
                 
                 // Shipping information section
                 VStack(alignment: .leading, spacing: 12) {
-                    Text("Shipping Information")
+                    Text("shipping_information".localized)
                         .font(.headline)
                     
                     if let selectedAddress = viewModel.selectedAddress {
@@ -57,7 +57,7 @@ struct OrderReviewView: View {
                 
                 // Payment method section
                 VStack(alignment: .leading, spacing: 12) {
-                    Text("Payment Method")
+                    Text("order_payment_method".localized)
                         .font(.headline)
                     
                     HStack {
@@ -76,21 +76,21 @@ struct OrderReviewView: View {
                 // Total summary
                 VStack(spacing: 16) {
                     HStack {
-                        Text("Subtotal")
+                        Text("subtotal".localized)
                             .fontWeight(.medium)
                         Spacer()
                         Text(viewModel.orderSummary.subtotal.toCurrentLocalePrice)
                     }
                     
                     HStack {
-                        Text("Tax")
+                        Text("tax_label".localized)
                             .fontWeight(.medium)
                         Spacer()
                         Text(viewModel.orderSummary.tax.toCurrentLocalePrice)
                     }
                     
                     HStack {
-                        Text("Shipping")
+                        Text("shipping".localized)
                             .fontWeight(.medium)
                         Spacer()
                         Text(viewModel.orderSummary.formattedShipping)
@@ -99,7 +99,7 @@ struct OrderReviewView: View {
                     Divider()
                     
                     HStack {
-                        Text("Total")
+                        Text("total".localized)
                             .font(.headline)
                         Spacer()
                         Text(viewModel.orderSummary.total.toCurrentLocalePrice)
@@ -113,7 +113,7 @@ struct OrderReviewView: View {
                 )
                 
                 PrimaryButton(
-                    title: "Place Order",
+                    title: "place_order".localized,
                     isLoading: viewModel.isLoading,
                     isEnabled: true
                 ) {
@@ -123,7 +123,7 @@ struct OrderReviewView: View {
             }
             .padding()
         }
-        .navigationTitle("Review Order")
+        .navigationTitle("review_order".localized)
         .onAppear {
             // Asegurarse de que los detalles de envío estén cargados
             viewModel.loadExistingShippingDetails()

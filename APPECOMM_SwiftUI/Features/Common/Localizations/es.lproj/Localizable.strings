@@ -1,7 +1,7 @@
-// General
+// MARK: - General
 "app_name" = "APPECOMM";
 
-// Authentication
+// MARK: - Authentication
 "login" = "Iniciar Sesión";
 "register" = "Registrarse";
 "email" = "Correo Electrónico";
@@ -13,7 +13,6 @@
 "form_errors" = "Por favor, corrija los errores del formulario";
 "auth_error" = "Error de autenticación";
 "invalid_credentials" = "Email o contraseña incorrectos";
-"server_error" = "Error del servidor. Intente más tarde.";
 "try_again_later" = "Por favor, intente más tarde";
 "login_success" = "Login exitoso";
 "welcome" = "¡Bienvenido!";
@@ -35,7 +34,7 @@
 "cancel" = "Cancelar";
 "auth_failed" = "Autenticación fallida";
 
-// Profile
+// MARK: - Profile
 "profile" = "Perfil";
 "settings" = "Configuración";
 "logout" = "Cerrar Sesión";
@@ -49,7 +48,35 @@
 "save_changes" = "Guardar Cambios";
 "hello_user" = "Hola,";
 "shipping_information" = "Información de Envío";
+"default" = "Por defecto";
+"shipping_addresses" = "Direcciones de envío";
+"manage_shipping_addresses" = "Gestionar direcciones de envío";
+"more_addresses" = "+ %d direcciones mas";
+"no_shipping_addresses" = "Sin direcciones de envío";
 "add_shipping_address" = "Añadir Dirección de Envío";
+"delete_address" = "Eliminar Dirección";
+"delete_btn_address" = "Eliminar";
+"cancel_btn_address" = "Cancelar";
+"are_you_sure" = "¿Estás seguro de que deseas eliminar esta dirección?";
+"no_addresses" = "Aún no hay direcciones";
+"first_shipping_address" = "Añade tu primera dirección de envío para que el pago sea más rápido.";
+"add_address" = "Añadir Dirección";
+"edit_address" = "Editar Dirección";
+"default_address" = "Dirección Predeterminada";
+"set_as" = "Establecer como Predeterminada";
+"contact_info" = "Información de contacto";
+"full_name" = "Nombre completo";
+"phone_number" = "Número de teléfono";
+"address" = "Dirección";
+"street_address" = "Calle";
+"city" = "Ciudad";
+"state_province" = "Estado/Provincia";
+"postal_code" = "Código postal";
+"country" = "País";
+"set_as_default_address" = "Establecer como dirección predeterminada";
+"save_address" = "Guardar dirección";
+"address_saved" = "¡Dirección guardada exitosamente!";
+"orders" = "Pedidos";
 "my_orders" = "Mis Pedidos";
 "order_details" = "Detalles del Pedido";
 "order_number" = "Pedido #";
@@ -59,14 +86,14 @@
 "notifications" = "Notificaciones";
 "help_support" = "Ayuda y Soporte";
 
-// Products
+// MARK: - Products
 "products" = "Productos";
 "all" = "Todos";
 "add_to_cart" = "Añadir al Carrito";
 "price" = "Precio";
 "description" = "Descripción";
 
-// Cart
+// MARK: - Cart
 "cart" = "Mi Carrito";
 "checkout" = "Pagar";
 "total" = "Total";
@@ -77,7 +104,6 @@
 "clear_cart_confirmation" = "¿Estás seguro de que deseas eliminar todos los artículos de tu carrito?";
 "empty_cart_message" = "Parece que aún no has añadido ningún artículo a tu carrito";
 "browse_products" = "Explorar Productos";
-"order_summary" = "Resumen del Pedido";
 "subtotal" = "Subtotal";
 "shipping" = "Envío";
 "shipping_calculated" = "Calculado en el checkout";
@@ -85,7 +111,7 @@
 "remove_item" = "Eliminar Artículo";
 "remove" = "Eliminar";
 "remove_item_confirmation" = "¿Estás seguro de que deseas eliminar este artículo de tu carrito?";
-"variant_label" = "Variante:";
+"variant_label" = "Variante: %@";
 "quantity_label" = "Cantidad:";
 "unable_to_load_cart" = "No se pudo cargar el carrito: %@";
 "unable_to_update_item" = "No se pudo actualizar el artículo: %@";
@@ -95,20 +121,68 @@
 "unable_to_clear_cart" = "No se pudo vaciar el carrito: %@";
 "cart_cleared" = "Carrito vaciado";
 
-// Orders
-"orders" = "Pedidos";
+// MARK: - Orders
 "order_history" = "Historial de Pedidos";
 "order_status" = "Estado del Pedido";
 "order_date" = "Fecha del Pedido";
+"pending_payment" = "Pedidos pendientes de pago";
+"no_pending_orders" = "No hay pedidos pendientes";
+"no_orders_history" = "No hay pedidos en el historial";
+"loading_orders" = "Cargando pedidos...";
+"order" = "Pedido #%d";
+"pending_status" = "Pendiente";
+"pending_payment_status" = "Pago pendiente";
+"processing_status" = "En proceso";
+"shipped_status" = "Enviado";
+"delivered_status" = "Entregado";
+"cancelled_status" = "Cancelado";
+"refunded_status" = "Reembolsado";
+"paid_status" = "Pagado";
+"no_order_details" = "No hay detalles del pedido disponibles";
+"order_placed" = "Pedido realizado";
+"items_label" = "Artículos";
+"order_summary" = "Resumen del pedido";
+"free_label" = "Gratis";
+"payment_confirmed" = "Pago confirmado";
+"order_shipped" = "Pedido enviado";
+"order_delivered" = "Pedido entregado";
+"contact_support" = "Contactar con soporte";
+"reorder_label" = "Pedirlo de nuevo";
+"error_loading_order" = "Error al cargar orden";
+"order_try_again" = "Intentar de nuevo";
 
-// Settings
+// MARK: - Order Review
+"no_items_in_cart" = "No hay artículos en el carrito";
+"order_payment_method" = "Método de pago";
+"tax_label" = "Impuesto";
+"place_order" = "Realizar pedido";
+"review_order" = "Revisar pedido";
+
+// MARK: - Order Summary Card
+"and_more_items" = "Y %d artículos más...";
+"select_shipping_address" = "Seleccionar dirección de envío";
+"default_label" = "Por defecto";
+"set_as_default" = "Establecer como predeterminado";
+
+// MARK: - Shipping Info View
+"continue_to_payment" = "Continuar con el pago";
+"please_fill_in" = "Por favor, rellena correctamente todos los campos obligatorios";
+"next_label" = "Siguiente";
+"shipping_address_label" = "Dirección de envío";
+"change_label" = "Cambiar";
+"no_shipping_address_selected" = "No se ha seleccionado ninguna dirección de envío";
+"add_new_address" = "Agregar nueva dirección";
+"fullname_is_required" = "Se requiere el nombre completo";
+"set_as_default_shipping" = "Establecer como dirección de envío predeterminada";
+
+// MARK: - Settings
 "preferences" = "Preferencias";
 "language" = "Idioma";
 "language_settings" = "Configuración de Idioma";
 "about" = "Acerca de";
 "version" = "Versión";
 
-// Product Details
+// MARK: - Product Details
 "product_details" = "Detalles del Producto";
 "available_variants" = "Variantes Disponibles";
 "original_price" = "Precio original:";
@@ -130,7 +204,7 @@
 "yes" = "Sí";
 "no" = "No";
 
-// Why Shop Section
+// MARK: - Why Shop Section
 "why_shop_title" = "¿POR QUÉ COMPRAR CON NOSOTROS?";
 "why_shop_subtitle" = "Comprar con nosotros viene con beneficios únicos no disponibles en ningún otro lugar. Descubre todas las razones para quedarte y jugar.";
 "rewards_title" = "GANA RECOMPENSAS Y COMPRA CON PUNTOS";
@@ -142,7 +216,7 @@
 "contests_title" = "CONCURSOS Y SORTEOS";
 "contests_description" = "Gana premios exclusivos";
 
-// Network Errors
+// MARK: - Network Errors
 "invalid_url" = "La URL no es válida";
 "invalid_response" = "Respuesta del servidor inválida";
 "no_data" = "No se recibieron datos";
@@ -151,31 +225,30 @@
 "not_found" = "El recurso solicitado no existe";
 "invalid_request" = "Solicitud inválida";
 "processing_error" = "Error al procesar la respuesta. Formato inesperado de datos.";
-"unknown_error" = "Ha ocurrido un error desconocido. Intente nuevamente.";
 
-// Validation
+// MARK: - Validation
 "name_empty" = "El nombre no puede estar vacío";
 "name_too_short" = "El nombre debe tener al menos 2 caracteres";
 
-// Notifications
+// MARK: - Notifications
 "dismiss_notification" = "Descartar notificación";
 "sign_up_exclusive" = "Regístrate para ofertas exclusivas";
 
-// Newsletter Form
+// MARK: - Newsletter Form
 "email" = "Correo";
 "phone_number_optional" = "Número de teléfono (opcional)";
-"accept_terms" = "Acepto los términos y condiciones";
+"newsletter_accept_terms" = "Acepto los términos y condiciones";
 "sign_up" = "Registrarse";
 "newsletter_signup" = "Registro al Boletín";
 "close" = "Cerrar";
 
-// Legal & Accessibility
+// MARK: - Legal & Accessibility
 "privacy_policy" = "Política de Privacidad";
 "terms_conditions" = "Términos y Condiciones";
 "accessibility_statement" = "Declaración de Accesibilidad";
 "copyright_notice" = "El contenido de las series, especificaciones de productos, fechas de lanzamiento y precios están sujetos a cambios. Todos los derechos reservados.";
 
-// Home View
+// MARK: - Home View
 "search" = "Buscar";
 "featured_categories" = "Categorías Destacadas";
 "new_arrivals" = "Novedades";
@@ -183,18 +256,18 @@
 "best_sellers" = "Más Vendidos";
 "best_sellers_subtitle" = "Nuestros productos más populares";
 "connect_with_us" = "CONÉCTATE CON NOSOTROS";
-"newsletter_title" = "¿Quieres $20 de descuento? Suscríbete a nuestro Boletín.";
+"newsletter_title" = "¿Quieres 20€ de descuento? Suscríbete a nuestro Boletín.";
 "newsletter_subtitle" = "¡Regístrate para recibir alertas por SMS y sé el primero en enterarte!";
 "get_in_the_loop" = "¡ÚNETE A LA LISTA!";
 "failed_to_load_data" = "Error al cargar los datos";
 
-// Search View
+// MARK: - Search View
 "search_products" = "Buscar productos";
 "no_products_found" = "No se encontraron productos";
 "try_different_keywords" = "Intenta con palabras diferentes";
 "clear_search" = "Limpiar búsqueda";
 
-// Promotion Banner
+// MARK: - Promotion Banner
 "summer_sale" = "Rebajas de Verano";
 "summer_sale_subtitle" = "Hasta 50% de descuento en artículos seleccionados";
 "shop_now" = "Comprar Ahora";
@@ -202,20 +275,25 @@
 "new_collection_subtitle" = "Descubre nuestra última colección";
 "view_collection" = "Ver Colección";
 "special_offer" = "Oferta Especial";
-"special_offer_subtitle" = "Envío gratis en pedidos superiores a $50";
+"special_offer_subtitle" = "Envío gratis en pedidos superiores a 50€";
 "learn_more" = "Saber Más";
 
-// Error Messages
+// MARK: - Error Messages
+"processing_error" = "Error al procesar la respuesta. Formato de datos inesperado.";
+"server_error" = "Error del servidor. Inténtalo de nuevo más tarde.";
+"unauthorized" = "La sesión ha expirado. Por favor, inicia sesión nuevamente.";
+"unknown_error" = "Se ha producido un error desconocido. Por favor inténtalo de nuevo.";
 "error" = "Error";
+"error_occurred" = "Ha ocurrido un error";
 
-// Success Messages
+// MARK: - Success Messages
 "success" = "Éxito";
 "products_updated" = "Se han cargado %d productos";
 
-// Components
+// MARK: - Components
 "loading" = "Cargando";
 
-// Splash View
+// MARK: - Splash View
 "splash_welcome" = "Bienvenido a";
 "splash_loading" = "Cargando...";
 "splash_version" = "Versión %@";
@@ -238,5 +316,93 @@
 "splash_privacy_button" = "Ver Política de Privacidad";
 "splash_continue" = "Continuar";
 
-// Checkout
-"done" = "Hecho";
+// MARK: - Checkout View
+"done_label" = "Hecho";
+"checkout_payment_method" = "Método de pago";
+"checkout_order_review" = "Revisión del pedido";
+"checkout_processing_review" = "Revisión del proceso";
+"checkout_payment_confirmation" = "Confirmación de pago";
+"checkout_cancel_order" = "¿Cancelar pedido?";
+"checkout_continue_order" = "Continuar con el pedido";
+"cancel_order_label" = "Cancelar pedido";
+"if_you_cancel_now" = "Si cancelas ahora, perderás la información introducida y volverás al carrito.";
+"select_payment_method" = "Selecciona un método de pago";
+"credit_card_option" = "Tarjeta de crédito";
+"apple_pay_option" = "Apple Pay";
+"checkout_payment_failure" = "No se pudo procesar el pago: Orden no encontrada";
+"no_authenticated_user" = "Usuario no autenticado";
+"failed_to_save_shipping_details" = "No se pudieron guardar los detalles del envío";
+"please_select_shipping_address" = "Por favor selecciona una dirección de envío";
+"invalid_shipping_address_id" = "ID de dirección de envío inválido";
+"payment_completed" = "Pago completado";
+"please_complete_shipping_fields" = "Por favor complete los campos de envío";
+"please_complete_shipping_fields_or_select_address" = "Por favor complete los campos de envío o selecciona una dirección";
+"failed_to_load_shipping_addresses" = "Fallo al cargar direcciones de envío";
+"no_user_id_available" = "ID de usuario no disponible";
+"please_fill_required_fields" = "Por favor, rellena los campos obligatorios";
+"failed_to_create_shipping_address" = "Fallo al crear la dirección de envío";
+"failed_to_set_default_address" = "No se pudo establecer la dirección predeterminada";
+"failed_to_delete_address" = "Fallo al borrar la dirección";
+"continue_label" = "Continuar";
+
+// MARK: - Registration
+"create_your_account" = "Crea Tu Cuenta";
+"join_us_message" = "¡Únete a nosotros y comienza a comprar con beneficios exclusivos!";
+"first_name" = "Nombre";
+"first_name_placeholder" = "Ingresa tu nombre";
+"last_name" = "Apellido";
+"last_name_placeholder" = "Ingresa tu apellido";
+"email_placeholder" = "Ingresa tu correo electrónico";
+"password_placeholder" = "Crea una contraseña";
+"confirm_password" = "Confirmar Contraseña";
+"confirm_password_placeholder" = "Ingresa tu contraseña nuevamente";
+"password_confirmation_required" = "Se requiere confirmación de contraseña";
+"passwords_do_not_match" = "Las contraseñas no coinciden";
+"must_accept_terms" = "Debes aceptar los términos y condiciones";
+"creating_account" = "Creando cuenta...";
+"registration_error" = "Error de Registro";
+"invalid_registration_details" = "Detalles de registro inválidos";
+"account_created_success" = "¡Tu cuenta ha sido creada exitosamente! Bienvenido a APPECOMM";
+"already_have_account" = "¿Ya tienes una cuenta? ";
+"sign_in" = "Iniciar Sesión";
+"back_label" = "Atrás";
+"registration_accept_terms" = "Acepto los ";
+"terms_and_conditions" = "Términos y Condiciones";
+"last_updated" = "Última actualización: %@";
+"agreement_to_terms" = "1. Acuerdo de Términos";
+"agreement_to_terms_text" = "Al acceder y usar la aplicación APPECOMM, aceptas estar sujeto a estos Términos y Condiciones y nuestra Política de Privacidad. Si no estás de acuerdo con estos Términos, no puedes acceder o usar la aplicación.";
+"user_accounts" = "2. Cuentas de Usuario";
+"user_accounts_text" = "Cuando creas una cuenta con nosotros, debes proporcionar información precisa, completa y actualizada. Eres responsable de mantener la confidencialidad de tu cuenta y contraseña y de restringir el acceso a tu dispositivo.";
+"purchases_and_payments" = "3. Compras y Pagos";
+"purchases_and_payments_text" = "Al proporcionar un método de pago, declaras que estás autorizado a usar el método de pago designado y que la información de pago que proporcionas es verdadera y precisa.";
+"privacy_policy_section" = "4. Política de Privacidad";
+"privacy_policy_section_text" = "Tu privacidad es importante para nosotros. Nuestra Política de Privacidad explica cómo recopilamos, usamos, divulgamos y protegemos tu información. Al usar nuestra aplicación, aceptas las prácticas de datos descritas en nuestra Política de Privacidad.";
+"product_information" = "5. Información del Producto";
+"product_information_text" = "Nos esforzamos por proporcionar descripciones precisas de productos, precios e información de disponibilidad, pero no garantizamos que las descripciones de productos u otro contenido sea preciso, completo, confiable o libre de errores.";
+"limitations_of_liability" = "6. Limitaciones de Responsabilidad";
+"limitations_of_liability_text" = "En ningún caso APPECOMM será responsable por daños directos, indirectos, punitivos, incidentales, especiales o consecuentes que surjan de, o estén de alguna manera conectados con, tu uso de esta aplicación o con la demora o incapacidad para usar esta aplicación.";
+"governing_law" = "7. Ley Aplicable";
+"governing_law_text" = "Estos Términos se regirán e interpretarán de acuerdo con las leyes del estado o país donde APPECOMM tiene su sede, sin tener en cuenta sus disposiciones de conflicto de leyes.";
+"i_accept" = "Acepto";
+
+// MARK: - Payment Confirmation View
+"payment_successful" = "Pago existoso!";
+"thank_you_for_your_order" = "Gracias por su pedido. Su pago ha sido procesado exitosamente.";
+"order_number" = "Número de pedido";
+"date_label" = "Fecha";
+"order_total" = "Total del pedido";
+"a_confirmation_email" = "Se ha enviado un correo de confirmación a su dirección de correo electrónico.";
+"continue_shopping_btn" = "Continuar comprando";
+"view_order_btn" = "Ver pedido";
+
+// MARK: - Payment Error View
+"payment_failed" = "Pago fallido";
+"there_was_a_problem" = "Hubo un problema al procesar tu pago. Por favor inténtalo de nuevo.";
+"return_to_cart" = "Volver al carrito";
+"payment_cancelled" = "Pago cancelado";
+
+// MARK: - My Wishlist View
+"my_wishlist_title" = "Mi lista de deseos";
+"wishlist_empty" = "Tu lista de deseos está vacía";
+"wishlist_will_appear" = "Los artículos que agregues a tu lista de deseos aparecerán aquí";
+"browse_products" = "Explorar productos";
