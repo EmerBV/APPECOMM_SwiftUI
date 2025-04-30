@@ -34,7 +34,7 @@ struct PaymentSheetView: View {
                 }
             }
             .padding()
-            .navigationTitle("Pago Seguro")
+            .navigationTitle("secure_payment".localized)
             .navigationBarTitleDisplayMode(.inline)
         }
         .onAppear {
@@ -55,11 +55,11 @@ struct PaymentSheetView: View {
                 .font(.system(size: 48))
                 .foregroundColor(.blue)
             
-            Text("Finalizar Compra")
+            Text("finalize_purchase".localized)
                 .font(.title2)
                 .fontWeight(.semibold)
             
-            Text("Total a pagar: \(viewModel.amountFormatted)")
+            Text(String(format: "total_to_pay".localized, viewModel.amountFormatted))
                 .font(.headline)
         }
     }
@@ -69,7 +69,7 @@ struct PaymentSheetView: View {
             ProgressView()
                 .scaleEffect(1.5)
             
-            Text("Preparando información de pago...")
+            Text("preparing_payment_info".localized)
                 .font(.headline)
         }
         .frame(maxWidth: .infinity)
@@ -84,7 +84,7 @@ struct PaymentSheetView: View {
             } label: {
                 HStack {
                     Image(systemName: "checkmark.shield.fill")
-                    Text("Pagar Ahora")
+                    Text("pay_now".localized)
                         .font(.headline)
                 }
                 .frame(maxWidth: .infinity)
@@ -95,7 +95,7 @@ struct PaymentSheetView: View {
             }
             .disabled(viewModel.paymentSheet == nil || viewModel.isLoading)
             
-            Text("Pago seguro procesado por Stripe")
+            Text("stripe_secure_payment".localized)
                 .font(.caption)
                 .foregroundColor(.secondary)
         }
@@ -106,7 +106,7 @@ struct PaymentSheetView: View {
             ProgressView()
                 .scaleEffect(1.5)
             
-            Text("Procesando su pago...")
+            Text("processing_payment".localized)
                 .font(.headline)
         }
         .frame(maxWidth: .infinity)

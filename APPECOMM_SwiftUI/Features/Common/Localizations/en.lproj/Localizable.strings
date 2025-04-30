@@ -395,6 +395,15 @@
 "continue_shopping_btn" = "Continue Shopping";
 "view_order_btn" = "View Order";
 
+// MARK: - Payment Sheet View
+"secure_payment" = "Secure Payment";
+"finalize_purchase" = "Finalize Purchase";
+"total_to_pay" = "Total to pay: %@";
+"preparing_payment_info" = "Preparing payment info...";
+"pay_now" = "Pay Now";
+"stripe_secure_payment" = "Secure payment processed by Stripe";
+"processing_payment" = "Processing Payment...";
+
 // MARK: - Payment Error View
 "payment_failed" = "Payment Failed";
 "there_was_a_problem" = "There was a problem processing your payment. Please try again.";
