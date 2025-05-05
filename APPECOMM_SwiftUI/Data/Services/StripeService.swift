@@ -180,7 +180,14 @@ final class StripeService: StripeServiceProtocol {
         // que a su vez llamaría a la API de Stripe para crear un PaymentIntent
         
         // Ejemplo de URL de API del servidor
+        /*
         guard let url = URL(string: "\(AppConfig.shared.apiBaseUrl)/payments/create-intent") else {
+            completion(.failure(.invalidCardDetails))
+            return
+        }
+         */
+        
+        guard let url = URL(string: "\(AppConfig.shared.apiBaseUrl)/payments/create-payment-intent") else {
             completion(.failure(.invalidCardDetails))
             return
         }
