@@ -24,55 +24,59 @@ struct ShippingInfoView: View {
     }
     
     var body: some View {
-        ScrollView(showsIndicators: false) {
-            VStack(spacing: 20) {
-                // Content: address selector, existing details, or form
-                VStack(alignment: .leading, spacing: 16) {
-                    if !viewModel.shippingAddresses.isEmpty && !viewModel.isAddingNewAddress {
-                        // Mostrar selección de dirección
-                        existingAddressesView
-                    } else {
-                        // Mostrar formulario
-                        shippingFormView
-                    }
-                    
-                    /*
-                    // Order summary
-                    OrderSummaryCard(viewModel: viewModel)
-                     */
-                    
-                    // Continue button
-                    PrimaryButton(
-                        title: "continue_label".localized,
-                        isLoading: viewModel.isLoading,
-                        isEnabled: viewModel.hasExistingShippingDetails || viewModel.selectedAddress != nil || viewModel.shippingDetailsForm.isValid
-                    ) {
-                        focusedField = nil
-                        if viewModel.isAddingNewAddress {
-                            viewModel.createNewShippingAddress()
-                        } else if viewModel.selectedAddress != nil {
-                            // Si ya hay una dirección seleccionada, simplemente avanzamos
-                            viewModel.proceedToNextStep()
-                        } else if viewModel.hasExistingShippingDetails && viewModel.existingShippingDetails != nil {
-                            // Si hay dirección existente pero no seleccionada, usamos esa
-                            viewModel.selectedAddress = viewModel.existingShippingDetails
-                            viewModel.proceedToNextStep()
+        ZStack(alignment: .bottom) {
+            ScrollView(showsIndicators: false) {
+                VStack(spacing: 20) {
+                    // Content: address selector, existing details, or form
+                    VStack(alignment: .leading, spacing: 16) {
+                        if !viewModel.shippingAddresses.isEmpty && !viewModel.isAddingNewAddress {
+                            // Mostrar selección de dirección
+                            existingAddressesView
                         } else {
-                            // En otro caso, validamos y guardamos
-                            viewModel.validateShippingForm()
-                            if viewModel.shippingDetailsForm.isValid {
-                                viewModel.saveShippingDetails()
-                            } else {
-                                viewModel.errorMessage = "please_fill_in".localized
-                                viewModel.showError = true
-                            }
+                            // Mostrar formulario
+                            shippingFormView
                         }
                     }
-                    .padding(.top, 16)
+                    .padding(.horizontal)
+                }
+                .padding(.vertical)
+                // Añadir padding inferior para evitar que el contenido quede detrás del botón
+                .padding(.bottom, 80)
+            }
+            
+            // Botón fijo en la parte inferior
+            VStack {
+                PrimaryButton(
+                    title: "continue_label".localized,
+                    isLoading: viewModel.isLoading,
+                    isEnabled: viewModel.hasExistingShippingDetails || viewModel.selectedAddress != nil || viewModel.shippingDetailsForm.isValid
+                ) {
+                    focusedField = nil
+                    if viewModel.isAddingNewAddress {
+                        viewModel.createNewShippingAddress()
+                    } else if viewModel.selectedAddress != nil {
+                        // Si ya hay una dirección seleccionada, simplemente avanzamos
+                        viewModel.proceedToNextStep()
+                    } else if viewModel.hasExistingShippingDetails && viewModel.existingShippingDetails != nil {
+                        // Si hay dirección existente pero no seleccionada, usamos esa
+                        viewModel.selectedAddress = viewModel.existingShippingDetails
+                        viewModel.proceedToNextStep()
+                    } else {
+                        // En otro caso, validamos y guardamos
+                        viewModel.validateShippingForm()
+                        if viewModel.shippingDetailsForm.isValid {
+                            viewModel.saveShippingDetails()
+                        } else {
+                            viewModel.errorMessage = "please_fill_in".localized
+                            viewModel.showError = true
+                        }
+                    }
                 }
                 .padding(.horizontal)
+                .padding(.vertical, 12)
+                .background(Color(.systemBackground))
+                .shadow(color: Color.black.opacity(0.1), radius: 5, x: 0, y: -2)
             }
-            .padding(.vertical)
         }
         .navigationTitle("shipping_address_label".localized)
         .toolbar {

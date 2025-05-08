@@ -11,31 +11,33 @@ struct PaymentMethodSelectionView: View {
     @ObservedObject var viewModel: CheckoutViewModel
     
     var body: some View {
-        ScrollView(showsIndicators: false) {
-            VStack(spacing: 20) {
-                Text("select_payment_method".localized)
-                    .font(.headline)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.horizontal)
-                
-                // Payment method options
-                VStack(spacing: 16) {
-                    ForEach(PaymentMethodOptions.allCases) { method in
-                        PaymentMethodCard(
-                            method: method,
-                            isSelected: viewModel.selectedPaymentMethod == method,
-                            action: { viewModel.selectedPaymentMethod = method }
-                        )
+        ZStack(alignment: .bottom) {
+            ScrollView(showsIndicators: false) {
+                VStack(spacing: 20) {
+                    Text("select_payment_method".localized)
+                        .font(.headline)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.horizontal)
+                    
+                    // Payment method options
+                    VStack(spacing: 16) {
+                        ForEach(PaymentMethodOptions.allCases) { method in
+                            PaymentMethodCard(
+                                method: method,
+                                isSelected: viewModel.selectedPaymentMethod == method,
+                                action: { viewModel.selectedPaymentMethod = method }
+                            )
+                        }
                     }
-                }
-                .padding(.horizontal)
-                
-                /*
-                OrderSummaryCard(viewModel: viewModel)
                     .padding(.horizontal)
-                 */
-                
-                // Review order button
+                }
+                .padding(.vertical)
+                // Añadir padding inferior para evitar que el contenido quede detrás del botón
+                .padding(.bottom, 80)
+            }
+            
+            // Botón fijo en la parte inferior
+            VStack {
                 PrimaryButton(
                     title: "review_order".localized,
                     isLoading: false,
@@ -43,9 +45,11 @@ struct PaymentMethodSelectionView: View {
                 ) {
                     viewModel.proceedToNextStep()
                 }
-                .padding([.top, .horizontal])
+                .padding(.horizontal)
+                .padding(.vertical, 12)
+                .background(Color(.systemBackground))
+                .shadow(color: Color.black.opacity(0.1), radius: 5, x: 0, y: -2)
             }
-            .padding(.vertical)
         }
     }
 }
