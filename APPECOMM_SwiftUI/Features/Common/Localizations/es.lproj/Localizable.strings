@@ -35,6 +35,7 @@
 "auth_failed" = "Autenticación fallida";
 
 // MARK: - Profile
+"account_and_settings" = "Cuenta y configuración";
 "profile" = "Perfil";
 "settings" = "Configuración";
 "logout" = "Cerrar Sesión";
@@ -81,10 +82,14 @@
 "order_details" = "Detalles del Pedido";
 "order_number" = "Pedido #";
 "no_orders" = "No hay pedidos aún";
+"wishlist_label" = "Lista de Deseos";
 "my_wishlist" = "Mi Lista de Deseos";
-"payment_methods" = "Métodos de Pago";
+"settings_label" = "Ajustes";
+"payment_methods" = "Métodos de pago";
+"manage_payment_methods" = "Gestionar métodos de pago";
 "notifications" = "Notificaciones";
 "help_support" = "Ayuda y Soporte";
+"appearance_label" = "Apariencia";
 
 // MARK: - Products
 "products" = "Productos";

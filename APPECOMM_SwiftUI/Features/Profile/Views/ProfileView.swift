@@ -141,7 +141,8 @@ struct ProfileView: View {
     private func profileView(user: User) -> some View {
         List {
             // User Info
-            Section(header: Text("personal_information".localized)) {
+            Section {
+                /*
                 VStack(spacing: 20) {
                     // Avatar
                     Image(systemName: "person.circle.fill")
@@ -164,6 +165,18 @@ struct ProfileView: View {
                 }
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 16)
+                 */
+                
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("hello_user".localized + " \(user.firstName)")
+                        .font(.title3)
+                        .fontWeight(.bold)
+                    
+                    Text(user.email)
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                }
+            
             }
             
             // Shipping Information
@@ -223,11 +236,17 @@ struct ProfileView: View {
                         .padding(.vertical, 8)
                 }
             } header: {
-                Text("shipping_information".localized)
+                Text("shipping_addresses".localized)
+                    .foregroundColor(.black)
+                    .fontWeight(.bold)
             }
             
             // Orders
-            Section(header: Text("orders".localized)) {
+            Section(
+                header: Text("orders".localized)
+                    .foregroundColor(.black)
+                    .fontWeight(.bold)
+            ) {
                 if let orders = user.orders, !orders.isEmpty {
                     NavigationLink(destination: OrdersListView(viewModel: DependencyInjector.shared.resolve(OrdersViewModel.self))) {
                         Label("my_orders".localized, systemImage: "list.bullet.clipboard")
@@ -239,18 +258,44 @@ struct ProfileView: View {
                 }
             }
             
-            // Actions
+            // Payment methods
             Section {
+                Button(action: {
+                    
+                }) {
+                    HStack {
+                        Text("manage_payment_methods".localized)
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .font(.caption)
+                            .foregroundColor(.gray)
+                    }
+                }
+            } header: {
+                Text("payment_methods".localized)
+                    .foregroundColor(.black)
+                    .fontWeight(.bold)
+            }
+            
+            // Wishlist
+            Section(
+                header: Text("wishlist_label".localized)
+                    .foregroundColor(.black)
+                    .fontWeight(.bold)
+            ) {
                 NavigationLink(destination: WishListView(viewModel: DependencyInjector.shared.resolve(WishListViewModel.self))) {
                     Label("my_wishlist".localized, systemImage: "heart")
                 }
-                
-                NavigationLink(destination: Text("payment_methods".localized)) {
-                    Label("payment_methods".localized, systemImage: "creditcard")
-                }
-                
+            }
+            
+            // Settings
+            Section(
+                header: Text("settings_label".localized)
+                    .foregroundColor(.black)
+                    .fontWeight(.bold)
+            ) {
                 NavigationLink(destination: Text("notifications".localized)) {
-                    Label("notifications".localized, systemImage: "bell")
+                    Label("notifications".localized, systemImage: "bell.badge")
                 }
                 
                 NavigationLink(destination: LanguageSettingsView()) {
@@ -261,11 +306,15 @@ struct ProfileView: View {
                     Label("help_support".localized, systemImage: "questionmark.circle")
                 }
                 
+                NavigationLink(destination: Text("appearance_label".localized)) {
+                    Label("appearance_label".localized, systemImage: "sun.max")
+                }
+                
                 Button(action: {
                     showingLogoutConfirmation = true
                 }) {
                     HStack {
-                        Label("logout".localized, systemImage: "arrow.right.square")
+                        Label("logout".localized, systemImage: "power")
                             .foregroundColor(.red)
                         
                         Spacer()

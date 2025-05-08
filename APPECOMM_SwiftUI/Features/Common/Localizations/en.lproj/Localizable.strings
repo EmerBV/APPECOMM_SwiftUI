@@ -35,6 +35,7 @@
 "auth_failed" = "Authentication failed";
 
 // MARK: - Profile
+"account_and_settings" = "Account & Settings";
 "profile" = "Profile";
 "settings" = "Settings";
 "logout" = "Logout";
@@ -81,10 +82,14 @@
 "order_details" = "Order Details";
 "order_number" = "Order #";
 "no_orders" = "No orders yet";
+"wishlist_label" = "Wishlist";
 "my_wishlist" = "My Wishlist";
+"settings_label" = "Settings";
 "payment_methods" = "Payment Methods";
+"manage_payment_methods" = "Manage Payment Methods";
 "notifications" = "Notifications";
 "help_support" = "Help & Support";
+"appearance_label" = "Appearance";
 
 // MARK: - Products
 "products" = "Products";
