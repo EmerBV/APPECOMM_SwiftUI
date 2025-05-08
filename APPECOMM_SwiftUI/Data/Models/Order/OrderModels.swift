@@ -48,6 +48,15 @@ struct OrderItem: Identifiable, Codable, Equatable {
     let price: Decimal
     let totalPrice: Decimal
     
+    // Computed property para generar un ID único cuando el id es nil
+    var uniqueId: String {
+        if let id = id {
+            return "\(id)"
+        } else {
+            return "\(productId)_\(variantId ?? 0)_\(quantity)"
+        }
+    }
+    
     var formattedPrice: String {
         return price.toCurrentLocalePrice
     }

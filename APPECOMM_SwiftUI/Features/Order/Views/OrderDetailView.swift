@@ -102,7 +102,7 @@ struct OrderDetailView: View {
             Text("items_label".localized)
                 .font(.headline)
             
-            ForEach(order.items, id: \.id) { item in
+            ForEach(order.items, id: \.uniqueId) { item in
                 HStack(alignment: .top, spacing: 12) {
                     ZStack {
                         RoundedRectangle(cornerRadius: 8)
