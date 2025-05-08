@@ -89,8 +89,14 @@ struct OrderSummaryCheckout {
     var tax: Decimal = 0
     var shippingCost: Decimal = 0
     
+    /*
     var formattedShipping: String {
         return shippingCost > 0 ? shippingCost.toCurrentLocalePrice : "shipping_calculated".localized
+    }
+     */
+    
+    var formattedShipping: String {
+        return shippingCost > 0 ? shippingCost.toCurrentLocalePrice : "included_label".localized
     }
     
     var total: Decimal {

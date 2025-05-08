@@ -121,8 +121,16 @@ private struct CartContentView: View {
     var body: some View {
         VStack(spacing: 0) {
             cartItemsList
-            OrderSummaryView(cart: cart, viewModel: viewModel)
-            CheckoutButton(viewModel: viewModel, isShowingCheckout: $isShowingCheckout)
+            
+            OrderSummaryView(
+                cart: cart,
+                viewModel: viewModel
+            )
+            
+            CheckoutButton(
+                viewModel: viewModel,
+                isShowingCheckout: $isShowingCheckout
+            )
         }
     }
     
@@ -198,6 +206,7 @@ private struct OrderSummaryView: View {
     
     var body: some View {
         VStack(spacing: 12) {
+            /*
             Divider()
                 .padding(.bottom, 8)
             
@@ -208,14 +217,28 @@ private struct OrderSummaryView: View {
             }
             .padding(.horizontal)
             
-            summaryRow(title: "subtotal".localized, value: cart.totalAmount.toCurrentLocalePrice)
-            summaryRow(title: "shipping".localized, value: "shipping_calculated".localized, isSecondary: true)
+            summaryRow(title: "subtotal_label".localized, value: cart.totalAmount.toCurrentLocalePrice)
+            
+            //summaryRow(title: "shipping_label".localized, value: "shipping_calculated".localized, isSecondary: true)
+            summaryRow(title: "tax_label".localized, value: "included_label".localized, isSecondary: true)
+            summaryRow(title: "shipping_label".localized, value: "free_label".localized, isSecondary: true)
             
             Divider()
                 .padding(.vertical, 8)
             
             summaryRow(
-                title: "total".localized,
+                title: "total_label".localized,
+                value: cart.totalAmount.toCurrentLocalePrice,
+                isBold: true
+            )
+             */
+            
+            // BLOQUE SOLO CON SUBTOTAL
+            Divider()
+                .padding(.bottom, 8)
+            
+            summaryRow(
+                title: "subtotal_label".localized,
                 value: cart.totalAmount.toCurrentLocalePrice,
                 isBold: true
             )

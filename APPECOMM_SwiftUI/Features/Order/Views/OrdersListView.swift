@@ -71,7 +71,7 @@ struct OrdersListView: View {
                 }
                 
                 HStack {
-                    Text("total".localized + ":" + " \(order.totalAmount.toCurrentLocalePrice)")
+                    Text("total_label".localized + ":" + " \(order.totalAmount.toCurrentLocalePrice)")
                         .font(.subheadline)
                     
                     Spacer()

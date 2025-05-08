@@ -36,12 +36,14 @@ struct ShippingInfoView: View {
                         shippingFormView
                     }
                     
+                    /*
                     // Order summary
                     OrderSummaryCard(viewModel: viewModel)
+                     */
                     
                     // Continue button
                     PrimaryButton(
-                        title: "continue_to_payment".localized,
+                        title: "continue_label".localized,
                         isLoading: viewModel.isLoading,
                         isEnabled: viewModel.hasExistingShippingDetails || viewModel.selectedAddress != nil || viewModel.shippingDetailsForm.isValid
                     ) {
@@ -72,7 +74,7 @@ struct ShippingInfoView: View {
             }
             .padding(.vertical)
         }
-        .navigationTitle("shipping_information".localized)
+        .navigationTitle("shipping_address_label".localized)
         .toolbar {
             ToolbarItem(placement: .keyboard) {
                 HStack {
@@ -116,7 +118,7 @@ struct ShippingInfoView: View {
         VStack(alignment: .leading, spacing: 12) {
             // Cabecera con texto descriptivo y botón de selección
             HStack {
-                Text("shipping_address_label".localized)
+                Text("select_shipping_address".localized)
                     .font(.headline)
                 
                 Spacer()

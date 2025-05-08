@@ -174,7 +174,7 @@ struct CheckoutContentView: View {
     private var navigationTitle: String {
         switch viewModel.currentStep {
         case .shippingInfo:
-            return "shipping".localized
+            return "shipping_label".localized
         case .paymentMethod:
             return "checkout_payment_method".localized
         case .review:

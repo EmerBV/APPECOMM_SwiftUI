@@ -43,7 +43,7 @@ struct OrderSummaryCard: View {
             
             // Subtotal
             HStack {
-                Text("subtotal".localized)
+                Text("subtotal_label".localized)
                 Spacer()
                 Text(viewModel.orderSummary.subtotal.toCurrentLocalePrice)
             }
@@ -52,21 +52,24 @@ struct OrderSummaryCard: View {
             HStack {
                 Text("tax_label".localized)
                 Spacer()
-                Text(viewModel.orderSummary.tax.toCurrentLocalePrice)
+                //Text(viewModel.orderSummary.tax.toCurrentLocalePrice)
+                Text("included_label".localized)
             }
             
             // Shipping
             HStack {
-                Text("shipping".localized)
+                Text("shipping_label".localized)
                 Spacer()
-                Text(viewModel.orderSummary.formattedShipping)
+                //Text(viewModel.orderSummary.formattedShipping)
+                Text("free_label".localized)
+                    .foregroundColor(.green)
             }
             
             Divider()
             
             // Total
             HStack {
-                Text("total".localized)
+                Text("total_label".localized)
                     .fontWeight(.semibold)
                 Spacer()
                 Text(viewModel.orderSummary.total.toCurrentLocalePrice)

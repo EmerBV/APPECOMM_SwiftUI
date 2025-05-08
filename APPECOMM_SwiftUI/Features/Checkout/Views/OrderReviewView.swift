@@ -76,7 +76,7 @@ struct OrderReviewView: View {
                 // Total summary
                 VStack(spacing: 16) {
                     HStack {
-                        Text("subtotal".localized)
+                        Text("subtotal_label".localized)
                             .fontWeight(.medium)
                         Spacer()
                         Text(viewModel.orderSummary.subtotal.toCurrentLocalePrice)
@@ -86,20 +86,23 @@ struct OrderReviewView: View {
                         Text("tax_label".localized)
                             .fontWeight(.medium)
                         Spacer()
-                        Text(viewModel.orderSummary.tax.toCurrentLocalePrice)
+                        //Text(viewModel.orderSummary.tax.toCurrentLocalePrice)
+                        Text("included_label".localized)
                     }
                     
                     HStack {
-                        Text("shipping".localized)
+                        Text("shipping_label".localized)
                             .fontWeight(.medium)
                         Spacer()
-                        Text(viewModel.orderSummary.formattedShipping)
+                        //Text(viewModel.orderSummary.formattedShipping)
+                        Text("free_label".localized)
+                            .foregroundColor(.green)
                     }
                     
                     Divider()
                     
                     HStack {
-                        Text("total".localized)
+                        Text("total_label".localized)
                             .font(.headline)
                         Spacer()
                         Text(viewModel.orderSummary.total.toCurrentLocalePrice)

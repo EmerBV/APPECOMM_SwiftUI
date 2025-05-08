@@ -170,11 +170,13 @@ class CheckoutViewModel: ObservableObject {
     private func calculateOrderSummary(from cart: Cart) {
         self.orderSummary.subtotal = cart.totalAmount
         
+        /*
         // Calculate tax (example: 8% of subtotal)
         self.orderSummary.tax = calculateTax(orderSummary.subtotal)
         
         // Determine shipping cost (free for orders over $50)
         self.orderSummary.shippingCost = calculateShipping(orderSummary.subtotal)
+         */
     }
     
     private func calculateTax(_ amount: Decimal) -> Decimal {

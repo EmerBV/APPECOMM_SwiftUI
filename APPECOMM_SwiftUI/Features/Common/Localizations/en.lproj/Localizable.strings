@@ -96,7 +96,7 @@
 // MARK: - Cart
 "cart" = "My Cart";
 "checkout" = "Checkout";
-"total" = "Total";
+"total_label" = "Total";
 "empty_cart" = "Your cart is empty";
 "clear_cart" = "Clear Cart";
 "clear" = "Clear";
@@ -104,8 +104,8 @@
 "clear_cart_confirmation" = "Are you sure you want to remove all items from your cart?";
 "empty_cart_message" = "Looks like you haven't added any items to your cart yet";
 "browse_products" = "Browse Products";
-"subtotal" = "Subtotal";
-"shipping" = "Shipping";
+"subtotal_label" = "Subtotal";
+"shipping_label" = "Shipping";
 "shipping_calculated" = "Calculated at checkout";
 "proceed_to_checkout" = "Proceed to Checkout";
 "remove_item" = "Remove Item";
@@ -155,6 +155,7 @@
 "no_items_in_cart" = "No items in cart";
 "order_payment_method" = "Payment Method";
 "tax_label" = "Tax";
+"included_label" = "Included";
 "place_order" = "Place Order";
 "review_order" = "Review Order";
 
@@ -169,6 +170,7 @@
 "please_fill_in" = "Please fill in all required fields correctly";
 "next_label" = "Next";
 "shipping_address_label" = "Shipping Address";
+"select_shipping_address" = "Select a shipping address";
 "change_label" = "Change";
 "no_shipping_address_selected" = "No shipping address selected";
 "add_new_address" = "Add New Address";

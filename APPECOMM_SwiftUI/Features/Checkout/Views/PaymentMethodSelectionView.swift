@@ -30,12 +30,14 @@ struct PaymentMethodSelectionView: View {
                 }
                 .padding(.horizontal)
                 
+                /*
                 OrderSummaryCard(viewModel: viewModel)
                     .padding(.horizontal)
+                 */
                 
-                // Continue button
+                // Review order button
                 PrimaryButton(
-                    title: "continue_label".localized,
+                    title: "review_order".localized,
                     isLoading: false,
                     isEnabled: true
                 ) {

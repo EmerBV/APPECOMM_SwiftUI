@@ -73,7 +73,7 @@ struct OrderDetailView: View {
                 Spacer()
                 
                 VStack(alignment: .trailing, spacing: 4) {
-                    Text("total".localized)
+                    Text("total_label".localized)
                         .font(.caption)
                         .foregroundColor(.secondary)
                     
@@ -159,14 +159,19 @@ struct OrderDetailView: View {
             
             Group {
                 HStack {
-                    Text("subtotal".localized)
+                    Text("subtotal_label".localized)
                     Spacer()
                     Text(order.totalAmount.toCurrentLocalePrice)
                 }
                 
-                // In a real app, you'd have tax and shipping details
                 HStack {
-                    Text("shipping".localized)
+                    Text("tax_label".localized)
+                    Spacer()
+                    Text("included_label".localized)
+                }
+                
+                HStack {
+                    Text("shipping_label".localized)
                     Spacer()
                     Text("free_label".localized)
                         .foregroundColor(.green)
@@ -175,7 +180,7 @@ struct OrderDetailView: View {
                 Divider()
                 
                 HStack {
-                    Text("total".localized)
+                    Text("total_label".localized)
                         .fontWeight(.bold)
                     Spacer()
                     Text(order.totalAmount.toCurrentLocalePrice)
