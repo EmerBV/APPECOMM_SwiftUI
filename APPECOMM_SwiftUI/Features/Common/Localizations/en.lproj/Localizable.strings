@@ -97,6 +97,32 @@
 "add_to_cart" = "Add to Cart";
 "price" = "Price";
 "description" = "Description";
+"filter_products" = "Filter Products";
+"reset_label" = "Reset";
+"apply_label" = "Apply";
+"sort_label" = "Sort";
+"sort_by" = "Sort By";
+"price_range" = "Price Range";
+"enable_price_filter" = "Enable Price Range";
+"product_status_in_stock" = "In Stock";
+"product_status_out_of_stock" = "Out of Stock";
+"availability_label" = "Availability";
+"product_status" = "Product Availability";
+"category_filter_label" = "Category";
+"select_category" = "Select Category";
+"all_categories" = "All Categories";
+"brands_filter_label" = "Brands";
+"select_brand" = "Select Brand";
+"all_brands" = "All Brands";
+"newest" = "Newest";
+"price_low_to_high" = "Price: Low to High";
+"price_high_to_low" = "Price: High to Low";
+"name_a_to_z" = "Name: A to Z";
+"name_z_to_a" = "Name: Z to A";
+"best_selling" = "Best Sellers";
+"most_wished" = "Most Wished";
+"biggest_discount" = "Best Deals";
+"clear_filters" = "Clear Filters";
 
 // MARK: - Cart
 "cart" = "My Cart";

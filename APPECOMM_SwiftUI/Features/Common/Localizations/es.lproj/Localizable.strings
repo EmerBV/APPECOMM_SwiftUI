@@ -97,6 +97,32 @@
 "add_to_cart" = "Añadir al Carrito";
 "price" = "Precio";
 "description" = "Descripción";
+"filter_products" = "Filtrar productos";
+"reset_label" = "Restablecer";
+"apply_label" = "Aplicar";
+"sort_label" = "Ordenar";
+"sort_by" = "Ordenar por";
+"price_range" = "Rango de precios";
+"enable_price_filter" = "Habilitar rango de precios";
+"product_status_in_stock" = "En stock";
+"product_status_out_of_stock" = "Fuera de stock";
+"availability_label" = "Disponibilidad";
+"product_status" = "Disponibilidad del producto";
+"category_filter_label" = "Categoría";
+"select_category" = "Seleccionar categoría";
+"all_categories" = "Todas las categorías";
+"brands_filter_label" = "Marcas";
+"select_brand" = "Seleccionar marca";
+"all_brands" = "Todas las marcas";
+"newest" = "El más nuevo";
+"price_low_to_high" = "Precio: Bajo a Alto";
+"price_high_to_low" = "Precio: Alto a Bajo";
+"name_a_to_z" = "Nombre: A a Z";
+"name_z_to_a" = "Nombre: Z a A";
+"best_selling" = "Los más vendidos";
+"most_wished" = "Los más deseados";
+"biggest_discount" = "Mejores descuentos";
+"clear_filters" = "Borrar filtros";
 
 // MARK: - Cart
 "cart" = "Mi Carrito";
@@ -105,7 +131,7 @@
 "empty_cart" = "Tu carrito está vacío";
 "clear_cart" = "Vaciar Carrito";
 "clear" = "Vaciar";
-"clear_all" = "Vaciar Todo";
+"clear_all" = "Vaciar todo";
 "clear_cart_confirmation" = "¿Estás seguro de que deseas eliminar todos los artículos de tu carrito?";
 "empty_cart_message" = "Parece que aún no has añadido ningún artículo a tu carrito";
 "browse_products" = "Explorar Productos";

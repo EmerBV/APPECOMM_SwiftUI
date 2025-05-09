@@ -15,6 +15,10 @@ class ProductListViewModel: ObservableObject {
     @Published var errorMessage: String?
     
     // Filtrado y búsqueda
+    @Published var filter = ProductFilter()
+    @Published var isFilterSheetPresented = false
+    @Published var temporaryFilter = ProductFilter()
+    @Published var brands: [String] = []
     @Published var searchText = ""
     @Published var selectedCategory: String?
     
@@ -176,6 +180,77 @@ class ProductListViewModel: ObservableObject {
             .store(in: &cancellables)
     }
     
+    // Method to load products with filter
+    func loadProductsWithFilter(forceRefresh: Bool = false) {
+        // Prevent loading if already loading
+        guard !isLoading else { return }
+        
+        // Use cached data if possible and not forcing refresh
+        if !forceRefresh && !products.isEmpty && filter.hasActiveFilters == false {
+            return
+        }
+        
+        isLoading = true
+        errorMessage = nil
+        
+        // Create a filter DTO based on our filter model
+        let filterDto = ProductFilterDto(
+            sortBy: filter.sortBy?.rawValue,
+            availability: filter.availability,
+            category: filter.selectedCategory,
+            minPrice: filter.minPrice,
+            maxPrice: filter.maxPrice,
+            brand: filter.selectedBrand,
+            page: 0,
+            size: 50 // You might want to adjust this or make it configurable
+        )
+        
+        productRepository.getFilteredProducts(filterDto: filterDto)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] completion in
+                self?.isLoading = false
+                
+                if case .failure(let error) = completion {
+                    Logger.error("Error loading filtered products: \(error)")
+                    self?.errorMessage = error.localizedDescription
+                }
+            } receiveValue: { [weak self] products in
+                self?.products = products
+                Logger.info("Loaded \(products.count) filtered products")
+            }
+            .store(in: &cancellables)
+    }
+    
+    // Method to apply filter and reload products
+    func applyFilter() {
+        filter = temporaryFilter
+        loadProductsWithFilter(forceRefresh: true)
+    }
+    
+    // Method to show the filter sheet
+    func showFilterSheet() {
+        // Copy current filter to temporary filter
+        temporaryFilter = filter
+        isFilterSheetPresented = true
+    }
+    
+    // Method to reset filters
+    func resetFilter() {
+        temporaryFilter.reset()
+    }
+    
+    // Method to load all available brands
+    func loadBrands() {
+        if !brands.isEmpty {
+            return
+        }
+        
+        // This would ideally come from an API endpoint
+        // For now, let's extract unique brands from loaded products
+        let uniqueBrands = Set(products.map { $0.brand })
+        brands = Array(uniqueBrands).sorted()
+    }
+    
     func addToCart(productId: Int, quantity: Int, variantId: Int? = nil) {
         guard !isAddingToCart else { return }
         
@@ -230,24 +305,7 @@ class ProductListViewModel: ObservableObject {
     }
 }
 
-// Extensión para guardar objetos en UserDefaults
-extension UserDefaults {
-    func save<T: Encodable>(object: T, forKey key: String) {
-        let encoder = JSONEncoder()
-        if let encoded = try? encoder.encode(object) {
-            self.set(encoded, forKey: key)
-        }
-    }
-    
-    func getObject<T: Decodable>(forKey key: String) -> T? {
-        guard let data = self.data(forKey: key) else { return nil }
-        let decoder = JSONDecoder()
-        return try? decoder.decode(T.self, from: data)
-    }
-}
-
 extension ProductListViewModel {
-    
     func addToCartWithNotification(productId: Int, quantity: Int, variantId: Int? = nil) {
         guard !isAddingToCart else { return }
         

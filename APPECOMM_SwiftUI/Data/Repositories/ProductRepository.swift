@@ -20,6 +20,7 @@ protocol ProductRepositoryProtocol {
     func getFeaturedProducts() -> AnyPublisher<[Product], Error>
     func getAllCategories() -> AnyPublisher<[Category], Error>
     func searchProducts(query: String, filters: [String: Any]?) -> AnyPublisher<[Product], Error>
+    func getFilteredProducts(filterDto: ProductFilterDto) -> AnyPublisher<[Product], Error>
 }
 
 final class ProductRepository: ProductRepositoryProtocol {
@@ -234,6 +235,65 @@ final class ProductRepository: ProductRepositoryProtocol {
                 }
             })
             .mapError { $0 }
+            .eraseToAnyPublisher()
+    }
+    
+    func getFilteredProducts(filterDto: ProductFilterDto) -> AnyPublisher<[Product], Error> {
+        // This is a placeholder - you would implement this in your actual repository
+        return getAllProducts()
+            .map { products -> [Product] in
+                var filteredProducts = products
+                
+                // Apply category filter
+                if let category = filterDto.category {
+                    filteredProducts = filteredProducts.filter { $0.category.name == category }
+                }
+                
+                // Apply brand filter
+                if let brand = filterDto.brand {
+                    filteredProducts = filteredProducts.filter { $0.brand == brand }
+                }
+                
+                // Apply price filters
+                if let minPrice = filterDto.minPrice {
+                    filteredProducts = filteredProducts.filter { $0.price >= minPrice }
+                }
+                
+                if let maxPrice = filterDto.maxPrice {
+                    filteredProducts = filteredProducts.filter { $0.price <= maxPrice }
+                }
+                
+                // Apply availability filter
+                if let status = filterDto.availability {
+                    filteredProducts = filteredProducts.filter { $0.status == status }
+                }
+                
+                // Apply sorting
+                if let sortBy = filterDto.sortBy {
+                    switch sortBy {
+                    case "price_asc":
+                        filteredProducts.sort { $0.price < $1.price }
+                    case "price_desc":
+                        filteredProducts.sort { $0.price > $1.price }
+                    case "name_asc":
+                        filteredProducts.sort { $0.name < $1.name }
+                    case "name_desc":
+                        filteredProducts.sort { $0.name > $1.name }
+                    case "bestselling":
+                        filteredProducts.sort { $0.salesCount > $1.salesCount }
+                    case "mostwished":
+                        filteredProducts.sort { $0.wishCount > $1.wishCount }
+                    case "newest":
+                        filteredProducts.sort { $0.createdAt > $1.createdAt }
+                    case "discount":
+                        filteredProducts.sort { $0.discountPercentage > $1.discountPercentage }
+                    default:
+                        break
+                    }
+                }
+                
+                return filteredProducts
+            }
             .eraseToAnyPublisher()
     }
     

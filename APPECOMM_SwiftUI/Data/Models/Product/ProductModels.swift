@@ -20,7 +20,7 @@ struct Product: Identifiable, Codable, Equatable {
     let salesCount: Int
     let wishCount: Int
     let preOrder: Bool
-    let createdAt: String  // Asegurarnos de que esto sea String para la fecha
+    let createdAt: String
     let variants: [Variant]?
     let images: [ProductImage]?
     
