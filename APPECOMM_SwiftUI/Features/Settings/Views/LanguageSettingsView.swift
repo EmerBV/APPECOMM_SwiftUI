@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct LanguageSettingsView: View {
+    @Environment(\.presentationMode) var presentationMode
     @StateObject private var localizationManager = LocalizationManager.shared
     
     var body: some View {
@@ -23,5 +24,16 @@ struct LanguageSettingsView: View {
             }
         }
         .navigationTitle("language".localized)
+        .navigationBarBackButtonHidden(true)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarLeading) {
+                Button(action: {
+                    presentationMode.wrappedValue.dismiss()
+                }) {
+                    Image(systemName: "chevron.left")
+                    //.foregroundColor(.blue)
+                }
+            }
+        }
     }
 }

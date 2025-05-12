@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct OrdersListView: View {
+    @Environment(\.presentationMode) var presentationMode
     @ObservedObject var viewModel: OrdersViewModel
     
     var body: some View {
@@ -48,6 +49,17 @@ struct OrdersListView: View {
             }
         }
         .navigationTitle("my_orders".localized)
+        .navigationBarBackButtonHidden(true)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarLeading) {
+                Button(action: {
+                    presentationMode.wrappedValue.dismiss()
+                }) {
+                    Image(systemName: "chevron.left")
+                    //.foregroundColor(.blue)
+                }
+            }
+        }
         .onAppear {
             viewModel.loadOrders()
         }

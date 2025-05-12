@@ -9,7 +9,9 @@ import SwiftUI
 import Kingfisher
 
 struct WishListView: View {
+    @Environment(\.presentationMode) var presentationMode
     @StateObject var viewModel: WishListViewModel
+    
     private var baseURL: String {
         AppConfig.shared.imageBaseUrl
     }
@@ -33,6 +35,17 @@ struct WishListView: View {
             }
         }
         .navigationTitle("my_wishlist_title".localized)
+        .navigationBarBackButtonHidden(true)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarLeading) {
+                Button(action: {
+                    presentationMode.wrappedValue.dismiss()
+                }) {
+                    Image(systemName: "chevron.left")
+                    //.foregroundColor(.blue)
+                }
+            }
+        }
         .onAppear {
             viewModel.loadWishList()
         }
