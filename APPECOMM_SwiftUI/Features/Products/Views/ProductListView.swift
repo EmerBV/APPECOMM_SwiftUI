@@ -269,18 +269,31 @@ private struct FilterSheetView: View {
     @State private var maxPrice: Double = 1000
     @State private var priceFilterEnabled = false
     
+    // For option selection sheets
+    @State private var showSortOptions = false
+    @State private var showAvailabilityOptions = false
+    @State private var showCategoryOptions = false
+    @State private var showBrandOptions = false
+    
     // Ensure we load the brands when the view appears
     var body: some View {
         NavigationView {
             Form {
                 // Sort By Section
                 Section {
-                    Picker("sort_by".localized, selection: $filter.sortBy) {
-                        ForEach(ProductSortOption.allCases) { option in
-                            Text(option.displayName).tag(option as ProductSortOption?)
+                    Button(action: {
+                        showSortOptions = true
+                    }) {
+                        HStack {
+                            Text("sort_by".localized)
+                            Spacer()
+                            Text(filter.sortBy?.displayName ?? "newest".localized)
+                                .foregroundColor(.secondary)
+                            Image(systemName: "chevron.right")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
                         }
                     }
-                    .pickerStyle(DefaultPickerStyle())
                 }
                 
                 // Price Range Section
@@ -319,38 +332,56 @@ private struct FilterSheetView: View {
                 
                 // Availability Section
                 Section {
-                    Picker("availability_label".localized, selection: $filter.availability) {
-                        Text("all".localized).tag(nil as ProductStatus?)
-                        ForEach(ProductStatus.allCases, id: \.self) { status in
-                            Text(status.displayName).tag(status as ProductStatus?)
+                    Button(action: {
+                        showAvailabilityOptions = true
+                    }) {
+                        HStack {
+                            Text("availability_label".localized)
+                            Spacer()
+                            Text(filter.availability?.displayName ?? "all".localized)
+                                .foregroundColor(.secondary)
+                            Image(systemName: "chevron.right")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
                         }
                     }
-                    .pickerStyle(DefaultPickerStyle())
                 }
                 
                 // Category Section
                 if !viewModel.categories.isEmpty {
                     Section {
-                        Picker("category_filter_label".localized, selection: $filter.selectedCategory) {
-                            Text("all_categories".localized).tag(nil as String?)
-                            ForEach(viewModel.categories, id: \.self) { category in
-                                Text(category).tag(category as String?)
+                        Button(action: {
+                            showCategoryOptions = true
+                        }) {
+                            HStack {
+                                Text("category_filter_label".localized)
+                                Spacer()
+                                Text(filter.selectedCategory ?? "all_categories".localized)
+                                    .foregroundColor(.secondary)
+                                Image(systemName: "chevron.right")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
                             }
                         }
-                        .pickerStyle(DefaultPickerStyle())
                     }
                 }
                 
                 // Brand Section
                 if !viewModel.brands.isEmpty {
                     Section {
-                        Picker("brands_filter_label".localized, selection: $filter.selectedBrand) {
-                            Text("all_brands".localized).tag(nil as String?)
-                            ForEach(viewModel.brands, id: \.self) { brand in
-                                Text(brand).tag(brand as String?)
+                        Button(action: {
+                            showBrandOptions = true
+                        }) {
+                            HStack {
+                                Text("brands_filter_label".localized)
+                                Spacer()
+                                Text(filter.selectedBrand ?? "all_brands".localized)
+                                    .foregroundColor(.secondary)
+                                Image(systemName: "chevron.right")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
                             }
                         }
-                        .pickerStyle(DefaultPickerStyle())
                     }
                 }
             }
@@ -386,6 +417,67 @@ private struct FilterSheetView: View {
                 
                 // Load brands if needed
                 viewModel.loadBrands()
+            }
+            .sheet(isPresented: $showSortOptions) {
+                OptionSelectionView(
+                    title: "sort_by".localized,
+                    options: ProductSortOption.allCases.map { OptionItem(id: $0.rawValue, title: $0.displayName) },
+                    selectedId: filter.sortBy?.rawValue,
+                    onSelect: { optionId in
+                        if let selectedOption = ProductSortOption.allCases.first(where: { $0.rawValue == optionId }) {
+                            filter.sortBy = selectedOption
+                        }
+                        showSortOptions = false
+                    }
+                )
+            }
+            .sheet(isPresented: $showAvailabilityOptions) {
+                OptionSelectionView(
+                    title: "availability_label".localized,
+                    options: [OptionItem(id: "all", title: "all".localized)] +
+                    ProductStatus.allCases.map { OptionItem(id: $0.rawValue, title: $0.displayName) },
+                    selectedId: filter.availability?.rawValue ?? "all",
+                    onSelect: { optionId in
+                        if optionId == "all" {
+                            filter.availability = nil
+                        } else if let status = ProductStatus.allCases.first(where: { $0.rawValue == optionId }) {
+                            filter.availability = status
+                        }
+                        showAvailabilityOptions = false
+                    }
+                )
+            }
+            .sheet(isPresented: $showCategoryOptions) {
+                OptionSelectionView(
+                    title: "category_filter_label".localized,
+                    options: [OptionItem(id: "all", title: "all_categories".localized)] +
+                    viewModel.categories.map { OptionItem(id: $0, title: $0) },
+                    selectedId: filter.selectedCategory ?? "all",
+                    onSelect: { optionId in
+                        if optionId == "all" {
+                            filter.selectedCategory = nil
+                        } else {
+                            filter.selectedCategory = optionId
+                        }
+                        showCategoryOptions = false
+                    }
+                )
+            }
+            .sheet(isPresented: $showBrandOptions) {
+                OptionSelectionView(
+                    title: "brands_filter_label".localized,
+                    options: [OptionItem(id: "all", title: "all_brands".localized)] +
+                    viewModel.brands.map { OptionItem(id: $0, title: $0) },
+                    selectedId: filter.selectedBrand ?? "all",
+                    onSelect: { optionId in
+                        if optionId == "all" {
+                            filter.selectedBrand = nil
+                        } else {
+                            filter.selectedBrand = optionId
+                        }
+                        showBrandOptions = false
+                    }
+                )
             }
         }
     }
